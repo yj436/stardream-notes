@@ -104,7 +104,7 @@ export const useBlogStore = defineStore('blog', {
         appApi.getPosts(),
         me ? appApi.getDraft() : Promise.resolve(this.draft),
       ])
-      this.users = me && !users.some((user) => user.id === me.id) ? [me, ...users] : users
+      this.users = me ? [me, ...users.filter((user) => user.id !== me.id)] : users
       this.posts = posts
       this.draft = draft
       this.search = await appApi.searchContent('')

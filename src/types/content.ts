@@ -151,3 +151,31 @@ export interface AdminStats {
   animeRecords: number
   reports?: number
 }
+
+export interface DatabaseHealth {
+  ok: boolean
+  provider: string
+  latencyMs?: number
+  counts?: {
+    users: number
+    posts: number
+    comments: number
+    reports: number
+  }
+  code?: string
+  message?: string
+}
+
+export interface ApiHealth {
+  ok: boolean
+  name: string
+  database?: DatabaseHealth
+}
+
+export interface ApiRuntimeInfo {
+  mode: 'mock' | 'api'
+  apiBaseUrl: string
+  configuredApiBaseUrl: string | null
+  isGitHubPagesHost: boolean
+  fallbackEnabled: boolean
+}

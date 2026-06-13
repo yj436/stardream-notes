@@ -3,11 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Activity,
+  AlertTriangle,
   BarChart3,
   BellRing,
   CheckCircle2,
   CircleGauge,
-  Clock3,
+  Cloud,
+  Database,
   FileText,
   Flag,
   LayoutDashboard,
@@ -16,14 +18,17 @@ import {
   RefreshCw,
   Search,
   Send,
+  Server,
   ShieldCheck,
   Trash2,
   Users,
+  WifiOff,
 } from 'lucide-vue-next'
 import TimestampPill from '@/components/TimestampPill.vue'
+import { appApi } from '@/api/appApi'
 import { useBlogStore } from '@/stores/blog'
 import { useNotificationStore } from '@/composables/useNotificationStore'
-import type { Post, Report, User } from '@/types/content'
+import type { ApiHealth, Post, Report, User } from '@/types/content'
 
 type AdminTab = 'users' | 'posts' | 'comments' | 'reports'
 
@@ -35,6 +40,9 @@ const adminQuery = ref('')
 const broadcastText = ref('')
 const broadcastSent = ref(false)
 const refreshing = ref(false)
+const runtimeInfo = appApi.getRuntimeInfo()
+const systemHealth = ref<ApiHealth | null>(null)
+const systemLoading = ref(false)
 
 const tabConfig = [
   { key: 'users' as const, label: '用户', title: '用户管理', desc: '角色、封禁与创作者权限', icon: Users },
@@ -42,6 +50,15 @@ const tabConfig = [
   { key: 'comments' as const, label: '评论', title: '评论审核', desc: '社区互动与风险评论', icon: MessageSquareText },
   { key: 'reports' as const, label: '举报', title: '举报处理', desc: '复核流程与处理结论', icon: Flag },
 ]
+
+const loadSystemHealth = async () => {
+  systemLoading.value = true
+  try {
+    systemHealth.value = await appApi.getSystemHealth()
+  } finally {
+    systemLoading.value = false
+  }
+}
 
 const sendBroadcast = () => {
   if (!broadcastText.value.trim()) return
@@ -59,8 +76,11 @@ const sendBroadcast = () => {
 
 const refreshAdmin = async () => {
   refreshing.value = true
-  await blog.loadAdmin()
-  refreshing.value = false
+  try {
+    await Promise.all([blog.loadAdmin(), loadSystemHealth()])
+  } finally {
+    refreshing.value = false
+  }
 }
 
 const queryText = computed(() => adminQuery.value.trim().toLowerCase())
@@ -94,6 +114,38 @@ const currentRows = computed(() => {
   if (tab.value === 'comments') return filteredAdminComments.value.length
   return filteredAdminReports.value.length
 })
+const dataModeLabel = computed(() => (runtimeInfo.mode === 'mock' ? '演示数据模式' : '真实 API 模式'))
+const apiHealthTone = computed(() => {
+  if (runtimeInfo.mode === 'mock') return 'warning'
+  if (!systemHealth.value) return 'info'
+  return systemHealth.value.ok ? 'success' : 'danger'
+})
+const databaseHealthTone = computed(() => {
+  if (runtimeInfo.mode === 'mock') return 'warning'
+  if (!systemHealth.value?.database) return 'info'
+  return systemHealth.value.database.ok ? 'success' : 'danger'
+})
+const apiHealthLabel = computed(() => {
+  if (systemLoading.value) return '检测中'
+  if (runtimeInfo.mode === 'mock') return 'Mock 在线'
+  if (!systemHealth.value) return '未检测'
+  return systemHealth.value.ok ? 'API 在线' : 'API 异常'
+})
+const databaseHealthLabel = computed(() => {
+  if (systemLoading.value) return '检测中'
+  if (runtimeInfo.mode === 'mock') return 'Mock 数据'
+  const database = systemHealth.value?.database
+  if (!database) return '未返回'
+  if (database.ok) return `${database.provider.toUpperCase()} 正常`
+  return database.code || '数据库异常'
+})
+const apiHealthIcon = computed(() => {
+  if (systemLoading.value) return RefreshCw
+  if (runtimeInfo.mode === 'mock') return AlertTriangle
+  return systemHealth.value?.ok ? CheckCircle2 : WifiOff
+})
+const healthCounts = computed(() => systemHealth.value?.database?.counts)
+const apiEndpointLabel = computed(() => runtimeInfo.apiBaseUrl)
 
 const navItems = computed(() =>
   tabConfig.map((item) => ({
@@ -201,12 +253,28 @@ onMounted(async () => {
 
       <div class="admin-system-card">
         <span class="section-kicker"><CircleGauge :size="15" /> 系统状态</span>
-        <strong>本地 MVP 环境</strong>
-        <small>SQLite · Express API · Vue 控制台</small>
+        <strong>{{ dataModeLabel }}</strong>
+        <small class="admin-endpoint"><Cloud :size="13" /> {{ apiEndpointLabel }}</small>
         <div class="admin-health-row">
-          <span><CheckCircle2 :size="14" /> API 在线</span>
-          <span><Clock3 :size="14" /> 实时刷新</span>
+          <span :class="['admin-health-pill', apiHealthTone]">
+            <component :is="apiHealthIcon" :size="14" :class="{ 'spin-icon': systemLoading }" />
+            {{ apiHealthLabel }}
+          </span>
+          <span :class="['admin-health-pill', databaseHealthTone]">
+            <Database :size="14" />
+            {{ databaseHealthLabel }}
+          </span>
         </div>
+        <div v-if="healthCounts" class="admin-health-counts">
+          <span><Users :size="13" />{{ healthCounts.users }}</span>
+          <span><FileText :size="13" />{{ healthCounts.posts }}</span>
+          <span><MessageSquareText :size="13" />{{ healthCounts.comments }}</span>
+          <span><Flag :size="13" />{{ healthCounts.reports }}</span>
+        </div>
+        <button type="button" class="ghost-button compact admin-health-refresh" :disabled="systemLoading" @click="loadSystemHealth">
+          <Server :size="15" />
+          {{ systemLoading ? '检测中' : '重新检测' }}
+        </button>
       </div>
     </aside>
 

@@ -5,6 +5,8 @@ import type {
   AnimeRecord,
   AnimeRecordPayload,
   AnimeStatus,
+  ApiHealth,
+  ApiRuntimeInfo,
   AuthResult,
   Comment,
   Draft,
@@ -22,11 +24,20 @@ import type {
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const isGitHubPagesHost = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')
 const shouldUseMockApi = import.meta.env.VITE_USE_MOCK_API === 'true' || (!configuredApiBaseUrl && isGitHubPagesHost)
+const apiBaseUrl = configuredApiBaseUrl || '/api'
 
 const client = axios.create({
-  baseURL: configuredApiBaseUrl || '/api',
+  baseURL: apiBaseUrl,
   timeout: 1800,
 })
+
+const runtimeInfo: ApiRuntimeInfo = {
+  mode: shouldUseMockApi ? 'mock' : 'api',
+  apiBaseUrl,
+  configuredApiBaseUrl: configuredApiBaseUrl || null,
+  isGitHubPagesHost,
+  fallbackEnabled: shouldUseMockApi,
+}
 
 const tokenKey = 'stardream:auth-token'
 let authToken = window.localStorage.getItem(tokenKey)
@@ -119,6 +130,10 @@ const getMockAdminComments = async () => {
 const getMockReports = async (): Promise<Report[]> => []
 
 export const appApi = {
+  getRuntimeInfo() {
+    return runtimeInfo
+  },
+
   setToken(token: string | null) {
     authToken = token
     if (token) window.localStorage.setItem(tokenKey, token)
@@ -127,6 +142,41 @@ export const appApi = {
 
   getStoredToken() {
     return authToken
+  },
+
+  async getSystemHealth(): Promise<ApiHealth> {
+    if (shouldUseMockApi) {
+      const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getPosts()])
+      return {
+        ok: true,
+        name: 'stardream-mock-api',
+        database: {
+          ok: true,
+          provider: 'mock',
+          latencyMs: 0,
+          counts: {
+            users: users.length,
+            posts: posts.length,
+            comments: posts.reduce((total, post) => total + post.commentCount, 0),
+            reports: 0,
+          },
+        },
+      }
+    }
+
+    try {
+      return (await client.get<ApiHealth>('/health')).data
+    } catch (error) {
+      return {
+        ok: false,
+        name: 'stardream-api',
+        database: {
+          ok: false,
+          provider: 'unknown',
+          message: axios.isAxiosError(error) ? error.message : 'Health check failed',
+        },
+      }
+    }
   },
 
   async login(payload: LoginPayload) {
