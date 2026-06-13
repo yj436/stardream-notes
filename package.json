@@ -10,9 +10,14 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:push:dev": "prisma db push",
     "db:seed": "node prisma/seed.js",
-    "db:reset": "prisma db push --force-reset && node prisma/seed.js"
+    "db:doctor": "node prisma/doctor.js",
+    "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed && npm run db:doctor",
+    "db:reset:dev": "prisma db push --force-reset && node prisma/seed.js",
+    "db:sqlite:generate": "prisma generate --schema prisma/sqlite/schema.prisma",
+    "db:sqlite:push": "prisma db push --schema prisma/sqlite/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

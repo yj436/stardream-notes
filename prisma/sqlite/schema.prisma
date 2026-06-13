@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String        @id
+  username            String        @unique
+  email               String?       @unique
+  passwordHash        String?
+  nickname            String
+  avatarUrl           String
+  avatarPosition      String?
+  coverUrl            String
+  bio                 String
+  level               Int           @default(1)
+  creatorBadge        String?
+  favoriteCharacter   String
+  stats               String
+  role                String        @default("user")
+  status              String        @default("active")
+  isFollowing         Boolean       @default(false)
+  theme               String        @default("sakura")
+  posts               Post[]
+  comments            Comment[]
+  animeRecords        AnimeRecord[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+}
+
+model Post {
+  id            String    @id
+  authorId      String
+  title         String
+  excerpt       String
+  content       String
+  coverUrl      String
+  imagePosition String?
+  type          String
+  tags          String
+  gallery       String
+  viewCount     Int       @default(0)
+  likeCount     Int       @default(0)
+  favoriteCount Int       @default(0)
+  commentCount  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  status        String    @default("published")
+  isPinned      Boolean   @default(false)
+  isLiked       Boolean   @default(false)
+  isFavorited   Boolean   @default(false)
+  reactions     String    @default("{}")
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  reports       Report[]
+}
+
+model Comment {
+  id        String   @id
+  postId    String
+  userId    String
+  parentId  String?
+  content   String
+  likeCount Int      @default(0)
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AnimeRecord {
+  id        String   @id
+  userId    String
+  title     String
+  coverUrl  String
+  status    String
+  rating    Int
+  review    String
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Draft {
+  id        String   @id
+  userId    String   @unique
+  title     String
+  content   String
+  tags      String
+  images    String
+  savedAt   DateTime?
+}
+
+model Report {
+  id         String   @id
+  postId     String
+  reporterId String
+  reason     String
+  detail     String?
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}

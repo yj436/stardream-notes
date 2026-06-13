@@ -3,102 +3,121 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id                  String        @id
-  username            String        @unique
-  email               String?       @unique
-  passwordHash        String?
-  nickname            String
-  avatarUrl           String
-  avatarPosition      String?
-  coverUrl            String
-  bio                 String
-  level               Int           @default(1)
-  creatorBadge        String?
-  favoriteCharacter   String
-  stats               String
-  role                String        @default("user")
-  status              String        @default("active")
-  isFollowing         Boolean       @default(false)
-  theme               String        @default("sakura")
-  posts               Post[]
-  comments            Comment[]
-  animeRecords        AnimeRecord[]
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  id                String        @id @default(cuid()) @db.VarChar(64)
+  username          String        @unique @db.VarChar(64)
+  email             String?       @unique @db.VarChar(191)
+  passwordHash      String?       @db.VarChar(191)
+  nickname          String        @db.VarChar(80)
+  avatarUrl         String        @db.VarChar(512)
+  avatarPosition    String?       @db.VarChar(64)
+  coverUrl          String        @db.VarChar(512)
+  bio               String        @db.Text
+  level             Int           @default(1)
+  creatorBadge      String?       @db.VarChar(80)
+  favoriteCharacter String        @db.Text
+  stats             String        @db.Text
+  role              String        @default("user") @db.VarChar(24)
+  status            String        @default("active") @db.VarChar(24)
+  isFollowing       Boolean       @default(false)
+  theme             String        @default("sakura") @db.VarChar(32)
+  posts             Post[]
+  comments          Comment[]
+  animeRecords      AnimeRecord[]
+  draft             Draft?
+  reports           Report[]      @relation("Reporter")
+  createdAt         DateTime      @default(now()) @db.DateTime(3)
+  updatedAt         DateTime      @updatedAt @db.DateTime(3)
 }
 
 model Post {
-  id            String    @id
-  authorId      String
-  title         String
-  excerpt       String
-  content       String
-  coverUrl      String
-  imagePosition String?
-  type          String
-  tags          String
-  gallery       String
+  id            String    @id @default(cuid()) @db.VarChar(64)
+  authorId      String    @db.VarChar(64)
+  title         String    @db.VarChar(191)
+  excerpt       String    @db.Text
+  content       String    @db.LongText
+  coverUrl      String    @db.VarChar(512)
+  imagePosition String?   @db.VarChar(64)
+  type          String    @db.VarChar(24)
+  tags          String    @db.Text
+  gallery       String    @db.Text
   viewCount     Int       @default(0)
   likeCount     Int       @default(0)
   favoriteCount Int       @default(0)
   commentCount  Int       @default(0)
-  createdAt     DateTime  @default(now())
-  status        String    @default("published")
+  createdAt     DateTime  @default(now()) @db.DateTime(3)
+  status        String    @default("published") @db.VarChar(24)
   isPinned      Boolean   @default(false)
   isLiked       Boolean   @default(false)
   isFavorited   Boolean   @default(false)
-  reactions     String    @default("{}")
+  reactions     String    @db.Text
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments      Comment[]
   reports       Report[]
+
+  @@index([authorId])
+  @@index([status, createdAt])
+  @@index([isPinned, createdAt])
 }
 
 model Comment {
-  id        String   @id
-  postId    String
-  userId    String
-  parentId  String?
-  content   String
+  id        String   @id @default(cuid()) @db.VarChar(64)
+  postId    String   @db.VarChar(64)
+  userId    String   @db.VarChar(64)
+  parentId  String?  @db.VarChar(64)
+  content   String   @db.Text
   likeCount Int      @default(0)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.DateTime(3)
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([userId])
+  @@index([parentId])
 }
 
 model AnimeRecord {
-  id        String   @id
-  userId    String
-  title     String
-  coverUrl  String
-  status    String
+  id        String   @id @default(cuid()) @db.VarChar(64)
+  userId    String   @db.VarChar(64)
+  title     String   @db.VarChar(191)
+  coverUrl  String   @db.VarChar(512)
+  status    String   @db.VarChar(32)
   rating    Int
-  review    String
-  updatedAt DateTime @updatedAt
+  review    String   @db.Text
+  updatedAt DateTime @updatedAt @db.DateTime(3)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
+  @@index([status])
 }
 
 model Draft {
-  id        String   @id
-  userId    String   @unique
-  title     String
-  content   String
-  tags      String
-  images    String
-  savedAt   DateTime?
+  id      String    @id @default(cuid()) @db.VarChar(64)
+  userId  String    @unique @db.VarChar(64)
+  title   String    @db.VarChar(191)
+  content String    @db.LongText
+  tags    String    @db.Text
+  images  String    @db.Text
+  savedAt DateTime? @db.DateTime(3)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Report {
-  id         String   @id
-  postId     String
-  reporterId String
-  reason     String
-  detail     String?
-  status     String   @default("open")
-  createdAt  DateTime @default(now())
+  id         String   @id @default(cuid()) @db.VarChar(64)
+  postId     String   @db.VarChar(64)
+  reporterId String   @db.VarChar(64)
+  reason     String   @db.VarChar(80)
+  detail     String?  @db.Text
+  status     String   @default("open") @db.VarChar(24)
+  createdAt  DateTime @default(now()) @db.DateTime(3)
   post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporter   User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([reporterId])
+  @@index([status, createdAt])
 }

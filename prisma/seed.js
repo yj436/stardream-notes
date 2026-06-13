@@ -265,18 +265,46 @@ const animeRecords = [
   },
 ]
 
-await prisma.comment.deleteMany()
-await prisma.animeRecord.deleteMany()
-await prisma.post.deleteMany()
-await prisma.draft.deleteMany()
-await prisma.user.deleteMany()
+for (const user of users) {
+  await prisma.user.upsert({
+    where: { id: user.id },
+    update: user,
+    create: user,
+  })
+}
 
-for (const user of users) await prisma.user.create({ data: user })
-for (const post of posts) await prisma.post.create({ data: post })
-for (const comment of comments) await prisma.comment.create({ data: comment })
-for (const record of animeRecords) await prisma.animeRecord.create({ data: record })
-await prisma.draft.create({
-  data: {
+for (const post of posts) {
+  await prisma.post.upsert({
+    where: { id: post.id },
+    update: post,
+    create: post,
+  })
+}
+
+for (const comment of comments) {
+  await prisma.comment.upsert({
+    where: { id: comment.id },
+    update: comment,
+    create: comment,
+  })
+}
+
+for (const record of animeRecords) {
+  await prisma.animeRecord.upsert({
+    where: { id: record.id },
+    update: record,
+    create: record,
+  })
+}
+await prisma.draft.upsert({
+  where: { userId: 'u_mika' },
+  update: {
+    title: '',
+    content: '',
+    tags: json(['鍘熷垱浼佸垝']),
+    images: json([]),
+  },
+  create: {
     id: 'draft_u_mika',
     userId: 'u_mika',
     title: '',
@@ -285,5 +313,7 @@ await prisma.draft.create({
     images: json([]),
   },
 })
+
+console.log(`Seeded ${users.length} users, ${posts.length} posts, ${comments.length} comments, ${animeRecords.length} anime records.`)
 
 await prisma.$disconnect()

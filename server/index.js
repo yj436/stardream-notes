@@ -4,19 +4,32 @@ import multer from 'multer'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import prismaPkg from '../node_modules/@prisma/client/index.js'
+import { PrismaClient } from '@prisma/client'
 import crypto from 'node:crypto'
 
-const { PrismaClient } = prismaPkg
 const prisma = new PrismaClient()
 const app = express()
 const port = Number(process.env.API_PORT ?? 3001)
 const tokenSecret = process.env.AUTH_SECRET ?? 'stardream-local-secret'
+const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
 const serverDir = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(serverDir, '..')
 const uploadsDir = path.join(projectRoot, 'uploads')
 
-app.use(cors())
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        callback(null, true)
+        return
+      }
+      callback(new Error(`Origin ${origin} is not allowed by CORS`))
+    },
+  }),
+)
 app.use(express.json({ limit: '1mb' }))
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 app.use('/uploads', express.static(uploadsDir))
@@ -105,6 +118,33 @@ const reactionKeys = new Set(Object.keys(defaultReactions))
 const readStats = (user) => parse(user?.stats, defaultStats)
 const readReactions = (post) => ({ ...defaultReactions, ...parse(post?.reactions, {}) })
 
+const getDatabaseHealth = async () => {
+  const startedAt = Date.now()
+  try {
+    await prisma.$queryRawUnsafe('SELECT 1')
+    const [users, posts, comments, reports] = await Promise.all([
+      prisma.user.count(),
+      prisma.post.count(),
+      prisma.comment.count(),
+      prisma.report.count(),
+    ])
+    return {
+      ok: true,
+      provider: 'mysql',
+      latencyMs: Date.now() - startedAt,
+      counts: { users, posts, comments, reports },
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      provider: 'mysql',
+      latencyMs: Date.now() - startedAt,
+      code: error?.code,
+      message: error?.message,
+    }
+  }
+}
+
 const toUser = (user) => {
   const { passwordHash: _passwordHash, ...safeUser } = user
   return {
@@ -169,8 +209,9 @@ app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}`, filename: req.file.filename })
 })
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, name: 'stardream-api' })
+app.get('/api/health', async (_req, res) => {
+  const database = await getDatabaseHealth()
+  res.status(database.ok ? 200 : 503).json({ ok: database.ok, name: 'stardream-api', database })
 })
 
 app.post('/api/auth/register', async (req, res) => {
@@ -706,6 +747,26 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Internal server error' })
 })
 
-app.listen(port, () => {
-  console.log(`Stardream API running on http://127.0.0.1:${port}`)
+const shutdown = async () => {
+  await prisma.$disconnect().catch(() => undefined)
+  process.exit(0)
+}
+
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
+
+const start = async () => {
+  const database = await getDatabaseHealth()
+  if (!database.ok) {
+    console.warn('Database health check failed during startup:', database.message)
+  }
+  app.listen(port, () => {
+    console.log(`Stardream API running on http://127.0.0.1:${port}`)
+  })
+}
+
+start().catch(async (error) => {
+  console.error('Failed to start Stardream API:', error)
+  await prisma.$disconnect().catch(() => undefined)
+  process.exit(1)
 })

@@ -1,14 +1,13 @@
 # 星梦笔记
 
-二次元轻博客社区 MVP，包含 Vue 3 前端、Express API、Prisma ORM 和本地 SQLite 数据库。当前重点功能包括文章发布、画廊、Live2D 小人、用户空间、后台管理和富文本编辑。
+二次元轻博客社区 MVP，包含 Vue 3 前端、Express API、Prisma ORM 和线上 MySQL 数据库。当前重点功能包括文章发布、画廊、Live2D 小人、用户空间、后台管理和富文本编辑。
 
 ## 本地运行
 
 ```bash
 npm install
 npm run db:generate
-npm run db:push
-npm run db:seed
+npm run db:setup
 npm run dev:full
 ```
 
@@ -38,7 +37,8 @@ npm run dev          # 只启动前端
 npm run dev:server   # 只启动后端
 npm run dev:full     # 同时启动前端和后端
 npm run build        # 前端生产构建和类型检查
-npm run db:reset     # 重置 SQLite 数据库并重新写入种子数据
+npm run db:setup     # 执行 Prisma 生成、迁移、种子数据和健康检查
+npm run db:reset:dev # 开发环境强制重置当前数据库，请勿用于线上库
 ```
 
 ## GitHub Pages 部署
@@ -54,14 +54,20 @@ npm run db:reset     # 重置 SQLite 数据库并重新写入种子数据
 
 如果仓库是用户站点仓库，例如 `<username>.github.io`，可以把工作流里的 `BASE_PATH` 改成 `/`。
 
+## 线上数据库
+
+生产数据库已切换为 MySQL，Prisma 主 schema 位于 `prisma/schema.prisma`。GitHub Pages 只负责托管前端静态文件；真实线上数据需要部署 Express API，并连接托管 MySQL。
+
+详细步骤见 [Database Deployment](docs/database.md)。
+
 ## 技术栈
 
 - Frontend: Vue 3, TypeScript, Vite, Pinia, Vue Router
 - UI: 自定义后台界面、lucide-vue-next、md-editor-v3
 - Backend: Node.js, Express
-- Database: SQLite for local MVP, Prisma ORM
+- Database: MySQL 8.x for production, SQLite fallback schema, Prisma ORM
 
-后续切换 PostgreSQL 时，保留 Prisma model，调整 datasource provider 和连接串即可。
+线上版本请使用托管 MySQL，并通过 `VITE_API_BASE_URL` 让 GitHub Pages 前端连接已部署的 Express API。
 
 ## 已实现功能
 
