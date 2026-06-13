@@ -6,7 +6,6 @@
 
 ```bash
 npm install
-npm run db:generate
 npm run db:setup
 npm run dev:full
 ```
@@ -36,8 +35,10 @@ http://127.0.0.1:3001/api/health
 npm run dev          # 只启动前端
 npm run dev:server   # 只启动后端
 npm run dev:full     # 同时启动前端和后端
+npm run start:api    # 生产模式启动后端 API
 npm run build        # 前端生产构建和类型检查
 npm run db:setup     # 执行 Prisma 生成、迁移、种子数据和健康检查
+npm run smoke:api    # 检查已部署 API 的健康状态和核心公开接口
 npm run db:reset:dev # 开发环境强制重置当前数据库，请勿用于线上库
 ```
 
@@ -58,7 +59,7 @@ npm run db:reset:dev # 开发环境强制重置当前数据库，请勿用于线
 
 生产数据库已切换为 MySQL，Prisma 主 schema 位于 `prisma/schema.prisma`。GitHub Pages 只负责托管前端静态文件；真实线上数据需要部署 Express API，并连接托管 MySQL。
 
-详细步骤见 [Database Deployment](docs/database.md)。
+详细步骤见 [Database Deployment](docs/database.md)。项目已提供后端 Dockerfile，可部署到支持 Node.js 或容器的云平台。
 
 ## 技术栈
 

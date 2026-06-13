@@ -1,10 +1,8 @@
 # Dependencies
 node_modules/
-server/node_modules/
 
 # Build output
 dist/
-server/dist/
 
 # Local environment
 .env
@@ -14,10 +12,7 @@ server/dist/
 # Local databases and uploads
 prisma/dev.db
 prisma/dev.db-journal
-server/prisma/dev.db
-server/prisma/dev.db-journal
 uploads/
-server/uploads/
 
 # Logs and runtime noise
 *.log

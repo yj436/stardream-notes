@@ -9,7 +9,7 @@ import crypto from 'node:crypto'
 
 const prisma = new PrismaClient()
 const app = express()
-const port = Number(process.env.API_PORT ?? 3001)
+const port = Number(process.env.PORT ?? process.env.API_PORT ?? 3001)
 const tokenSecret = process.env.AUTH_SECRET ?? 'stardream-local-secret'
 const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
   .split(',')
@@ -19,6 +19,7 @@ const serverDir = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(serverDir, '..')
 const uploadsDir = path.join(projectRoot, 'uploads')
 
+app.set('trust proxy', 1)
 app.use(
   cors({
     origin(origin, callback) {
