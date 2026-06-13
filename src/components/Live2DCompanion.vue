@@ -6,7 +6,7 @@ import { useLive2DCompanion } from '@/composables/useLive2DCompanion'
 import type { Widget, WidgetOptions } from 'l2d-widget'
 
 const transitionDuration = 700
-const defaultModelPath = '/live2d/mao/Mao.model3.json'
+const defaultModelPath = `${import.meta.env.BASE_URL}live2d/mao/Mao.model3.json`
 
 const route = useRoute()
 const { enabled, minViewportWidth, modelSourceUrl, setEnabled } = useLive2DCompanion()

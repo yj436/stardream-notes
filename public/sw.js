@@ -1,8 +1,9 @@
 const CACHE_NAME = 'stardream-v2'
+const scopeUrl = self.registration.scope
 
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
+  new URL('./', scopeUrl).toString(),
+  new URL('index.html', scopeUrl).toString(),
 ]
 
 self.addEventListener('install', (event) => {
@@ -31,7 +32,15 @@ self.addEventListener('fetch', (event) => {
   // Skip non-http(s) requests
   if (!request.url.startsWith('http')) return
   const url = new URL(request.url)
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/')) return
+  const scopePath = new URL(scopeUrl).pathname
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/uploads/') ||
+    url.pathname.startsWith(`${scopePath}api/`) ||
+    url.pathname.startsWith(`${scopePath}uploads/`)
+  ) {
+    return
+  }
 
   event.respondWith(
     caches.match(request).then((cached) => {

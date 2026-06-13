@@ -19,8 +19,12 @@ import type {
   User,
 } from '@/types/content'
 
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+const isGitHubPagesHost = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')
+const shouldUseMockApi = import.meta.env.VITE_USE_MOCK_API === 'true' || (!configuredApiBaseUrl && isGitHubPagesHost)
+
 const client = axios.create({
-  baseURL: '/api',
+  baseURL: configuredApiBaseUrl || '/api',
   timeout: 1800,
 })
 
@@ -69,14 +73,50 @@ const normalizeDraft = (draft: Draft): Draft => ({
 })
 
 const withFallback = async <T>(request: () => Promise<T>, fallback: () => Promise<T>): Promise<T> => {
+  if (shouldUseMockApi) return fallback()
   try {
     return await request()
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response) throw error
-    console.warn('API fallback to local mock:', error)
+    if (axios.isAxiosError(error) && error.response && !isGitHubPagesHost) throw error
+    if (!isGitHubPagesHost) console.warn('API fallback to local mock:', error)
     return fallback()
   }
 }
+
+const createMockAuthUser = async (identifier?: string) => {
+  const users = await mockApi.getUsers()
+  const normalizedIdentifier = identifier?.trim().toLowerCase()
+  const user =
+    users.find((item) =>
+      [item.username, item.email, item.nickname].some((value) => value?.toLowerCase() === normalizedIdentifier),
+    ) ?? users[0]
+  return normalizeUser({
+    ...user,
+    email: user.email ?? 'admin@stardream.local',
+    role: 'admin',
+    status: 'active',
+  })
+}
+
+const getMockAdminStats = async (): Promise<AdminStats> => {
+  const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getPosts()])
+  const animeRecords = await Promise.all(users.map((user) => mockApi.getAnimeRecords(user.id)))
+  return {
+    users: users.length,
+    posts: posts.length,
+    comments: posts.reduce((total, post) => total + post.commentCount, 0),
+    animeRecords: animeRecords.flat().length,
+    reports: 0,
+  }
+}
+
+const getMockAdminComments = async () => {
+  const posts = await mockApi.getPosts()
+  const commentGroups = await Promise.all(posts.map((post) => mockApi.getComments(post.id)))
+  return commentGroups.flat().map(normalizeComment)
+}
+
+const getMockReports = async (): Promise<Report[]> => []
 
 export const appApi = {
   setToken(token: string | null) {
@@ -90,12 +130,32 @@ export const appApi = {
   },
 
   async login(payload: LoginPayload) {
+    if (shouldUseMockApi) {
+      const user = await createMockAuthUser(payload.identifier)
+      const result = { token: 'mock-token', user }
+      this.setToken(result.token)
+      return result
+    }
     const result = (await client.post<AuthResult>('/auth/login', payload)).data
     this.setToken(result.token)
     return { ...result, user: normalizeUser(result.user) }
   },
 
   async register(payload: RegisterPayload) {
+    if (shouldUseMockApi) {
+      const baseUser = await createMockAuthUser(payload.username)
+      const user = normalizeUser({
+        ...baseUser,
+        id: `u_${Date.now()}`,
+        username: payload.username,
+        nickname: payload.nickname,
+        email: payload.email,
+        role: 'creator',
+      })
+      const result = { token: 'mock-token', user }
+      this.setToken(result.token)
+      return result
+    }
     const result = (await client.post<AuthResult>('/auth/register', payload)).data
     this.setToken(result.token)
     return { ...result, user: normalizeUser(result.user) }
@@ -103,6 +163,7 @@ export const appApi = {
 
   async getMe() {
     if (!authToken) return null
+    if (shouldUseMockApi) return createMockAuthUser()
     try {
       return normalizeUser((await client.get<User>('/auth/me')).data)
     } catch {
@@ -232,15 +293,39 @@ export const appApi = {
   },
 
   async updatePost(id: string, payload: NewPostPayload) {
-    return normalizePost((await client.put<Post>(`/posts/${id}`, payload)).data)
+    return withFallback(
+      async () => normalizePost((await client.put<Post>(`/posts/${id}`, payload)).data),
+      async () => {
+        const existing = await mockApi.getPostById(id)
+        if (!existing) throw new Error('Post not found')
+        return normalizePost({
+          ...existing,
+          ...payload,
+          coverUrl: payload.images[0] ?? existing.coverUrl,
+          gallery: payload.images.length ? payload.images : existing.gallery,
+        })
+      },
+    )
   },
 
   async deletePost(id: string) {
+    if (shouldUseMockApi) return
     await client.delete(`/posts/${id}`)
   },
 
   async reportPost(id: string, payload: { reason: string; detail?: string }) {
-    return (await client.post<Report>(`/posts/${id}/reports`, payload)).data
+    return withFallback(
+      async () => (await client.post<Report>(`/posts/${id}/reports`, payload)).data,
+      async () => ({
+        id: `r_${Date.now()}`,
+        postId: id,
+        reporterId: 'mock-user',
+        reason: payload.reason,
+        detail: payload.detail,
+        status: 'open' as const,
+        createdAt: new Date().toISOString(),
+      }),
+    )
   },
 
   async searchContent(query: string, type: 'all' | 'post' | 'user' | 'tag' = 'all'): Promise<SearchResult> {
@@ -289,38 +374,72 @@ export const appApi = {
   },
 
   async getAdminStats() {
-    return (await client.get<AdminStats>('/admin/stats')).data
+    return withFallback(async () => (await client.get<AdminStats>('/admin/stats')).data, getMockAdminStats)
   },
 
   async getAdminUsers() {
-    return (await client.get<User[]>('/admin/users')).data.map(normalizeUser)
+    return withFallback(
+      async () => (await client.get<User[]>('/admin/users')).data.map(normalizeUser),
+      async () => (await mockApi.getUsers()).map(normalizeUser),
+    )
   },
 
   async updateAdminUser(id: string, payload: { status?: User['status']; role?: User['role'] }) {
-    return normalizeUser((await client.patch<User>(`/admin/users/${id}`, payload)).data)
+    return withFallback(
+      async () => normalizeUser((await client.patch<User>(`/admin/users/${id}`, payload)).data),
+      async () => {
+        const user = await mockApi.getUserById(id)
+        if (!user) throw new Error('User not found')
+        return normalizeUser({ ...user, ...payload })
+      },
+    )
   },
 
   async getAdminPosts() {
-    return (await client.get<Post[]>('/admin/posts')).data.map(normalizePost)
+    return withFallback(
+      async () => (await client.get<Post[]>('/admin/posts')).data.map(normalizePost),
+      async () => (await mockApi.getPosts()).map(normalizePost),
+    )
   },
 
   async updateAdminPost(id: string, payload: { isPinned?: boolean; status?: Post['status'] }) {
-    return normalizePost((await client.patch<Post>(`/admin/posts/${id}`, payload)).data)
+    return withFallback(
+      async () => normalizePost((await client.patch<Post>(`/admin/posts/${id}`, payload)).data),
+      async () => {
+        const post = await mockApi.getPostById(id)
+        if (!post) throw new Error('Post not found')
+        return normalizePost({ ...post, ...payload })
+      },
+    )
   },
 
   async deleteAdminPost(id: string) {
+    if (shouldUseMockApi) return
     await client.delete(`/admin/posts/${id}`)
   },
 
   async getAdminComments() {
-    return (await client.get<Comment[]>('/admin/comments')).data.map(normalizeComment)
+    return withFallback(
+      async () => (await client.get<Comment[]>('/admin/comments')).data.map(normalizeComment),
+      getMockAdminComments,
+    )
   },
 
   async getAdminReports() {
-    return (await client.get<Report[]>('/admin/reports')).data
+    return withFallback(async () => (await client.get<Report[]>('/admin/reports')).data, getMockReports)
   },
 
   async updateAdminReport(id: string, payload: { status: Report['status']; hidePost?: boolean }) {
-    return (await client.patch<Report>(`/admin/reports/${id}`, payload)).data
+    return withFallback(
+      async () => (await client.patch<Report>(`/admin/reports/${id}`, payload)).data,
+      async () => ({
+        id,
+        postId: 'mock-post',
+        reporterId: 'mock-user',
+        reason: payload.hidePost ? 'hidden' : 'review',
+        status: payload.status,
+        createdAt: new Date().toISOString(),
+      }),
+    )
   },
 }
