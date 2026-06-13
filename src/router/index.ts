@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import PostDetailView from '@/views/PostDetailView.vue'
 import UserProfileView from '@/views/UserProfileView.vue'
@@ -15,8 +15,13 @@ import ArchiveView from '@/views/ArchiveView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import AnimeBrowserView from '@/views/AnimeBrowserView.vue'
 
+const history =
+  import.meta.env.VITE_ROUTER_MODE === 'hash'
+    ? createWebHashHistory(import.meta.env.BASE_URL)
+    : createWebHistory(import.meta.env.BASE_URL)
+
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history,
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/post/:id', name: 'post-detail', component: PostDetailView },
