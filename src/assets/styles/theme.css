@@ -1,0 +1,217 @@
+:root.dark {
+  color-scheme: dark;
+  --bg: #101421;
+  --surface: rgba(22, 27, 44, 0.86);
+  --surface-strong: #171d30;
+  --ink: #e7ecfa;
+  --muted: #a1a8bd;
+  --line: rgba(161, 168, 189, 0.18);
+  --pink: #ff8db8;
+  --pink-soft: rgba(255, 141, 184, 0.14);
+  --blue: #91a8ff;
+  --blue-soft: rgba(145, 168, 255, 0.14);
+  --mint: #5eead4;
+  --mint-soft: rgba(94, 234, 212, 0.14);
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
+  color: var(--ink);
+  background: var(--bg);
+}
+
+:root.dark html {
+  background:
+    linear-gradient(135deg, rgba(255, 141, 184, 0.08), rgba(145, 168, 255, 0.08), rgba(94, 234, 212, 0.06)),
+    var(--bg);
+}
+
+:root.dark body,
+:root.dark .topbar,
+:root.dark .bottom-nav {
+  background: rgba(16, 20, 33, 0.94);
+}
+
+:root.dark .brand,
+:root.dark .footer-brand strong,
+:root.dark .blog-hero-copy h1,
+:root.dark .article-content h1,
+:root.dark .section-title h1,
+:root.dark .section-title h2,
+:root.dark .editor-panel h1,
+:root.dark .search-panel h1,
+:root.dark .profile-heading h1,
+:root.dark .post-title,
+:root.dark .user-name,
+:root.dark .stat-item strong,
+:root.dark .side-card h2,
+:root.dark .admin-brand-block strong,
+:root.dark .admin-topbar h1,
+:root.dark .admin-panel-head h2,
+:root.dark .admin-kpi-card strong,
+:root.dark .admin-system-card strong,
+:root.dark .admin-mini-chart strong,
+:root.dark .rich-editor-head strong,
+:root.dark .editor-outline strong,
+:root.dark .editor-asset-strip strong,
+:root.dark .admin-entity,
+:root.dark .admin-comment-copy,
+:root.dark .gallery-feature-card a,
+:root.dark .gallery-lightbox h2 {
+  color: #e7ecfa;
+}
+
+:root.dark .post-card,
+:root.dark .user-panel,
+:root.dark .comment-item,
+:root.dark .stat-item,
+:root.dark .read-meta-grid span,
+:root.dark .article-toc a,
+:root.dark .discover-stats span,
+:root.dark .gallery-console,
+:root.dark .gallery-search,
+:root.dark .gallery-stats span,
+:root.dark .gallery-tag-list button,
+:root.dark .gallery-feature-card,
+:root.dark .gallery-lightbox figure,
+:root.dark .topic-grid button,
+:root.dark .character-card,
+:root.dark .record-card,
+:root.dark .icon-tool,
+:root.dark .post-actions button,
+:root.dark .post-actions span,
+:root.dark .article-actions button,
+:root.dark .reaction-bar button,
+:root.dark .segmented button,
+:root.dark .text-button,
+:root.dark .admin-sidebar,
+:root.dark .admin-topbar,
+:root.dark .admin-primary-panel,
+:root.dark .admin-side-panel,
+:root.dark .admin-kpi-card,
+:root.dark .admin-global-search,
+:root.dark .admin-task-item,
+:root.dark .toggle-row,
+:root.dark .settings-link-button,
+:root.dark .rich-editor-shell,
+:root.dark .editor-modebar,
+:root.dark .editor-modebar button,
+:root.dark .editor-preview-inline,
+:root.dark .editor-metrics span,
+:root.dark .editor-asset-chip,
+:root.dark textarea,
+:root.dark input,
+:root.dark select {
+  color: var(--ink);
+  border-color: var(--line);
+  background: rgba(23, 29, 48, 0.88);
+}
+
+:root.dark .nav-links a,
+:root.dark .mini-author,
+:root.dark label,
+:root.dark .rank-row,
+:root.dark .admin-menu-item,
+:root.dark .gallery-tag-list button {
+  color: #c3cadc;
+}
+
+:root.dark .nav-links a.router-link-active,
+:root.dark .nav-links a:hover {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+:root.dark .blog-hero,
+:root.dark .halo-notice,
+:root.dark .feature-strip,
+:root.dark .editor-command,
+:root.dark .share-card,
+:root.dark .reply-list,
+:root.dark .admin-system-card,
+:root.dark .admin-menu-item.active,
+:root.dark .editor-modebar button.active,
+:root.dark .gallery-tag-list button.active {
+  background: linear-gradient(135deg, rgba(255, 141, 184, 0.1), rgba(145, 168, 255, 0.1), rgba(94, 234, 212, 0.08));
+}
+
+:root.dark .admin-table-head,
+:root.dark .admin-panel-head {
+  background: rgba(23, 29, 48, 0.7);
+}
+
+:root.dark .halo-masthead::after {
+  background:
+    linear-gradient(135deg, transparent 32%, rgba(16, 20, 33, 0.96) 33% 66%, transparent 67%),
+    linear-gradient(45deg, transparent 32%, rgba(16, 20, 33, 0.86) 33% 66%, transparent 67%);
+  background-size: 88px 88px;
+}
+
+:root.dark .page-hero::after {
+  background:
+    linear-gradient(135deg, transparent 32%, rgba(16, 20, 33, 0.96) 33% 66%, transparent 67%),
+    linear-gradient(45deg, transparent 32%, rgba(16, 20, 33, 0.86) 33% 66%, transparent 67%);
+  background-size: 58px 58px;
+}
+
+:root.dark .archive-row {
+  background: rgba(23, 29, 48, 0.88);
+}
+
+:root.dark .profile-dropdown,
+:root.dark .nav-search,
+:root.dark .profile-trigger,
+:root.dark .site-footer,
+:root.dark .footer-links a,
+:root.dark .floating-tools a,
+:root.dark .floating-tools button,
+:root.dark .live2d-companion-toggle,
+:root.dark .gallery-card {
+  background: rgba(23, 29, 48, 0.96);
+}
+
+:root.dark .gallery-lightbox figure > img {
+  background: #080b14;
+}
+
+:root.dark .stardream-md-editor {
+  border-color: var(--line);
+  background: rgba(23, 29, 48, 0.88);
+}
+
+:root.dark .stardream-md-editor .md-editor-toolbar-wrapper {
+  border-color: var(--line);
+}
+
+:root.dark .petal {
+  opacity: 0.32;
+}
+
+:root.dark .star-dust {
+  opacity: 0.45;
+}
+
+:root.dark .markdown-body blockquote {
+  background: var(--pink-soft);
+}
+
+.page-transition-enter-active,
+.page-transition-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.page-transition-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-transition-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  button:active,
+  a:active,
+  .post-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}

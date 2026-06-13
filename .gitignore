@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Build output
+dist/
+server/dist/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Local databases and uploads
+prisma/dev.db
+prisma/dev.db-journal
+server/prisma/dev.db
+server/prisma/dev.db-journal
+uploads/
+server/uploads/
+
+# Logs and runtime noise
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# QA screenshots and local tool artifacts
+.codex-screenshots/
+acceptance-rounds-*.png
+admin-after-*.png
+admin-before-*.png
+design-current-*.png
+editor-*.png
+gallery-*.png
+halo-*.png
+homepage-*.png
+l2d-*.png
+mobile-*.png
+overflow-*.png
+settings-*.png
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

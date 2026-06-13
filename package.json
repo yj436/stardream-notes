@@ -1,0 +1,40 @@
+{
+  "name": "stardream-notes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "dev:server": "node server/index.js",
+    "dev:full": "concurrently \"npm run dev:server\" \"npm run dev -- --port 5174\"",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "prisma db push --force-reset && node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "axios": "^1.7.9",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "l2d-widget": "^0.1.0",
+    "lucide-vue-next": "^0.468.0",
+    "marked": "^18.0.5",
+    "md-editor-v3": "^6.5.1",
+    "multer": "^2.1.1",
+    "pinia": "^2.2.6",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3",
+    "playwright-core": "^1.60.0",
+    "prisma": "^6.19.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "vue-tsc": "^2.2.0"
+  }
+}
