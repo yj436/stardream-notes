@@ -37,7 +37,9 @@ jobs:
           VITE_ROUTER_MODE: hash
 
       - name: Add SPA fallback
-        run: cp dist/index.html dist/404.html
+        run: node scripts/write-pages-404.mjs
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

@@ -49,7 +49,7 @@ npm run db:reset     # 重置 SQLite 数据库并重新写入种子数据
 
 1. 安装依赖。
 2. 使用 `BASE_PATH=/<仓库名>/` 构建 Vite 静态站点。
-3. 生成 `dist/404.html` 作为 SPA 刷新兜底。
+3. 使用 hash 路由发布，并生成 `dist/404.html` 将旧 history 路由跳转到 hash 路由。
 4. 发布到 GitHub Pages。
 
 如果仓库是用户站点仓库，例如 `<username>.github.io`，可以把工作流里的 `BASE_PATH` 改成 `/`。
