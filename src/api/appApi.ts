@@ -110,7 +110,7 @@ const createMockAuthUser = async (identifier?: string) => {
 }
 
 const getMockAdminStats = async (): Promise<AdminStats> => {
-  const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getPosts()])
+  const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts()])
   const animeRecords = await Promise.all(users.map((user) => mockApi.getAnimeRecords(user.id)))
   return {
     users: users.length,
@@ -122,7 +122,7 @@ const getMockAdminStats = async (): Promise<AdminStats> => {
 }
 
 const getMockAdminComments = async () => {
-  const posts = await mockApi.getPosts()
+  const posts = await mockApi.getAdminPosts()
   const commentGroups = await Promise.all(posts.map((post) => mockApi.getComments(post.id)))
   return commentGroups.flat().map(normalizeComment)
 }
@@ -146,7 +146,7 @@ export const appApi = {
 
   async getSystemHealth(): Promise<ApiHealth> {
     if (shouldUseMockApi) {
-      const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getPosts()])
+      const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts()])
       return {
         ok: true,
         name: 'stardream-mock-api',
@@ -438,9 +438,9 @@ export const appApi = {
     return withFallback(
       async () => normalizeUser((await client.patch<User>(`/admin/users/${id}`, payload)).data),
       async () => {
-        const user = await mockApi.getUserById(id)
+        const user = await mockApi.updateAdminUser(id, payload)
         if (!user) throw new Error('User not found')
-        return normalizeUser({ ...user, ...payload })
+        return normalizeUser(user)
       },
     )
   },
@@ -448,7 +448,7 @@ export const appApi = {
   async getAdminPosts() {
     return withFallback(
       async () => (await client.get<Post[]>('/admin/posts')).data.map(normalizePost),
-      async () => (await mockApi.getPosts()).map(normalizePost),
+      async () => (await mockApi.getAdminPosts()).map(normalizePost),
     )
   },
 
@@ -456,15 +456,18 @@ export const appApi = {
     return withFallback(
       async () => normalizePost((await client.patch<Post>(`/admin/posts/${id}`, payload)).data),
       async () => {
-        const post = await mockApi.getPostById(id)
+        const post = await mockApi.updateAdminPost(id, payload)
         if (!post) throw new Error('Post not found')
-        return normalizePost({ ...post, ...payload })
+        return normalizePost(post)
       },
     )
   },
 
   async deleteAdminPost(id: string) {
-    if (shouldUseMockApi) return
+    if (shouldUseMockApi) {
+      await mockApi.deleteAdminPost(id)
+      return
+    }
     await client.delete(`/admin/posts/${id}`)
   },
 
@@ -482,14 +485,7 @@ export const appApi = {
   async updateAdminReport(id: string, payload: { status: Report['status']; hidePost?: boolean }) {
     return withFallback(
       async () => (await client.patch<Report>(`/admin/reports/${id}`, payload)).data,
-      async () => ({
-        id,
-        postId: 'mock-post',
-        reporterId: 'mock-user',
-        reason: payload.hidePost ? 'hidden' : 'review',
-        status: payload.status,
-        createdAt: new Date().toISOString(),
-      }),
+      () => mockApi.updateAdminReport(id, payload),
     )
   },
 }

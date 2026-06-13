@@ -46,6 +46,8 @@ interface BlogState {
   loading: boolean
 }
 
+let bootstrapRequest: Promise<void> | null = null
+
 export const useBlogStore = defineStore('blog', {
   state: (): BlogState => ({
     currentUserId: '',
@@ -87,28 +89,42 @@ export const useBlogStore = defineStore('blog', {
   },
 
   actions: {
-    async bootstrap() {
-      if (this.posts.length) return
-      this.loading = true
-      const me = await appApi.getMe()
-      if (me) {
-        this.currentUserId = me.id
-        this.authToken = appApi.getStoredToken()
-      } else {
-        this.currentUserId = ''
-        this.authToken = null
+    async bootstrap(force = false) {
+      if (!force && bootstrapRequest) return bootstrapRequest
+      if (!force && this.posts.length) return
+
+      const request = (async () => {
+        this.loading = true
+        try {
+          const me = await appApi.getMe()
+          if (me) {
+            this.currentUserId = me.id
+            this.authToken = appApi.getStoredToken()
+          } else {
+            this.currentUserId = ''
+            this.authToken = null
+          }
+          getNotifStore()
+          const [users, posts, draft] = await Promise.all([
+            appApi.getUsers(),
+            appApi.getPosts(),
+            me ? appApi.getDraft() : Promise.resolve(this.draft),
+          ])
+          this.users = me ? [me, ...users.filter((user) => user.id !== me.id)] : users
+          this.posts = posts
+          this.draft = draft
+          this.search = await appApi.searchContent('')
+        } finally {
+          this.loading = false
+        }
+      })()
+
+      bootstrapRequest = request
+      try {
+        await request
+      } finally {
+        if (bootstrapRequest === request) bootstrapRequest = null
       }
-      getNotifStore()
-      const [users, posts, draft] = await Promise.all([
-        appApi.getUsers(),
-        appApi.getPosts(),
-        me ? appApi.getDraft() : Promise.resolve(this.draft),
-      ])
-      this.users = me ? [me, ...users.filter((user) => user.id !== me.id)] : users
-      this.posts = posts
-      this.draft = draft
-      this.search = await appApi.searchContent('')
-      this.loading = false
     },
 
     async login(payload: LoginPayload) {
@@ -336,7 +352,14 @@ export const useBlogStore = defineStore('blog', {
     async updateAdminPost(id: string, payload: { isPinned?: boolean; status?: Post['status'] }) {
       const post = await appApi.updateAdminPost(id, payload)
       this.adminPosts = this.adminPosts.map((item) => (item.id === id ? post : item))
-      this.replacePost(post)
+      if (post.status === 'hidden' || post.status === 'archived') {
+        this.posts = this.posts.filter((item) => item.id !== id)
+      } else if (this.posts.some((item) => item.id === id)) {
+        this.replacePost(post)
+      } else {
+        this.posts = await appApi.getPosts()
+      }
+      this.search = await appApi.searchContent('')
       this.notify('文章状态已更新', 'success')
     },
 
@@ -352,7 +375,11 @@ export const useBlogStore = defineStore('blog', {
     async updateAdminReport(id: string, payload: { status: Report['status']; hidePost?: boolean }) {
       const report = await appApi.updateAdminReport(id, payload)
       this.adminReports = this.adminReports.map((item) => (item.id === id ? report : item))
-      if (payload.hidePost) this.adminPosts = await appApi.getAdminPosts()
+      if (payload.hidePost) {
+        this.adminPosts = await appApi.getAdminPosts()
+        this.posts = this.posts.filter((post) => post.id !== report.postId)
+        this.search = await appApi.searchContent('')
+      }
       this.adminStats = await appApi.getAdminStats()
       this.notify('举报处理状态已更新', 'success')
     },

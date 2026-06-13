@@ -116,8 +116,21 @@ const stringify = (value) => JSON.stringify(value ?? [])
 const defaultStats = { posts: 0, followers: 0, following: 0, likes: 0 }
 const defaultReactions = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const reactionKeys = new Set(Object.keys(defaultReactions))
+const publicPostWhere = { status: 'published' }
 const readStats = (user) => parse(user?.stats, defaultStats)
 const readReactions = (post) => ({ ...defaultReactions, ...parse(post?.reactions, {}) })
+
+const canAccessPost = (req, post) =>
+  post?.status === 'published' || Boolean(req.user && (req.user.role === 'admin' || req.user.id === post.authorId))
+
+const findAccessiblePost = async (req, res, id) => {
+  const post = await prisma.post.findUnique({ where: { id } })
+  if (!post || !canAccessPost(req, post)) {
+    res.status(404).json({ message: 'Post not found' })
+    return null
+  }
+  return post
+}
 
 const getDatabaseHealth = async () => {
   const startedAt = Date.now()
@@ -326,13 +339,13 @@ app.post('/api/users/:id/follow', requireAuth, async (req, res) => {
 })
 
 app.get('/api/posts', async (_req, res) => {
-  const posts = await prisma.post.findMany({ orderBy: { createdAt: 'desc' } })
+  const posts = await prisma.post.findMany({ where: publicPostWhere, orderBy: { createdAt: 'desc' } })
   res.json(posts.map(toPost))
 })
 
 app.get('/api/posts/:id', async (req, res) => {
-  const post = await prisma.post.findUnique({ where: { id: req.params.id } })
-  if (!post) return res.status(404).json({ message: 'Post not found' })
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   res.json(toPost(post))
 })
 
@@ -430,8 +443,8 @@ app.delete('/api/posts/:id', requireAuth, async (req, res) => {
 app.post('/api/posts/:id/reports', requireAuth, async (req, res) => {
   const { reason, detail } = req.body
   if (!reason) return res.status(400).json({ message: 'reason is required' })
-  const post = await prisma.post.findUnique({ where: { id: req.params.id } })
-  if (!post) return res.status(404).json({ message: 'Post not found' })
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   const report = await prisma.report.create({
     data: {
       id: createId('r'),
@@ -445,8 +458,8 @@ app.post('/api/posts/:id/reports', requireAuth, async (req, res) => {
 })
 
 app.post('/api/posts/:id/like', requireAuth, async (req, res) => {
-  const post = await prisma.post.findUnique({ where: { id: req.params.id } })
-  if (!post) return res.status(404).json({ message: 'Post not found' })
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   const isLiked = !post.isLiked
   const author = await prisma.user.findUnique({ where: { id: post.authorId } })
   const [updated] = await prisma.$transaction([
@@ -472,8 +485,8 @@ app.post('/api/posts/:id/like', requireAuth, async (req, res) => {
 })
 
 app.post('/api/posts/:id/favorite', requireAuth, async (req, res) => {
-  const post = await prisma.post.findUnique({ where: { id: req.params.id } })
-  if (!post) return res.status(404).json({ message: 'Post not found' })
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   const isFavorited = !post.isFavorited
   const updated = await prisma.post.update({
     where: { id: post.id },
@@ -485,8 +498,8 @@ app.post('/api/posts/:id/favorite', requireAuth, async (req, res) => {
 app.post('/api/posts/:id/reactions/:reaction', requireAuth, async (req, res) => {
   const reaction = String(req.params.reaction)
   if (!reactionKeys.has(reaction)) return res.status(400).json({ message: 'Unsupported reaction' })
-  const post = await prisma.post.findUnique({ where: { id: req.params.id } })
-  if (!post) return res.status(404).json({ message: 'Post not found' })
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   const selected = Boolean(req.body?.selected)
   const current = readReactions(post)
   const next = {
@@ -501,6 +514,8 @@ app.post('/api/posts/:id/reactions/:reaction', requireAuth, async (req, res) => 
 })
 
 app.get('/api/posts/:id/comments', async (req, res) => {
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   const comments = await prisma.comment.findMany({
     where: { postId: req.params.id },
     orderBy: { createdAt: 'desc' },
@@ -511,6 +526,8 @@ app.get('/api/posts/:id/comments', async (req, res) => {
 app.post('/api/posts/:id/comments', requireAuth, async (req, res) => {
   const { content, parentId } = req.body
   if (!content) return res.status(400).json({ message: 'content is required' })
+  const post = await findAccessiblePost(req, res, req.params.id)
+  if (!post) return
   const comment = await prisma.comment.create({
     data: {
       id: `c_${Date.now()}`,
@@ -621,7 +638,7 @@ app.put('/api/draft', requireAuth, async (req, res) => {
 app.get('/api/search', async (req, res) => {
   const query = String(req.query.q ?? '').toLowerCase()
   const type = String(req.query.type ?? 'all')
-  const [posts, users] = await Promise.all([prisma.post.findMany(), prisma.user.findMany()])
+  const [posts, users] = await Promise.all([prisma.post.findMany({ where: publicPostWhere }), prisma.user.findMany()])
   const normalizedPosts = posts.map(toPost)
   const normalizedUsers = users.map(toUser)
   const allTags = [...new Set(normalizedPosts.flatMap((post) => post.tags))]

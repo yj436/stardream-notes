@@ -15,6 +15,7 @@ import type {
   Post,
   PostReactionKey,
   ProfileUpdatePayload,
+  Report,
   SearchResult,
   User,
 } from '@/types/content'
@@ -335,15 +336,18 @@ const createExcerpt = (content: string) => {
   return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的星梦笔记。'
 }
 
+const isPublicPost = (post: Post) => (post.status ?? 'published') === 'published'
+const getPublicPosts = () => posts.filter(isPublicPost)
+
 export const mockApi = {
   async getPosts() {
     await wait()
-    return [...posts]
+    return [...getPublicPosts()]
   },
 
   async getPostById(id: string) {
     await wait()
-    return posts.find((post) => post.id === id)
+    return getPublicPosts().find((post) => post.id === id)
   },
 
   async getUsers() {
@@ -509,6 +513,8 @@ export const mockApi = {
       favoriteCount: 0,
       commentCount: 0,
       createdAt: new Date().toISOString(),
+      status: 'published',
+      isPinned: false,
       reactions: { ...emptyReactions },
     }
     posts = [post, ...posts]
@@ -525,12 +531,13 @@ export const mockApi = {
   async searchContent(query: string, type: 'all' | 'post' | 'user' | 'tag' = 'all'): Promise<SearchResult> {
     await wait()
     const keyword = query.trim().toLowerCase()
-    const allTags = Array.from(new Set(posts.flatMap((post) => post.tags)))
-    if (!keyword) return { posts, users, tags: allTags }
+    const publicPosts = getPublicPosts()
+    const allTags = Array.from(new Set(publicPosts.flatMap((post) => post.tags)))
+    if (!keyword) return { posts: publicPosts, users, tags: allTags }
 
     const foundPosts =
       type === 'all' || type === 'post'
-        ? posts.filter((post) =>
+        ? publicPosts.filter((post) =>
             [post.title, post.excerpt, post.content, ...post.tags].some((text) => text.toLowerCase().includes(keyword)),
           )
         : []
@@ -555,5 +562,65 @@ export const mockApi = {
     draft = { ...payload, savedAt: new Date().toISOString() }
     persistDraft()
     return { ...draft }
+  },
+
+  async getAdminPosts() {
+    await wait()
+    return [...posts]
+  },
+
+  async updateAdminUser(id: string, payload: { status?: User['status']; role?: User['role'] }) {
+    await wait(90)
+    users = users.map((user) => (user.id === id ? { ...user, ...payload } : user))
+    persistUsers()
+    return users.find((user) => user.id === id)
+  },
+
+  async updateAdminPost(id: string, payload: { isPinned?: boolean; status?: Post['status'] }) {
+    await wait(90)
+    posts = posts.map((post) => (post.id === id ? { ...post, ...payload } : post))
+    persistPosts()
+    return posts.find((post) => post.id === id)
+  },
+
+  async deleteAdminPost(id: string) {
+    await wait(90)
+    const existing = posts.find((post) => post.id === id)
+    posts = posts.filter((post) => post.id !== id)
+    comments = comments.filter((comment) => comment.postId !== id)
+    if (existing) {
+      users = users.map((user) =>
+        user.id === existing.authorId
+          ? {
+              ...user,
+              stats: {
+                ...user.stats,
+                posts: Math.max(0, user.stats.posts - 1),
+                likes: Math.max(0, user.stats.likes - existing.likeCount),
+              },
+            }
+          : user,
+      )
+    }
+    persistPosts()
+    persistComments()
+    persistUsers()
+    return true
+  },
+
+  async updateAdminReport(id: string, payload: { status: Report['status']; hidePost?: boolean }) {
+    await wait(90)
+    if (payload.hidePost) {
+      posts = posts.map((post) => (post.id === id ? { ...post, status: 'hidden' } : post))
+      persistPosts()
+    }
+    return {
+      id,
+      postId: id,
+      reporterId: 'mock-user',
+      reason: payload.hidePost ? 'hidden' : 'review',
+      status: payload.status,
+      createdAt: new Date().toISOString(),
+    }
   },
 }

@@ -33,7 +33,7 @@ const onTouchMove = (e: TouchEvent) => {
 
 const onTouchEnd = async () => {
   if (pullRefreshing.value) {
-    await blog.bootstrap()
+    await blog.bootstrap(true)
     blog.notify('已刷新推荐流', 'success')
   }
   pullRefreshing.value = false
