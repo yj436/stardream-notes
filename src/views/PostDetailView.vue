@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Bookmark, BookOpen, Copy, Edit3, Flag, Heart, ListTree, MessageCircle, Reply, Send, Share2, Trash2 } from 'lucide-vue-next'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
@@ -7,6 +7,7 @@ import TimestampPill from '@/components/TimestampPill.vue'
 import UserPanel from '@/components/UserPanel.vue'
 import { useBlogStore } from '@/stores/blog'
 import type { Comment, PostReactionKey } from '@/types/content'
+import { extractArticleHeadings } from '@/utils/heading'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,6 +19,8 @@ const shareOpen = ref(false)
 const reportReason = ref('不适宜内容')
 const reportDetail = ref('')
 const selectedReactions = ref<Record<string, boolean>>({})
+const readingProgress = ref(0)
+const activeHeadingId = ref('')
 
 const reactionEmojis = [
   { key: 'heart', icon: '♥', label: '暖心' },
@@ -40,11 +43,7 @@ const relatedPosts = computed(() => {
 })
 const articleHeadings = computed(() => {
   if (!post.value) return []
-  return post.value.content
-    .split('\n')
-    .map((line) => line.match(/^#{2,3}\s+(.+)$/)?.[1]?.trim())
-    .filter((heading): heading is string => Boolean(heading))
-    .slice(0, 6)
+  return extractArticleHeadings(post.value.content)
 })
 const wordCount = computed(() => post.value?.content.replace(/\s+/g, '').length ?? 0)
 const readingMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 420)))
@@ -74,6 +73,37 @@ const readSelectedReactions = () => {
 
 const writeSelectedReactions = () => {
   window.localStorage.setItem(reactionStorageKey.value, JSON.stringify(selectedReactions.value))
+}
+
+const updateReadingState = () => {
+  const articleBody = document.getElementById('article-body')
+  if (!articleBody) {
+    readingProgress.value = 0
+    activeHeadingId.value = ''
+    return
+  }
+
+  const viewportTop = window.scrollY + 120
+  const start = articleBody.offsetTop
+  const readableHeight = Math.max(1, articleBody.scrollHeight - window.innerHeight * 0.55)
+  const progress = (viewportTop - start) / readableHeight
+  readingProgress.value = Math.min(100, Math.max(0, Math.round(progress * 100)))
+
+  const reachedHeadings = articleHeadings.value
+    .map((heading) => document.getElementById(heading.id))
+    .filter((heading): heading is HTMLElement => Boolean(heading))
+    .filter((heading) => heading.getBoundingClientRect().top <= 140)
+  const current = reachedHeadings[reachedHeadings.length - 1]
+
+  activeHeadingId.value = current?.id ?? articleHeadings.value[0]?.id ?? ''
+}
+
+const scrollToHeading = (id: string) => {
+  const heading = document.getElementById(id)
+  if (!heading) return
+  heading.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  activeHeadingId.value = id
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${id}`)
 }
 
 const submitComment = async () => {
@@ -118,8 +148,19 @@ const toggleReaction = async (key: PostReactionKey) => {
   await blog.toggleReaction(postId.value, key, selected)
 }
 
-onMounted(load)
+onMounted(() => {
+  void load()
+  window.addEventListener('scroll', updateReadingState, { passive: true })
+  window.addEventListener('resize', updateReadingState)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateReadingState)
+  window.removeEventListener('resize', updateReadingState)
+})
+
 watch(postId, load)
+watch(articleHeadings, () => window.setTimeout(updateReadingState, 0))
 </script>
 
 <template>
@@ -210,10 +251,22 @@ watch(postId, load)
           <span>约 {{ readingMinutes }} 分钟</span>
           <span>{{ post.tags.length }} 个标签</span>
         </div>
+        <div class="article-progress" aria-label="阅读进度">
+          <span :style="{ width: `${readingProgress}%` }" />
+        </div>
+        <small class="article-progress-copy">已读 {{ readingProgress }}%</small>
       </section>
       <section v-if="articleHeadings.length" class="side-card halo-widget article-toc">
         <span class="section-kicker"><ListTree :size="16" /> 文章目录</span>
-        <a v-for="heading in articleHeadings" :key="heading" href="#article-body">{{ heading }}</a>
+        <button
+          v-for="heading in articleHeadings"
+          :key="heading.id"
+          type="button"
+          :class="{ active: activeHeadingId === heading.id, nested: heading.depth === 3 }"
+          @click="scrollToHeading(heading.id)"
+        >
+          {{ heading.text }}
+        </button>
       </section>
       <section v-if="relatedPosts.length" class="side-card">
         <span class="section-kicker">相关文章</span>

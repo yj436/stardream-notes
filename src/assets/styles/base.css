@@ -1163,8 +1163,9 @@ button:disabled {
 }
 
 .read-meta-grid span,
-.article-toc a {
+.article-toc button {
   display: block;
+  width: 100%;
   padding: 9px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1172,15 +1173,42 @@ button:disabled {
   background: rgba(255, 255, 255, 0.7);
   font-size: 0.86rem;
   font-weight: 850;
+  text-align: left;
 }
 
-.article-toc a {
+.article-toc button {
   color: #3d4664;
 }
 
-.article-toc a:hover {
+.article-toc button:hover,
+.article-toc button.active {
   color: var(--pink);
   background: var(--pink-soft);
+}
+
+.article-toc button.nested {
+  padding-left: 22px;
+  font-size: 0.82rem;
+}
+
+.article-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(104, 114, 137, 0.12);
+}
+
+.article-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pink), var(--blue), var(--mint));
+  transition: width 0.18s ease;
+}
+
+.article-progress-copy {
+  color: var(--muted);
+  font-weight: 850;
 }
 
 .side-column,
@@ -3138,10 +3166,23 @@ label {
   line-height: 1.95;
 }
 
-.markdown-body h2 {
+.markdown-body h2,
+.markdown-body h3 {
   margin: 28px 0 16px;
   color: var(--blue);
   font-size: 1.6rem;
+  scroll-margin-top: 96px;
+}
+
+.markdown-body h3 {
+  color: #3d4664;
+  font-size: 1.28rem;
+}
+
+.markdown-body h2:focus,
+.markdown-body h3:focus {
+  outline: 2px solid rgba(91, 124, 255, 0.28);
+  outline-offset: 4px;
 }
 
 .markdown-body p {
