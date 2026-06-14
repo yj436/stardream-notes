@@ -1548,6 +1548,19 @@ label {
   padding: 14px 14px 14px 0;
 }
 
+.share-url {
+  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .editor-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 390px;

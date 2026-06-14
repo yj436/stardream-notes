@@ -8,6 +8,7 @@ import UserPanel from '@/components/UserPanel.vue'
 import { useBlogStore } from '@/stores/blog'
 import type { Comment, PostReactionKey } from '@/types/content'
 import { extractArticleHeadings } from '@/utils/heading'
+import { buildAppUrl, updatePageMeta } from '@/composables/useSeoMeta'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,6 +31,8 @@ const reactionEmojis = [
 ] satisfies Array<{ key: PostReactionKey; icon: string; label: string }>
 
 const postId = computed(() => String(route.params.id))
+const postRoutePath = computed(() => `/post/${postId.value}`)
+const shareUrl = computed(() => buildAppUrl(postRoutePath.value))
 const reactionStorageKey = computed(() => `stardream:post-reactions:${postId.value}`)
 const post = computed(() => blog.posts.find((item) => item.id === postId.value))
 const author = computed(() => blog.users.find((user) => user.id === post.value?.authorId))
@@ -131,12 +134,11 @@ const submitReport = async () => {
 
 const copyShareLink = async () => {
   if (!post.value) return
-  const url = `${window.location.origin}/post/${post.value.id}`
   try {
-    await navigator.clipboard.writeText(url)
+    await navigator.clipboard.writeText(shareUrl.value)
     blog.notify('分享链接已复制', 'success')
   } catch {
-    blog.notify(url, 'info')
+    blog.notify(shareUrl.value, 'info')
   }
 }
 
@@ -161,6 +163,22 @@ onBeforeUnmount(() => {
 
 watch(postId, load)
 watch(articleHeadings, () => window.setTimeout(updateReadingState, 0))
+watch(
+  post,
+  (value) => {
+    if (!value) return
+    updatePageMeta({
+      title: value.title,
+      description: value.excerpt || value.content,
+      image: value.coverUrl,
+      type: 'article',
+      routePath: postRoutePath.value,
+      publishedTime: value.createdAt,
+      tags: value.tags,
+    })
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -229,6 +247,7 @@ watch(articleHeadings, () => window.setTimeout(updateReadingState, 0))
               <small>来自 {{ author.nickname }} · {{ post.tags.map((tag) => `#${tag}`).join(' ') }}</small>
             </div>
           </div>
+          <div class="share-url" aria-label="分享链接">{{ shareUrl }}</div>
           <button type="button" class="ghost-button" @click="copyShareLink"><Copy :size="16" />复制链接</button>
         </div>
       </div>
