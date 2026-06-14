@@ -3451,11 +3451,235 @@ label {
   font-weight: 900;
 }
 
+.admin-carousel-manager {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.admin-carousel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-carousel-toolbar.compact {
+  padding-top: 2px;
+}
+
+.admin-carousel-toolbar > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-carousel-toolbar strong,
+.admin-carousel-item strong,
+.admin-carousel-preview strong,
+.admin-image-picker strong {
+  color: #1e2847;
+}
+
+.admin-carousel-toolbar small,
+.admin-carousel-item small,
+.admin-carousel-preview small,
+.admin-image-picker small {
+  color: var(--muted);
+}
+
+.admin-carousel-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-carousel-list,
+.admin-carousel-editor,
+.admin-carousel-form,
+.admin-image-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-carousel-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.admin-carousel-item.active {
+  border-color: rgba(91, 124, 255, 0.38);
+  background: linear-gradient(135deg, rgba(233, 238, 255, 0.9), rgba(222, 248, 244, 0.58));
+}
+
+.admin-carousel-select,
+.admin-image-picker button {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.admin-carousel-select img,
+.admin-image-picker img {
+  width: 86px;
+  height: 58px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.admin-carousel-select span,
+.admin-image-picker span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-carousel-select strong,
+.admin-carousel-select small,
+.admin-image-picker strong,
+.admin-image-picker small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-carousel-item-actions {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-carousel-item-actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #fff;
+}
+
+.admin-carousel-preview {
+  position: relative;
+  min-height: 278px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #17203a;
+  box-shadow: 0 16px 36px rgba(70, 92, 130, 0.15);
+}
+
+.admin-carousel-preview::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(180deg, rgba(23, 30, 55, 0.04), rgba(23, 30, 55, 0.84));
+}
+
+.admin-carousel-preview img {
+  width: 100%;
+  height: 278px;
+  object-fit: cover;
+}
+
+.admin-carousel-preview > div {
+  position: absolute;
+  z-index: 1;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-carousel-preview strong {
+  color: #fff;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.18;
+}
+
+.admin-carousel-preview small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.65;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.admin-carousel-form {
+  grid-template-columns: 1fr;
+}
+
+.admin-carousel-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: #fff;
+}
+
+.admin-input-with-icon input {
+  min-height: 38px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-image-picker {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 4px;
+}
+
+.admin-image-picker .admin-carousel-toolbar {
+  grid-column: 1 / -1;
+}
+
+.admin-image-picker button {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.admin-image-picker button.active {
+  border-color: rgba(255, 111, 168, 0.42);
+  background: var(--pink-soft);
+}
+
 .ghost-button.compact,
 .text-button.compact {
   min-height: 32px;
   padding: 6px 9px;
   font-size: 0.8rem;
+}
+
+.primary-button.compact {
+  min-height: 32px;
+  padding: 7px 11px;
+  font-size: 0.82rem;
 }
 
 .admin-broadcast-form {
@@ -3678,7 +3902,8 @@ label {
   .profile-grid,
   .gallery-grid-shell,
   .admin-shell,
-  .admin-workbench {
+  .admin-workbench,
+  .admin-carousel-grid {
     grid-template-columns: 1fr;
   }
 
@@ -3944,7 +4169,8 @@ label {
   .admin-topbar,
   .admin-top-actions,
   .admin-panel-head,
-  .admin-report-toolbar {
+  .admin-report-toolbar,
+  .admin-carousel-toolbar {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -4129,9 +4355,15 @@ label {
   }
 
   .admin-report-filters,
-  .admin-report-bulk {
+  .admin-report-bulk,
+  .admin-carousel-toolbar .admin-row-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .admin-carousel-fields,
+  .admin-image-picker {
+    grid-template-columns: 1fr;
   }
 
   .share-card img,

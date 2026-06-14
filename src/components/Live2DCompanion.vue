@@ -9,7 +9,7 @@ const transitionDuration = 700
 const defaultModelPath = `${import.meta.env.BASE_URL}live2d/mao/Mao.model3.json`
 
 const route = useRoute()
-const { enabled, minViewportWidth, modelSourceUrl, setEnabled } = useLive2DCompanion()
+const { enabled, minViewportWidth, setEnabled } = useLive2DCompanion()
 const canRender = ref(false)
 const loading = ref(false)
 const failed = ref(false)
@@ -63,25 +63,8 @@ const createOptions = (): WidgetOptions => ({
   },
   menus: {
     align: 'right',
-    items: [
-      {
-        icon: 'mdi:bed',
-        label: '休眠',
-        onClick: (instance) => instance.sleep(),
-      },
-      {
-        icon: 'mdi:copyright',
-        label: '模型来源',
-        onClick: () => window.open(modelSourceUrl, '_blank', 'noopener,noreferrer'),
-      },
-      {
-        icon: 'mdi:eye-off-outline',
-        label: '关闭',
-        onClick: () => {
-          void setEnabled(false)
-        },
-      },
-    ],
+    // Keep the widget menu empty so it does not request remote Iconify SVGs.
+    items: [],
   },
   statusBar: {
     style: {
@@ -99,9 +82,7 @@ const cleanupCompanionNodes = () => {
     if (!(node instanceof HTMLElement)) return
     const isWidgetShell = node.style.position === 'fixed' && node.style.zIndex === '9999' && !!node.querySelector('canvas')
     const isWidgetStatusBar = node.style.position === 'fixed' && node.style.zIndex === '9998'
-    if (isWidgetShell || isWidgetStatusBar) {
-      node.remove()
-    }
+    if (isWidgetShell || isWidgetStatusBar) node.remove()
   })
 }
 
@@ -117,7 +98,7 @@ const destroyWidget = async () => {
   try {
     await Promise.race([teardown, wait(transitionDuration + 350)])
   } catch {
-    // The widget owns a WebGL context; failures during teardown should not break the app shell.
+    // The widget owns a WebGL context; teardown failures should not break the app shell.
   } finally {
     cleanupCompanionNodes()
   }

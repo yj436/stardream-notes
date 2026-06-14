@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   Activity,
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   BellRing,
   CheckCircle2,
@@ -12,10 +14,16 @@ import {
   Database,
   FileText,
   Flag,
+  Image as ImageIcon,
+  Images,
   LayoutDashboard,
+  Link2,
   Megaphone,
   MessageSquareText,
+  Plus,
   RefreshCw,
+  RotateCcw,
+  Save,
   Search,
   Send,
   Server,
@@ -23,15 +31,24 @@ import {
   Trash2,
   Users,
   WifiOff,
+  X,
 } from 'lucide-vue-next'
 import TimestampPill from '@/components/TimestampPill.vue'
 import { appApi } from '@/api/appApi'
+import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
 import { useNotificationStore } from '@/composables/useNotificationStore'
-import type { ApiHealth, Post, Report, User } from '@/types/content'
+import type { ApiHealth, HomeCarouselSlide, Post, Report, User } from '@/types/content'
 
-type AdminTab = 'users' | 'posts' | 'comments' | 'reports'
+type AdminTab = 'users' | 'posts' | 'comments' | 'reports' | 'carousel'
 type ReportStatusFilter = 'all' | Report['status']
+type CarouselImageChoice = {
+  label: string
+  desc: string
+  url: string
+  position: string
+  post?: Post
+}
 
 const router = useRouter()
 const blog = useBlogStore()
@@ -43,6 +60,9 @@ const broadcastSent = ref(false)
 const refreshing = ref(false)
 const reportStatusFilter = ref<ReportStatusFilter>('all')
 const selectedReportIds = ref<string[]>([])
+const carouselSaving = ref(false)
+const selectedCarouselId = ref('')
+const carouselDrafts = ref<HomeCarouselSlide[]>([])
 const runtimeInfo = appApi.getRuntimeInfo()
 const systemHealth = ref<ApiHealth | null>(null)
 const systemLoading = ref(false)
@@ -52,6 +72,18 @@ const tabConfig = [
   { key: 'posts' as const, label: '内容', title: '文章管理', desc: '置顶、隐藏与内容状态', icon: FileText },
   { key: 'comments' as const, label: '评论', title: '评论审核', desc: '社区互动与风险评论', icon: MessageSquareText },
   { key: 'reports' as const, label: '举报', title: '举报处理', desc: '复核流程与处理结论', icon: Flag },
+  { key: 'carousel' as const, label: '轮播', title: '首页轮播', desc: '更换首屏主图与文案', icon: Images },
+]
+
+const builtinCarouselImages: CarouselImageChoice[] = [
+  { label: '星梦主视觉', desc: '沉浸式首页背景', url: imageAssets.hero, position: 'center' },
+  { label: '星空书桌', desc: '写作与插画氛围', url: imageAssets.starryDesk, position: 'center' },
+  { label: '樱花水彩', desc: '柔和插画教程', url: imageAssets.sakuraWatercolor, position: '20% 40%' },
+  { label: '月光影棚', desc: 'Cos 影棚展示', url: imageAssets.moonlightCos, position: '70% 28%' },
+  { label: '治愈追番', desc: '追番记录入口', url: imageAssets.healingAnime, position: '35% 55%' },
+  { label: '轻小说厨房', desc: '连载故事主图', url: imageAssets.novelKitchen, position: 'center' },
+  { label: '银河校园', desc: '原创企划封面', url: imageAssets.galaxySchool, position: 'center' },
+  { label: '创作者设定', desc: '写作工作台入口', url: imageAssets.creators, position: '70% 28%' },
 ]
 
 const reportStatusOptions: Array<{ key: ReportStatusFilter; label: string }> = [
@@ -89,6 +121,7 @@ const refreshAdmin = async () => {
   refreshing.value = true
   try {
     await Promise.all([blog.loadAdmin(), loadSystemHealth()])
+    syncCarouselDrafts()
   } finally {
     refreshing.value = false
   }
@@ -126,6 +159,7 @@ const currentRows = computed(() => {
   if (tab.value === 'users') return filteredAdminUsers.value.length
   if (tab.value === 'posts') return filteredAdminPosts.value.length
   if (tab.value === 'comments') return filteredAdminComments.value.length
+  if (tab.value === 'carousel') return carouselDrafts.value.length
   return filteredAdminReports.value.length
 })
 const dataModeLabel = computed(() => (runtimeInfo.mode === 'mock' ? '演示数据模式' : '真实 API 模式'))
@@ -171,7 +205,9 @@ const navItems = computed(() =>
           ? blog.adminPosts.length
           : item.key === 'comments'
             ? blog.adminComments.length
-            : blog.adminReports.length,
+            : item.key === 'reports'
+              ? blog.adminReports.length
+              : blog.adminCarouselSlides.length,
     alert: item.key === 'reports' ? openReports.value.length : 0,
   })),
 )
@@ -210,6 +246,16 @@ const kpis = computed(() => [
 const postTitle = (id: string) => blog.posts.find((post) => post.id === id)?.title ?? id
 const postAuthor = (post: Post) => blog.users.find((user) => user.id === post.authorId)?.nickname ?? post.authorId
 const reportPostTitle = (report: Report) => postTitle(report.postId)
+const syncCarouselDrafts = () => {
+  carouselDrafts.value = blog.adminCarouselSlides.map((slide) => ({ ...slide }))
+  if (!carouselDrafts.value.length) {
+    selectedCarouselId.value = ''
+    return
+  }
+  if (!selectedCarouselId.value || !carouselDrafts.value.some((slide) => slide.id === selectedCarouselId.value)) {
+    selectedCarouselId.value = carouselDrafts.value[0].id
+  }
+}
 const selectedVisibleReportIds = computed(() =>
   filteredAdminReports.value.filter((report) => selectedReportIds.value.includes(report.id)).map((report) => report.id),
 )
@@ -225,6 +271,24 @@ const reportStatusCounts = computed(() =>
         : blog.adminReports.filter((report) => report.status === option.key).length,
   })),
 )
+const selectedCarouselSlide = computed(() => carouselDrafts.value.find((slide) => slide.id === selectedCarouselId.value) ?? null)
+const enabledCarouselCount = computed(() => carouselDrafts.value.filter((slide) => slide.enabled).length)
+const carouselImageChoices = computed(() => {
+  const choices = [...builtinCarouselImages]
+  const seen = new Set(choices.map((choice) => choice.url))
+  blog.adminPosts.forEach((post) => {
+    if (seen.has(post.coverUrl)) return
+    seen.add(post.coverUrl)
+    choices.push({
+      label: post.title,
+      desc: `文章封面 · ${post.tags[0] ?? post.type}`,
+      url: post.coverUrl,
+      position: post.imagePosition ?? 'center',
+      post,
+    })
+  })
+  return choices
+})
 
 const updateUserRole = (user: User, role: string) => {
   if (role !== 'user' && role !== 'creator' && role !== 'admin') return
@@ -254,6 +318,88 @@ const runReportBatch = async (payload: { status: Report['status']; hidePost?: bo
   await blog.updateAdminReports(ids, payload)
   selectedReportIds.value = selectedReportIds.value.filter((id) => !ids.includes(id))
 }
+
+const updateCarouselDraft = (id: string, payload: Partial<HomeCarouselSlide>) => {
+  carouselDrafts.value = carouselDrafts.value.map((slide) => (slide.id === id ? { ...slide, ...payload } : slide))
+}
+
+const selectCarouselImage = (choice: CarouselImageChoice) => {
+  const current = selectedCarouselSlide.value
+  if (!current) return
+  updateCarouselDraft(current.id, {
+    imageUrl: choice.url,
+    imagePosition: choice.position,
+    ...(choice.post
+      ? {
+          title: choice.post.title,
+          excerpt: choice.post.excerpt,
+          tag: choice.post.tags[0] ?? '精选',
+          link: `/post/${choice.post.id}`,
+          sourcePostId: choice.post.id,
+        }
+      : { sourcePostId: undefined }),
+  })
+}
+
+const addCarouselDraft = () => {
+  const choice = carouselImageChoices.value[0]
+  const slide: HomeCarouselSlide = {
+    id: `hero_custom_${Date.now()}`,
+    title: '新的首页轮播',
+    excerpt: '用一句话介绍这张主图希望带读者前往哪里。',
+    imageUrl: choice?.url ?? imageAssets.hero,
+    imagePosition: choice?.position ?? 'center',
+    tag: '精选',
+    link: '/discover',
+    enabled: true,
+    updatedAt: new Date().toISOString(),
+  }
+  carouselDrafts.value = [...carouselDrafts.value, slide]
+  selectedCarouselId.value = slide.id
+}
+
+const removeCarouselDraft = (id: string) => {
+  if (carouselDrafts.value.length <= 1) return
+  const index = carouselDrafts.value.findIndex((slide) => slide.id === id)
+  carouselDrafts.value = carouselDrafts.value.filter((slide) => slide.id !== id)
+  if (selectedCarouselId.value === id) selectedCarouselId.value = carouselDrafts.value[Math.max(0, index - 1)]?.id ?? ''
+}
+
+const moveCarouselDraft = (id: string, direction: -1 | 1) => {
+  const index = carouselDrafts.value.findIndex((slide) => slide.id === id)
+  const nextIndex = index + direction
+  if (index < 0 || nextIndex < 0 || nextIndex >= carouselDrafts.value.length) return
+  const next = [...carouselDrafts.value]
+  const [slide] = next.splice(index, 1)
+  next.splice(nextIndex, 0, slide)
+  carouselDrafts.value = next
+}
+
+const saveCarouselDrafts = async () => {
+  if (!carouselDrafts.value.length) return
+  carouselSaving.value = true
+  try {
+    await blog.updateAdminHomeCarousel(carouselDrafts.value)
+    syncCarouselDrafts()
+  } finally {
+    carouselSaving.value = false
+  }
+}
+
+const resetCarouselDrafts = async () => {
+  carouselSaving.value = true
+  try {
+    await blog.resetAdminHomeCarousel()
+    syncCarouselDrafts()
+  } finally {
+    carouselSaving.value = false
+  }
+}
+
+watch(
+  () => blog.adminCarouselSlides.map((slide) => slide.id).join('|'),
+  () => syncCarouselDrafts(),
+)
 
 onMounted(async () => {
   await blog.bootstrap()
@@ -367,6 +513,140 @@ onMounted(async () => {
             </div>
             <span class="admin-count-pill">{{ currentRows }} 条</span>
           </div>
+
+          <section v-if="tab === 'carousel'" class="admin-carousel-manager">
+            <div class="admin-carousel-toolbar">
+              <div>
+                <strong>首页首屏轮播</strong>
+                <small>{{ enabledCarouselCount }} 张启用 · 最多建议保留 5 张主图</small>
+              </div>
+              <div class="admin-row-actions">
+                <button type="button" class="ghost-button compact" @click="addCarouselDraft"><Plus :size="15" />新增</button>
+                <button type="button" class="ghost-button compact" :disabled="carouselSaving" @click="resetCarouselDrafts">
+                  <RotateCcw :size="15" />
+                  重置主推
+                </button>
+                <button type="button" class="primary-button compact" :disabled="carouselSaving || !carouselDrafts.length" @click="saveCarouselDrafts">
+                  <Save :size="15" />
+                  {{ carouselSaving ? '保存中' : '保存轮播' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="admin-carousel-grid">
+              <div class="admin-carousel-list" aria-label="轮播列表">
+                <article v-for="(slide, index) in carouselDrafts" :key="slide.id" :class="['admin-carousel-item', { active: slide.id === selectedCarouselId }]">
+                  <button type="button" class="admin-carousel-select" @click="selectedCarouselId = slide.id">
+                    <img :src="slide.imageUrl" :alt="slide.title" :style="{ objectPosition: slide.imagePosition ?? 'center' }" />
+                    <span>
+                      <strong>{{ index + 1 }}. {{ slide.title }}</strong>
+                      <small>{{ slide.enabled ? '展示中' : '已停用' }} · #{{ slide.tag }}</small>
+                    </span>
+                  </button>
+                  <div class="admin-carousel-item-actions">
+                    <button type="button" title="上移" :disabled="index === 0" @click="moveCarouselDraft(slide.id, -1)"><ArrowUp :size="14" /></button>
+                    <button type="button" title="下移" :disabled="index === carouselDrafts.length - 1" @click="moveCarouselDraft(slide.id, 1)"><ArrowDown :size="14" /></button>
+                    <button type="button" title="移除" :disabled="carouselDrafts.length <= 1" @click="removeCarouselDraft(slide.id)"><X :size="14" /></button>
+                  </div>
+                </article>
+              </div>
+
+              <div v-if="selectedCarouselSlide" class="admin-carousel-editor">
+                <div class="admin-carousel-preview">
+                  <img :src="selectedCarouselSlide.imageUrl" :alt="selectedCarouselSlide.title" :style="{ objectPosition: selectedCarouselSlide.imagePosition ?? 'center' }" />
+                  <div>
+                    <span class="section-kicker"><ImageIcon :size="15" /> #{{ selectedCarouselSlide.tag }}</span>
+                    <strong>{{ selectedCarouselSlide.title }}</strong>
+                    <small>{{ selectedCarouselSlide.excerpt }}</small>
+                  </div>
+                </div>
+
+                <div class="admin-carousel-form">
+                  <label>
+                    轮播标题
+                    <input
+                      :value="selectedCarouselSlide.title"
+                      maxlength="80"
+                      @input="updateCarouselDraft(selectedCarouselSlide.id, { title: ($event.target as HTMLInputElement).value })"
+                    />
+                  </label>
+                  <label>
+                    摘要文案
+                    <textarea
+                      :value="selectedCarouselSlide.excerpt"
+                      rows="3"
+                      maxlength="180"
+                      @input="updateCarouselDraft(selectedCarouselSlide.id, { excerpt: ($event.target as HTMLTextAreaElement).value })"
+                    />
+                  </label>
+                  <div class="admin-carousel-fields">
+                    <label>
+                      标签
+                      <input
+                        :value="selectedCarouselSlide.tag"
+                        maxlength="16"
+                        @input="updateCarouselDraft(selectedCarouselSlide.id, { tag: ($event.target as HTMLInputElement).value })"
+                      />
+                    </label>
+                    <label>
+                      图片焦点
+                      <select
+                        :value="selectedCarouselSlide.imagePosition ?? 'center'"
+                        @change="updateCarouselDraft(selectedCarouselSlide.id, { imagePosition: ($event.target as HTMLSelectElement).value })"
+                      >
+                        <option value="center">居中</option>
+                        <option value="20% 40%">偏左</option>
+                        <option value="70% 28%">偏右人物</option>
+                        <option value="35% 55%">偏下主体</option>
+                        <option value="50% 20%">偏上主体</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>
+                    跳转链接
+                    <span class="admin-input-with-icon">
+                      <Link2 :size="15" />
+                      <input
+                        :value="selectedCarouselSlide.link"
+                        placeholder="/post/xxx 或 /discover"
+                        @input="updateCarouselDraft(selectedCarouselSlide.id, { link: ($event.target as HTMLInputElement).value })"
+                      />
+                    </span>
+                  </label>
+                  <label class="toggle-row">
+                    <input
+                      type="checkbox"
+                      :checked="selectedCarouselSlide.enabled"
+                      @change="updateCarouselDraft(selectedCarouselSlide.id, { enabled: ($event.target as HTMLInputElement).checked })"
+                    />
+                    <span>在首页轮播中启用</span>
+                  </label>
+                </div>
+
+                <div class="admin-image-picker">
+                  <div class="admin-carousel-toolbar compact">
+                    <div>
+                      <strong>更换轮播图</strong>
+                      <small>可使用内置封面或任意文章封面</small>
+                    </div>
+                  </div>
+                  <button
+                    v-for="choice in carouselImageChoices"
+                    :key="choice.url"
+                    type="button"
+                    :class="{ active: selectedCarouselSlide.imageUrl === choice.url }"
+                    @click="selectCarouselImage(choice)"
+                  >
+                    <img :src="choice.url" :alt="choice.label" :style="{ objectPosition: choice.position }" />
+                    <span>
+                      <strong>{{ choice.label }}</strong>
+                      <small>{{ choice.desc }}</small>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <section v-if="tab === 'users'" class="admin-table users-table">
             <div class="admin-table-row admin-table-head">

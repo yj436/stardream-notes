@@ -11,6 +11,7 @@ import type {
   AnimeRecordPayload,
   Comment,
   Draft,
+  HomeCarouselSlide,
   NewPostPayload,
   Post,
   PostReactionKey,
@@ -39,6 +40,7 @@ const storageKeys = {
   posts: 'stardream:posts',
   comments: 'stardream:comments',
   reports: 'stardream:reports',
+  homeCarousel: 'stardream:home-carousel',
   animeRecords: 'stardream:anime-records',
   draft: 'stardream:draft',
 }
@@ -341,10 +343,42 @@ const initialDraft: Draft = {
   images: [],
 }
 
+const buildDefaultHomeCarousel = (sourcePosts: Post[] = initialPosts): HomeCarouselSlide[] => {
+  const pinned = sourcePosts.filter((post) => post.isPinned)
+  const candidates = [...pinned, ...sourcePosts.filter((post) => !pinned.some((item) => item.id === post.id))]
+  return candidates.slice(0, 5).map((post, index) => ({
+    id: `hero_${post.id}`,
+    title: post.title,
+    excerpt: post.excerpt,
+    imageUrl: post.coverUrl,
+    imagePosition: post.imagePosition ?? 'center',
+    tag: post.tags[0] ?? ['今日主推', '灵感封面', '读者热看', '创作更新', '编辑精选'][index] ?? '精选',
+    link: `/post/${post.id}`,
+    sourcePostId: post.id,
+    enabled: true,
+    updatedAt: new Date().toISOString(),
+  }))
+}
+
+const sanitizeHomeCarousel = (slides: HomeCarouselSlide[]) =>
+  slides.slice(0, 8).map((slide, index) => ({
+    id: slide.id || `hero_custom_${Date.now()}_${index}`,
+    title: slide.title?.trim() || '星梦笔记主视觉',
+    excerpt: slide.excerpt?.trim() || '记录创作、追番和作品画廊的轻博客入口。',
+    imageUrl: slide.imageUrl || heroImage,
+    imagePosition: slide.imagePosition || 'center',
+    tag: slide.tag?.trim() || '精选',
+    link: slide.link?.trim() || '/',
+    sourcePostId: slide.sourcePostId,
+    enabled: Boolean(slide.enabled),
+    updatedAt: new Date().toISOString(),
+  }))
+
 let users = readStorage(storageKeys.users, initialUsers)
 let posts = readStorage(storageKeys.posts, initialPosts)
 let comments = readStorage(storageKeys.comments, initialComments)
 let reports = readStorage(storageKeys.reports, initialReports)
+let homeCarousel = readStorage(storageKeys.homeCarousel, buildDefaultHomeCarousel())
 let animeRecords = readStorage(storageKeys.animeRecords, initialAnimeRecords)
 let draft = readStorage(storageKeys.draft, initialDraft)
 
@@ -352,6 +386,7 @@ const persistUsers = () => writeStorage(storageKeys.users, users)
 const persistPosts = () => writeStorage(storageKeys.posts, posts)
 const persistComments = () => writeStorage(storageKeys.comments, comments)
 const persistReports = () => writeStorage(storageKeys.reports, reports)
+const persistHomeCarousel = () => writeStorage(storageKeys.homeCarousel, homeCarousel)
 const persistAnimeRecords = () => writeStorage(storageKeys.animeRecords, animeRecords)
 const persistDraft = () => writeStorage(storageKeys.draft, draft)
 
@@ -377,6 +412,35 @@ export const mockApi = {
   async getUsers() {
     await wait()
     return [...users]
+  },
+
+  async getHomeCarousel() {
+    await wait()
+    const slides = homeCarousel.length ? homeCarousel : buildDefaultHomeCarousel(posts)
+    return slides.filter((slide) => slide.enabled)
+  },
+
+  async getAdminHomeCarousel() {
+    await wait()
+    if (!homeCarousel.length) {
+      homeCarousel = buildDefaultHomeCarousel(posts)
+      persistHomeCarousel()
+    }
+    return [...homeCarousel]
+  },
+
+  async updateAdminHomeCarousel(slides: HomeCarouselSlide[]) {
+    await wait(120)
+    homeCarousel = sanitizeHomeCarousel(slides)
+    persistHomeCarousel()
+    return [...homeCarousel]
+  },
+
+  async resetAdminHomeCarousel() {
+    await wait(120)
+    homeCarousel = buildDefaultHomeCarousel(posts)
+    persistHomeCarousel()
+    return [...homeCarousel]
   },
 
   async getUserById(id: string) {

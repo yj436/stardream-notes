@@ -16,6 +16,13 @@ const asset = {
 }
 
 const json = (value) => JSON.stringify(value)
+const readJson = (value, fallback) => {
+  try {
+    return value ? JSON.parse(value) : fallback
+  } catch {
+    return fallback
+  }
+}
 const hashPassword = (password) => {
   const salt = 'stardream-seed'
   return `${salt}:${crypto.createHash('sha256').update(`${salt}:${password}`).digest('hex')}`
@@ -296,6 +303,31 @@ for (const record of animeRecords) {
     create: record,
   })
 }
+
+const carouselSlides = [...posts.filter((post) => post.isPinned), ...posts.filter((post) => !post.isPinned)]
+  .slice(0, 5)
+  .map((post, index) => {
+    const tags = readJson(post.tags, [])
+    return {
+      id: `hero_${post.id}`,
+      title: post.title,
+      excerpt: post.excerpt,
+      imageUrl: post.coverUrl,
+      imagePosition: post.imagePosition || 'center',
+      tag: tags[0] || ['Featured', 'Cover', 'Popular', 'New', 'Editor pick'][index] || 'Featured',
+      link: `/post/${post.id}`,
+      sourcePostId: post.id,
+      enabled: true,
+      updatedAt: new Date().toISOString(),
+    }
+  })
+
+await prisma.siteSetting.upsert({
+  where: { key: 'home.carousel' },
+  update: { value: json(carouselSlides) },
+  create: { key: 'home.carousel', value: json(carouselSlides) },
+})
+
 await prisma.draft.upsert({
   where: { userId: 'u_mika' },
   update: {

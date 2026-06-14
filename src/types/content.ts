@@ -59,6 +59,19 @@ export interface Post {
   reactions?: Record<PostReactionKey, number>
 }
 
+export interface HomeCarouselSlide {
+  id: string
+  title: string
+  excerpt: string
+  imageUrl: string
+  imagePosition?: string
+  tag: string
+  link: string
+  sourcePostId?: string
+  enabled: boolean
+  updatedAt?: string
+}
+
 export interface Report {
   id: string
   postId: string

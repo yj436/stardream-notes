@@ -121,3 +121,9 @@ model Report {
   @@index([reporterId])
   @@index([status, createdAt])
 }
+
+model SiteSetting {
+  key       String   @id @db.VarChar(80)
+  value     String   @db.LongText
+  updatedAt DateTime @updatedAt @db.DateTime(3)
+}

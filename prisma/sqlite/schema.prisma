@@ -102,3 +102,9 @@ model Report {
   createdAt  DateTime @default(now())
   post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -38,7 +38,7 @@ const latestPosts = computed(() => blog.posts.slice(0, 6))
 const hotPosts = computed(() => blog.hotPosts.slice(0, 5))
 const creators = computed(() => blog.users.slice(0, 3))
 const sideTags = computed(() => blog.tags.slice(0, 12))
-const heroSlides = computed(() => {
+const fallbackHeroSlides = computed(() => {
   const candidates = [leadPost.value, ...blog.featuredPosts, ...blog.hotPosts, ...blog.posts].filter(Boolean) as Post[]
   const seen = new Set<string>()
   return candidates
@@ -51,9 +51,34 @@ const heroSlides = computed(() => {
     .map((post, index) => ({
       post,
       author: authorFor(post.authorId),
+      title: post.title,
+      excerpt: post.excerpt,
+      imageUrl: post.coverUrl || imageAssets.hero,
+      imagePosition: post.imagePosition ?? 'center',
       eyebrow: ['今日主推', '灵感封面', '读者热看', '创作更新', '编辑精选'][index] ?? '精选文章',
+      tag: post.tags[0] ?? '精选',
+      link: `/post/${post.id}`,
     }))
 })
+const configuredHeroSlides = computed(() =>
+  blog.homeCarouselSlides
+    .filter((slide) => slide.enabled)
+    .map((slide, index) => {
+      const post = slide.sourcePostId ? blog.posts.find((item) => item.id === slide.sourcePostId) : undefined
+      return {
+        post,
+        author: post ? authorFor(post.authorId) : undefined,
+        title: slide.title,
+        excerpt: slide.excerpt,
+        imageUrl: slide.imageUrl || post?.coverUrl || imageAssets.hero,
+        imagePosition: slide.imagePosition ?? post?.imagePosition ?? 'center',
+        eyebrow: slide.tag || ['今日主推', '灵感封面', '读者热看', '创作更新', '编辑精选'][index] || '精选文章',
+        tag: slide.tag || post?.tags[0] || '精选',
+        link: slide.link || (post ? `/post/${post.id}` : '/discover'),
+      }
+    }),
+)
+const heroSlides = computed(() => (configuredHeroSlides.value.length ? configuredHeroSlides.value : fallbackHeroSlides.value))
 const activeHeroSlide = computed(() => {
   if (!heroSlides.value.length) return null
   return heroSlides.value[activeHeroIndex.value % heroSlides.value.length]
@@ -157,11 +182,11 @@ onBeforeUnmount(stopHeroCarousel)
       >
         <transition name="hero-fade" mode="out-in">
           <img
-            :key="activeHeroSlide.post.id"
+            :key="activeHeroSlide.post?.id ?? activeHeroSlide.imageUrl"
             class="hero-carousel-bg"
-            :src="activeHeroSlide.post.coverUrl || imageAssets.hero"
-            :alt="activeHeroSlide.post.title"
-            :style="{ objectPosition: activeHeroSlide.post.imagePosition ?? 'center' }"
+            :src="activeHeroSlide.imageUrl"
+            :alt="activeHeroSlide.title"
+            :style="{ objectPosition: activeHeroSlide.imagePosition }"
           />
         </transition>
         <div class="halo-sakura-layer" aria-hidden="true" />
@@ -175,9 +200,9 @@ onBeforeUnmount(stopHeroCarousel)
           <span class="section-kicker"><Sparkles :size="16" /> Halo 二次元博客</span>
           <h1>星梦笔记</h1>
           <p>梦之城、童话梦境、动漫创作与轻博客记录。</p>
-          <strong class="hero-slide-title">{{ activeHeroSlide.post.title }}</strong>
+          <strong class="hero-slide-title">{{ activeHeroSlide.title }}</strong>
           <div class="hero-actions">
-            <RouterLink class="primary-button" :to="`/post/${activeHeroSlide.post.id}`">
+            <RouterLink class="primary-button" :to="activeHeroSlide.link">
               <BookOpen :size="18" />
               阅读主推文章
             </RouterLink>
@@ -196,23 +221,27 @@ onBeforeUnmount(stopHeroCarousel)
             </button>
             <button type="button" aria-label="下一张" @click="nextHeroSlide"><ArrowRight :size="18" /></button>
           </div>
-          <RouterLink class="halo-featured-post" :to="`/post/${activeHeroSlide.post.id}`">
+          <RouterLink class="halo-featured-post" :to="activeHeroSlide.link">
             <span class="section-kicker"><CalendarDays :size="16" /> {{ activeHeroSlide.eyebrow }}</span>
-            <strong>{{ activeHeroSlide.post.title }}</strong>
-            <small>{{ activeHeroSlide.post.excerpt }}</small>
+            <strong>{{ activeHeroSlide.title }}</strong>
+            <small>{{ activeHeroSlide.excerpt }}</small>
             <span class="hero-author-line">
-              <span class="mini-avatar" :style="{ backgroundImage: `url(${activeHeroSlide.author?.avatarUrl})`, backgroundPosition: activeHeroSlide.author?.avatarPosition }" />
-              <span>{{ activeHeroSlide.author?.nickname ?? '星梦作者' }}</span>
-              <TimestampPill :value="activeHeroSlide.post.createdAt" compact />
+              <span
+                v-if="activeHeroSlide.author"
+                class="mini-avatar"
+                :style="{ backgroundImage: `url(${activeHeroSlide.author.avatarUrl})`, backgroundPosition: activeHeroSlide.author.avatarPosition }"
+              />
+              <span>{{ activeHeroSlide.author?.nickname ?? activeHeroSlide.tag }}</span>
+              <TimestampPill v-if="activeHeroSlide.post" :value="activeHeroSlide.post.createdAt" compact />
             </span>
           </RouterLink>
           <div class="hero-carousel-dots" role="tablist" aria-label="首页轮播">
             <button
               v-for="(slide, index) in heroSlides"
-              :key="slide.post.id"
+              :key="slide.post?.id ?? `${slide.title}-${index}`"
               type="button"
               :class="{ active: index === activeHeroIndex }"
-              :aria-label="`切换到 ${slide.post.title}`"
+              :aria-label="`切换到 ${slide.title}`"
               @click="setHeroSlide(index)"
             >
               <span />
@@ -221,13 +250,13 @@ onBeforeUnmount(stopHeroCarousel)
           <div class="hero-thumb-strip" aria-label="轮播文章">
             <button
               v-for="(slide, index) in heroSlides.slice(0, 4)"
-              :key="slide.post.id"
+              :key="slide.post?.id ?? `${slide.title}-${index}`"
               type="button"
               :class="{ active: index === activeHeroIndex }"
               @click="setHeroSlide(index)"
             >
-              <img :src="slide.post.coverUrl" :alt="slide.post.title" :style="{ objectPosition: slide.post.imagePosition ?? 'center' }" />
-              <span>#{{ slide.post.tags[0] }}</span>
+              <img :src="slide.imageUrl" :alt="slide.title" :style="{ objectPosition: slide.imagePosition }" />
+              <span>#{{ slide.tag }}</span>
             </button>
           </div>
         </div>

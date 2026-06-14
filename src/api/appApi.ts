@@ -10,6 +10,7 @@ import type {
   AuthResult,
   Comment,
   Draft,
+  HomeCarouselSlide,
   LoginPayload,
   NewPostPayload,
   Post,
@@ -81,6 +82,11 @@ const normalizeAnimeRecord = (record: AnimeRecord): AnimeRecord => ({
 const normalizeDraft = (draft: Draft): Draft => ({
   ...draft,
   images: draft.images.map(resolveAsset),
+})
+
+const normalizeCarouselSlide = (slide: HomeCarouselSlide): HomeCarouselSlide => ({
+  ...slide,
+  imageUrl: resolveAsset(slide.imageUrl),
 })
 
 const withFallback = async <T>(request: () => Promise<T>, fallback: () => Promise<T>): Promise<T> => {
@@ -240,6 +246,13 @@ export const appApi = {
     return withFallback(
       async () => (await client.get<User[]>('/users')).data.map(normalizeUser),
       () => mockApi.getUsers(),
+    )
+  },
+
+  async getHomeCarousel() {
+    return withFallback(
+      async () => (await client.get<HomeCarouselSlide[]>('/site/carousel')).data.map(normalizeCarouselSlide),
+      async () => (await mockApi.getHomeCarousel()).map(normalizeCarouselSlide),
     )
   },
 
@@ -444,6 +457,27 @@ export const appApi = {
     return withFallback(
       async () => (await client.get<Post[]>('/admin/posts')).data.map(normalizePost),
       async () => (await mockApi.getAdminPosts()).map(normalizePost),
+    )
+  },
+
+  async getAdminHomeCarousel() {
+    return withFallback(
+      async () => (await client.get<HomeCarouselSlide[]>('/admin/carousel')).data.map(normalizeCarouselSlide),
+      async () => (await mockApi.getAdminHomeCarousel()).map(normalizeCarouselSlide),
+    )
+  },
+
+  async updateAdminHomeCarousel(slides: HomeCarouselSlide[]) {
+    return withFallback(
+      async () => (await client.put<HomeCarouselSlide[]>('/admin/carousel', { slides })).data.map(normalizeCarouselSlide),
+      async () => (await mockApi.updateAdminHomeCarousel(slides)).map(normalizeCarouselSlide),
+    )
+  },
+
+  async resetAdminHomeCarousel() {
+    return withFallback(
+      async () => (await client.post<HomeCarouselSlide[]>('/admin/carousel/reset')).data.map(normalizeCarouselSlide),
+      async () => (await mockApi.resetAdminHomeCarousel()).map(normalizeCarouselSlide),
     )
   },
 

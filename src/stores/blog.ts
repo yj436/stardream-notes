@@ -9,6 +9,7 @@ import type {
   AnimeStatus,
   Comment,
   Draft,
+  HomeCarouselSlide,
   LoginPayload,
   NewPostPayload,
   Post,
@@ -35,6 +36,7 @@ interface BlogState {
   posts: Post[]
   commentsByPost: Record<string, Comment[]>
   animeRecords: AnimeRecord[]
+  homeCarouselSlides: HomeCarouselSlide[]
   draft: Draft
   search: SearchResult
   adminStats: AdminStats | null
@@ -42,6 +44,7 @@ interface BlogState {
   adminPosts: Post[]
   adminComments: Comment[]
   adminReports: Report[]
+  adminCarouselSlides: HomeCarouselSlide[]
   notifications: ToastMessage[]
   loading: boolean
 }
@@ -56,6 +59,7 @@ export const useBlogStore = defineStore('blog', {
     posts: [],
     commentsByPost: {},
     animeRecords: [],
+    homeCarouselSlides: [],
     draft: { title: '', content: '', tags: ['原创企划'], images: [] },
     search: { posts: [], users: [], tags: [] },
     adminStats: null,
@@ -63,6 +67,7 @@ export const useBlogStore = defineStore('blog', {
     adminPosts: [],
     adminComments: [],
     adminReports: [],
+    adminCarouselSlides: [],
     notifications: [],
     loading: false,
   }),
@@ -105,13 +110,15 @@ export const useBlogStore = defineStore('blog', {
             this.authToken = null
           }
           getNotifStore()
-          const [users, posts, draft] = await Promise.all([
+          const [users, posts, homeCarouselSlides, draft] = await Promise.all([
             appApi.getUsers(),
             appApi.getPosts(),
+            appApi.getHomeCarousel(),
             me ? appApi.getDraft() : Promise.resolve(this.draft),
           ])
           this.users = me ? [me, ...users.filter((user) => user.id !== me.id)] : users
           this.posts = posts
+          this.homeCarouselSlides = homeCarouselSlides
           this.draft = draft
           this.search = await appApi.searchContent('')
         } finally {
@@ -328,18 +335,20 @@ export const useBlogStore = defineStore('blog', {
         this.notify('需要管理员权限', 'warning')
         return
       }
-      const [stats, users, posts, comments, reports] = await Promise.all([
+      const [stats, users, posts, comments, reports, carouselSlides] = await Promise.all([
         appApi.getAdminStats(),
         appApi.getAdminUsers(),
         appApi.getAdminPosts(),
         appApi.getAdminComments(),
         appApi.getAdminReports(),
+        appApi.getAdminHomeCarousel(),
       ])
       this.adminStats = stats
       this.adminUsers = users
       this.adminPosts = posts
       this.adminComments = comments
       this.adminReports = reports
+      this.adminCarouselSlides = carouselSlides
     },
 
     async updateAdminUser(id: string, payload: { status?: User['status']; role?: User['role'] }) {
@@ -397,6 +406,21 @@ export const useBlogStore = defineStore('blog', {
       }
       this.adminStats = await appApi.getAdminStats()
       this.notify(`已批量处理 ${updatedReports.length} 条举报`, 'success')
+    },
+
+    async updateAdminHomeCarousel(slides: HomeCarouselSlide[]) {
+      const updated = await appApi.updateAdminHomeCarousel(slides)
+      this.adminCarouselSlides = updated
+      this.homeCarouselSlides = updated.filter((slide) => slide.enabled)
+      this.notify('首页轮播图已更新', 'success')
+    },
+
+    async resetAdminHomeCarousel() {
+      const updated = await appApi.resetAdminHomeCarousel()
+      this.adminCarouselSlides = updated
+      this.homeCarouselSlides = updated.filter((slide) => slide.enabled)
+      this.notify('首页轮播已恢复为文章主推', 'success')
+      return updated
     },
 
     notify(text: string, tone: ToastMessage['tone'] = 'info') {

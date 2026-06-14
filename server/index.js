@@ -119,6 +119,71 @@ const reactionKeys = new Set(Object.keys(defaultReactions))
 const publicPostWhere = { status: 'published' }
 const readStats = (user) => parse(user?.stats, defaultStats)
 const readReactions = (post) => ({ ...defaultReactions, ...parse(post?.reactions, {}) })
+const homeCarouselKey = 'home.carousel'
+const defaultCarouselTags = ['Featured', 'Cover', 'Popular', 'New', 'Editor pick']
+
+const cleanCarouselText = (value, fallback) => {
+  const text = String(value ?? '').trim()
+  return text || fallback
+}
+
+const sanitizeCarouselSlides = (slides) =>
+  Array.isArray(slides)
+    ? slides.slice(0, 8).map((slide, index) => ({
+        id: cleanCarouselText(slide?.id, `hero_custom_${Date.now()}_${index}`),
+        title: cleanCarouselText(slide?.title, 'Stardream Notes'),
+        excerpt: cleanCarouselText(slide?.excerpt, 'Featured writing, gallery work, and anime notes.'),
+        imageUrl: cleanCarouselText(slide?.imageUrl, 'asset:hero'),
+        imagePosition: cleanCarouselText(slide?.imagePosition, 'center'),
+        tag: cleanCarouselText(slide?.tag, defaultCarouselTags[index] ?? 'Featured'),
+        link: cleanCarouselText(slide?.link, '/'),
+        sourcePostId: slide?.sourcePostId ? String(slide.sourcePostId) : undefined,
+        enabled: slide?.enabled !== false,
+        updatedAt: new Date().toISOString(),
+      }))
+    : []
+
+const buildDefaultCarousel = (sourcePosts) =>
+  sourcePosts.slice(0, 5).map((post, index) => {
+    const tags = parse(post.tags, [])
+    return {
+      id: `hero_${post.id}`,
+      title: post.title,
+      excerpt: post.excerpt,
+      imageUrl: post.coverUrl,
+      imagePosition: post.imagePosition || 'center',
+      tag: tags[0] || defaultCarouselTags[index] || 'Featured',
+      link: `/post/${post.id}`,
+      sourcePostId: post.id,
+      enabled: true,
+      updatedAt: new Date().toISOString(),
+    }
+  })
+
+const getDefaultCarousel = async () => {
+  const posts = await prisma.post.findMany({
+    where: publicPostWhere,
+    orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+    take: 5,
+  })
+  return buildDefaultCarousel(posts)
+}
+
+const getCarouselSlides = async ({ includeDisabled = false } = {}) => {
+  const setting = await prisma.siteSetting.findUnique({ where: { key: homeCarouselKey } })
+  const slides = setting ? sanitizeCarouselSlides(parse(setting.value, [])) : await getDefaultCarousel()
+  return includeDisabled ? slides : slides.filter((slide) => slide.enabled)
+}
+
+const saveCarouselSlides = async (slides) => {
+  const sanitized = sanitizeCarouselSlides(slides)
+  await prisma.siteSetting.upsert({
+    where: { key: homeCarouselKey },
+    update: { value: stringify(sanitized) },
+    create: { key: homeCarouselKey, value: stringify(sanitized) },
+  })
+  return sanitized
+}
 
 const canAccessPost = (req, post) =>
   post?.status === 'published' || Boolean(req.user && (req.user.role === 'admin' || req.user.id === post.authorId))
@@ -663,6 +728,11 @@ app.get('/api/search', async (req, res) => {
   })
 })
 
+app.get('/api/site/carousel', async (_req, res) => {
+  const slides = await getCarouselSlides()
+  res.json(slides)
+})
+
 app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res) => {
   const [users, posts, comments, animeRecords, reports] = await Promise.all([
     prisma.user.count(),
@@ -677,6 +747,21 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res) => {
 app.get('/api/admin/users', requireAuth, requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } })
   res.json(users.map(toUser))
+})
+
+app.get('/api/admin/carousel', requireAuth, requireAdmin, async (_req, res) => {
+  const slides = await getCarouselSlides({ includeDisabled: true })
+  res.json(slides)
+})
+
+app.put('/api/admin/carousel', requireAuth, requireAdmin, async (req, res) => {
+  const slides = await saveCarouselSlides(req.body?.slides ?? [])
+  res.json(slides)
+})
+
+app.post('/api/admin/carousel/reset', requireAuth, requireAdmin, async (_req, res) => {
+  const slides = await getDefaultCarousel()
+  res.json(await saveCarouselSlides(slides))
 })
 
 app.patch('/api/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
