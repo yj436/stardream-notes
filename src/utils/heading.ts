@@ -2,6 +2,12 @@ export interface ArticleHeading {
   id: string
   text: string
   depth: number
+  line: number
+}
+
+export interface HeadingExtractionOptions {
+  minDepth?: number
+  maxDepth?: number
 }
 
 const plainHeadingText = (text: string) =>
@@ -29,13 +35,21 @@ export const getUniqueHeadingId = (text: string, usedIds: Map<string, number>) =
   return usedCount ? `${slug}-${usedCount + 1}` : slug
 }
 
-export const extractArticleHeadings = (markdown: string, limit = 8): ArticleHeading[] => {
+export const extractArticleHeadings = (
+  markdown: string,
+  limit = 8,
+  options: HeadingExtractionOptions = {},
+): ArticleHeading[] => {
+  const minDepth = options.minDepth ?? 2
+  const maxDepth = options.maxDepth ?? 3
   const usedIds = new Map<string, number>()
   const headings: ArticleHeading[] = []
 
-  for (const line of markdown.split('\n')) {
-    const match = line.match(/^(#{2,3})\s+(.+)$/)
+  for (const [index, line] of markdown.split('\n').entries()) {
+    const match = line.match(/^(#{1,6})\s+(.+)$/)
     if (!match) continue
+    const depth = match[1].length
+    if (depth < minDepth || depth > maxDepth) continue
 
     const text = plainHeadingText(match[2])
     if (!text) continue
@@ -43,7 +57,8 @@ export const extractArticleHeadings = (markdown: string, limit = 8): ArticleHead
     headings.push({
       id: getUniqueHeadingId(text, usedIds),
       text,
-      depth: match[1].length,
+      depth,
+      line: index + 1,
     })
 
     if (headings.length >= limit) break

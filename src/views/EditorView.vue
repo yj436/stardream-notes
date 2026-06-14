@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MdEditor } from 'md-editor-v3'
 import type { Footers, ToolbarNames } from 'md-editor-v3'
@@ -23,6 +23,7 @@ import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
 import type { PostType } from '@/types/content'
 import { formatDateTime, formatUnixTimestamp } from '@/utils/time'
+import { extractArticleHeadings, type ArticleHeading } from '@/utils/heading'
 import { appApi } from '@/api/appApi'
 import { moderateContent } from '@/composables/useModeration'
 import { useAppTheme } from '@/composables/useAppTheme'
@@ -37,6 +38,7 @@ const autosaveTimer = ref<number | null>(null)
 const uploading = ref(false)
 const uploadInputRef = ref<HTMLInputElement | null>(null)
 const editorMode = ref<'write' | 'split' | 'preview'>('split')
+const activeOutlineId = ref('')
 const editorToolbars: ToolbarNames[] = [
   'bold',
   'italic',
@@ -70,15 +72,8 @@ const editingPost = computed(() => blog.posts.find((post) => post.id === editing
 const wordCount = computed(() => form.content.replace(/\s/g, '').length)
 const readingMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 350)))
 const paragraphCount = computed(() => form.content.split(/\n{2,}/).filter((item) => item.trim()).length)
-const outline = computed(() =>
-  form.content
-    .split('\n')
-    .map((line, index) => {
-      const match = /^(#{1,3})\s+(.+)$/.exec(line.trim())
-      return match ? { level: match[1].length, text: match[2], line: index + 1 } : null
-    })
-    .filter(Boolean) as Array<{ level: number; text: string; line: number }>,
-)
+const outline = computed(() => extractArticleHeadings(form.content, 12, { minDepth: 1, maxDepth: 3 }))
+const outlineSummary = computed(() => (outline.value.length ? `${outline.value.length} 个标题` : '等待标题'))
 const sensitiveWords = ['暴力', '血腥', '广告', '辱骂']
 const contentWarnings = computed(() => sensitiveWords.filter((word) => `${form.title} ${form.content} ${form.tagsText}`.includes(word)))
 const writingScore = computed(() => publishChecks.value.filter((item) => item.ok).length / publishChecks.value.length)
@@ -127,6 +122,41 @@ const insertCodeBlock = () => {
 
 const insertDivider = () => {
   appendMarkdownBlock('---')
+}
+
+const lineToOffset = (line: number) => {
+  const lines = form.content.split('\n')
+  return lines.slice(0, Math.max(0, line - 1)).reduce((total, item) => total + item.length + 1, 0)
+}
+
+const focusEditorLine = async (item: ArticleHeading) => {
+  if (editorMode.value === 'preview') editorMode.value = 'split'
+  activeOutlineId.value = item.id
+  await nextTick()
+
+  const offset = lineToOffset(item.line)
+  const editor = document.getElementById('stardream-post-editor')
+  const textarea = editor?.querySelector<HTMLTextAreaElement>('textarea')
+  if (textarea) {
+    const lineHeight = textarea.scrollHeight / Math.max(1, form.content.split('\n').length)
+    textarea.focus()
+    textarea.setSelectionRange(offset, offset)
+    textarea.scrollTop = Math.max(0, (item.line - 3) * lineHeight)
+    return
+  }
+
+  const content = editor?.querySelector<HTMLElement>('.cm-content')
+  const line = editor?.querySelectorAll<HTMLElement>('.cm-line')[item.line - 1]
+  content?.focus()
+  line?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  if (!line) return
+
+  const range = document.createRange()
+  range.selectNodeContents(line)
+  range.collapse(true)
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
 }
 
 const insertTemplate = (type: 'inspiration' | 'tutorial' | 'review') => {
@@ -419,9 +449,22 @@ watch(
       <div v-if="form.images[0]" class="preview-cover">
         <img :src="form.images[0]" alt="预览封面" />
       </div>
-      <div v-if="outline.length" class="editor-outline">
-        <strong>文章大纲</strong>
-        <span v-for="item in outline" :key="`${item.line}-${item.text}`" :class="`level-${item.level}`">{{ item.text }}</span>
+      <div class="editor-outline">
+        <div class="editor-outline-head">
+          <strong>文章大纲</strong>
+          <small>{{ outlineSummary }}</small>
+        </div>
+        <button
+          v-for="item in outline"
+          :key="item.id"
+          type="button"
+          :class="['editor-outline-item', `level-${item.depth}`, { active: activeOutlineId === item.id }]"
+          @click="focusEditorLine(item)"
+        >
+          <span>{{ item.text }}</span>
+          <small>第 {{ item.line }} 行</small>
+        </button>
+        <p v-if="!outline.length" class="empty-note">用 #、## 或 ### 写下标题后，这里会生成可跳转的大纲。</p>
       </div>
       <div v-if="form.images.length" class="editor-asset-strip">
         <strong>图片资产</strong>

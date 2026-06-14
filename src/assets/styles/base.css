@@ -1783,27 +1783,65 @@ label {
   border-top: 1px solid var(--line);
 }
 
+.editor-outline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .editor-outline strong,
 .editor-asset-strip strong {
   color: #1e2847;
 }
 
-.editor-outline span {
-  display: block;
-  overflow: hidden;
+.editor-outline-head small {
   color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.editor-outline-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #3d4664;
+  background: rgba(255, 255, 255, 0.7);
+  text-align: left;
+}
+
+.editor-outline-item:hover,
+.editor-outline-item.active {
+  color: var(--pink);
+  background: var(--pink-soft);
+}
+
+.editor-outline-item span {
+  overflow: hidden;
   font-size: 0.86rem;
   font-weight: 850;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.editor-outline .level-2 {
-  padding-left: 12px;
+.editor-outline-item small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
 }
 
-.editor-outline .level-3 {
-  padding-left: 24px;
+.editor-outline-item.level-2 {
+  padding-left: 18px;
+}
+
+.editor-outline-item.level-3 {
+  padding-left: 30px;
 }
 
 .editor-asset-chip {
@@ -3579,6 +3617,17 @@ label {
   .stardream-md-editor .md-editor-content-wrapper > .md-editor-custom-scrollbar,
   .stardream-md-editor .md-editor-input-wrapper {
     width: 100% !important;
+  }
+
+  .stardream-md-editor .md-editor-toolbar,
+  .stardream-md-editor .md-editor-toolbar-left {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .stardream-md-editor .md-editor-toolbar-left {
+    scrollbar-width: thin;
   }
 
   .stardream-md-editor .md-editor-preview-wrapper,
