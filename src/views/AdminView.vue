@@ -31,6 +31,7 @@ import { useNotificationStore } from '@/composables/useNotificationStore'
 import type { ApiHealth, Post, Report, User } from '@/types/content'
 
 type AdminTab = 'users' | 'posts' | 'comments' | 'reports'
+type ReportStatusFilter = 'all' | Report['status']
 
 const router = useRouter()
 const blog = useBlogStore()
@@ -40,6 +41,8 @@ const adminQuery = ref('')
 const broadcastText = ref('')
 const broadcastSent = ref(false)
 const refreshing = ref(false)
+const reportStatusFilter = ref<ReportStatusFilter>('all')
+const selectedReportIds = ref<string[]>([])
 const runtimeInfo = appApi.getRuntimeInfo()
 const systemHealth = ref<ApiHealth | null>(null)
 const systemLoading = ref(false)
@@ -49,6 +52,14 @@ const tabConfig = [
   { key: 'posts' as const, label: '内容', title: '文章管理', desc: '置顶、隐藏与内容状态', icon: FileText },
   { key: 'comments' as const, label: '评论', title: '评论审核', desc: '社区互动与风险评论', icon: MessageSquareText },
   { key: 'reports' as const, label: '举报', title: '举报处理', desc: '复核流程与处理结论', icon: Flag },
+]
+
+const reportStatusOptions: Array<{ key: ReportStatusFilter; label: string }> = [
+  { key: 'all', label: '全部' },
+  { key: 'open', label: '待处理' },
+  { key: 'reviewing', label: '复核中' },
+  { key: 'resolved', label: '已解决' },
+  { key: 'rejected', label: '已驳回' },
 ]
 
 const loadSystemHealth = async () => {
@@ -100,7 +111,10 @@ const filteredAdminComments = computed(() =>
 )
 
 const filteredAdminReports = computed(() =>
-  blog.adminReports.filter((report) => includesQuery([report.reason, report.detail, report.status, report.postId])),
+  blog.adminReports.filter((report) => {
+    const statusMatched = reportStatusFilter.value === 'all' || report.status === reportStatusFilter.value
+    return statusMatched && includesQuery([report.reason, report.detail, report.status, report.postId])
+  }),
 )
 
 const currentTab = computed(() => tabConfig.find((item) => item.key === tab.value) ?? tabConfig[0])
@@ -196,6 +210,21 @@ const kpis = computed(() => [
 const postTitle = (id: string) => blog.posts.find((post) => post.id === id)?.title ?? id
 const postAuthor = (post: Post) => blog.users.find((user) => user.id === post.authorId)?.nickname ?? post.authorId
 const reportPostTitle = (report: Report) => postTitle(report.postId)
+const selectedVisibleReportIds = computed(() =>
+  filteredAdminReports.value.filter((report) => selectedReportIds.value.includes(report.id)).map((report) => report.id),
+)
+const allVisibleReportsSelected = computed(
+  () => filteredAdminReports.value.length > 0 && filteredAdminReports.value.every((report) => selectedReportIds.value.includes(report.id)),
+)
+const reportStatusCounts = computed(() =>
+  reportStatusOptions.map((option) => ({
+    ...option,
+    count:
+      option.key === 'all'
+        ? blog.adminReports.length
+        : blog.adminReports.filter((report) => report.status === option.key).length,
+  })),
+)
 
 const updateUserRole = (user: User, role: string) => {
   if (role !== 'user' && role !== 'creator' && role !== 'admin') return
@@ -207,6 +236,24 @@ const updatePostStatus = (post: Post) => {
 }
 
 const reportTone = (status: Report['status']) => (status === 'open' || status === 'reviewing' ? 'warning' : 'success')
+const reportStatusLabel = (status: Report['status']) =>
+  ({ open: '待处理', reviewing: '复核中', resolved: '已解决', rejected: '已驳回' })[status]
+
+const toggleVisibleReports = () => {
+  const visibleIds = filteredAdminReports.value.map((report) => report.id)
+  if (allVisibleReportsSelected.value) {
+    selectedReportIds.value = selectedReportIds.value.filter((id) => !visibleIds.includes(id))
+    return
+  }
+  selectedReportIds.value = Array.from(new Set([...selectedReportIds.value, ...visibleIds]))
+}
+
+const runReportBatch = async (payload: { status: Report['status']; hidePost?: boolean }) => {
+  const ids = selectedVisibleReportIds.value
+  if (!ids.length) return
+  await blog.updateAdminReports(ids, payload)
+  selectedReportIds.value = selectedReportIds.value.filter((id) => !ids.includes(id))
+}
 
 onMounted(async () => {
   await blog.bootstrap()
@@ -412,7 +459,39 @@ onMounted(async () => {
           </section>
 
           <section v-if="tab === 'reports'" class="admin-table reports-table">
+            <div class="admin-report-toolbar">
+              <div class="segmented admin-report-filters" aria-label="举报状态筛选">
+                <button
+                  v-for="option in reportStatusCounts"
+                  :key="option.key"
+                  type="button"
+                  :class="{ active: reportStatusFilter === option.key }"
+                  @click="reportStatusFilter = option.key"
+                >
+                  {{ option.label }}
+                  <small>{{ option.count }}</small>
+                </button>
+              </div>
+              <div class="admin-report-bulk">
+                <span>{{ selectedVisibleReportIds.length }} 已选</span>
+                <button type="button" class="ghost-button compact" :disabled="!filteredAdminReports.length" @click="toggleVisibleReports">
+                  {{ allVisibleReportsSelected ? '取消全选' : '选择当前' }}
+                </button>
+                <button type="button" class="ghost-button compact" :disabled="!selectedVisibleReportIds.length" @click="runReportBatch({ status: 'reviewing' })">
+                  批量复核
+                </button>
+                <button type="button" class="ghost-button compact" :disabled="!selectedVisibleReportIds.length" @click="runReportBatch({ status: 'resolved', hidePost: true })">
+                  批量隐藏
+                </button>
+                <button type="button" class="text-button compact" :disabled="!selectedVisibleReportIds.length" @click="runReportBatch({ status: 'rejected' })">
+                  批量驳回
+                </button>
+              </div>
+            </div>
             <div class="admin-table-row admin-table-head">
+              <span class="admin-check-cell">
+                <input type="checkbox" :checked="allVisibleReportsSelected" :disabled="!filteredAdminReports.length" @change="toggleVisibleReports" />
+              </span>
               <span>举报原因</span>
               <span>关联文章</span>
               <span>状态</span>
@@ -420,12 +499,15 @@ onMounted(async () => {
               <span>操作</span>
             </div>
             <div v-for="report in filteredAdminReports" :key="report.id" class="admin-table-row">
+              <span class="admin-check-cell">
+                <input v-model="selectedReportIds" type="checkbox" :value="report.id" />
+              </span>
               <span class="admin-report-copy">
                 <strong>{{ report.reason }}</strong>
                 <small>{{ report.detail || '无补充说明' }}</small>
               </span>
               <RouterLink class="admin-link" :to="`/post/${report.postId}`">{{ reportPostTitle(report) }}</RouterLink>
-              <span :class="['admin-status-chip', reportTone(report.status)]">{{ report.status }}</span>
+              <span :class="['admin-status-chip', reportTone(report.status)]">{{ reportStatusLabel(report.status) }}</span>
               <TimestampPill :value="report.createdAt" compact show-copy />
               <div class="admin-row-actions">
                 <button type="button" class="ghost-button compact" @click="blog.updateAdminReport(report.id, { status: 'reviewing' })">

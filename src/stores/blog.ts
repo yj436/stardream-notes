@@ -384,6 +384,21 @@ export const useBlogStore = defineStore('blog', {
       this.notify('举报处理状态已更新', 'success')
     },
 
+    async updateAdminReports(ids: string[], payload: { status: Report['status']; hidePost?: boolean }) {
+      const uniqueIds = Array.from(new Set(ids))
+      if (!uniqueIds.length) return
+      const updatedReports = await Promise.all(uniqueIds.map((id) => appApi.updateAdminReport(id, payload)))
+      this.adminReports = this.adminReports.map((item) => updatedReports.find((report) => report.id === item.id) ?? item)
+      if (payload.hidePost) {
+        const hiddenPostIds = new Set(updatedReports.map((report) => report.postId))
+        this.adminPosts = await appApi.getAdminPosts()
+        this.posts = this.posts.filter((post) => !hiddenPostIds.has(post.id))
+        this.search = await appApi.searchContent('')
+      }
+      this.adminStats = await appApi.getAdminStats()
+      this.notify(`已批量处理 ${updatedReports.length} 条举报`, 'success')
+    },
+
     notify(text: string, tone: ToastMessage['tone'] = 'info') {
       const message = { id: Date.now() + Math.random(), text, tone }
       this.notifications = [...this.notifications, message]

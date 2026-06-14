@@ -38,6 +38,7 @@ const storageKeys = {
   users: 'stardream:users',
   posts: 'stardream:posts',
   comments: 'stardream:comments',
+  reports: 'stardream:reports',
   animeRecords: 'stardream:anime-records',
   draft: 'stardream:draft',
 }
@@ -312,6 +313,27 @@ const initialAnimeRecords: AnimeRecord[] = [
   },
 ]
 
+const initialReports: Report[] = [
+  {
+    id: 'r_sample_open',
+    postId: 'p_yuki_1',
+    reporterId: 'u_nano',
+    reason: '内容需要复核',
+    detail: '标题和正文里有少量容易误解的表达，建议管理员看一眼。',
+    status: 'open',
+    createdAt: '2026-06-12T20:12:00+08:00',
+  },
+  {
+    id: 'r_sample_reviewing',
+    postId: 'p_cos',
+    reporterId: 'u_mika',
+    reason: '版权或素材说明',
+    detail: '图片素材来源说明不够完整。',
+    status: 'reviewing',
+    createdAt: '2026-06-12T21:30:00+08:00',
+  },
+]
+
 const initialDraft: Draft = {
   title: '',
   content: '',
@@ -322,12 +344,14 @@ const initialDraft: Draft = {
 let users = readStorage(storageKeys.users, initialUsers)
 let posts = readStorage(storageKeys.posts, initialPosts)
 let comments = readStorage(storageKeys.comments, initialComments)
+let reports = readStorage(storageKeys.reports, initialReports)
 let animeRecords = readStorage(storageKeys.animeRecords, initialAnimeRecords)
 let draft = readStorage(storageKeys.draft, initialDraft)
 
 const persistUsers = () => writeStorage(storageKeys.users, users)
 const persistPosts = () => writeStorage(storageKeys.posts, posts)
 const persistComments = () => writeStorage(storageKeys.comments, comments)
+const persistReports = () => writeStorage(storageKeys.reports, reports)
 const persistAnimeRecords = () => writeStorage(storageKeys.animeRecords, animeRecords)
 const persistDraft = () => writeStorage(storageKeys.draft, draft)
 
@@ -468,6 +492,22 @@ export const mockApi = {
     return comments.find((comment) => comment.id === commentId)
   },
 
+  async reportPost(postId: string, reporterId: string, payload: { reason: string; detail?: string }) {
+    await wait(90)
+    const report: Report = {
+      id: `r_${Date.now()}`,
+      postId,
+      reporterId,
+      reason: payload.reason,
+      detail: payload.detail,
+      status: 'open',
+      createdAt: new Date().toISOString(),
+    }
+    reports = [report, ...reports]
+    persistReports()
+    return report
+  },
+
   async addAnimeRecord(userId: string, payload: AnimeRecordPayload) {
     await wait(140)
     const record: AnimeRecord = {
@@ -569,6 +609,11 @@ export const mockApi = {
     return [...posts]
   },
 
+  async getAdminReports() {
+    await wait()
+    return [...reports].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+  },
+
   async updateAdminUser(id: string, payload: { status?: User['status']; role?: User['role'] }) {
     await wait(90)
     users = users.map((user) => (user.id === id ? { ...user, ...payload } : user))
@@ -610,17 +655,14 @@ export const mockApi = {
 
   async updateAdminReport(id: string, payload: { status: Report['status']; hidePost?: boolean }) {
     await wait(90)
+    const current = reports.find((report) => report.id === id)
+    if (!current) return undefined
+    reports = reports.map((report) => (report.id === id ? { ...report, status: payload.status } : report))
     if (payload.hidePost) {
-      posts = posts.map((post) => (post.id === id ? { ...post, status: 'hidden' } : post))
+      posts = posts.map((post) => (post.id === current.postId ? { ...post, status: 'hidden' } : post))
       persistPosts()
     }
-    return {
-      id,
-      postId: id,
-      reporterId: 'mock-user',
-      reason: payload.hidePost ? 'hidden' : 'review',
-      status: payload.status,
-      createdAt: new Date().toISOString(),
-    }
+    persistReports()
+    return reports.find((report) => report.id === id)
   },
 }

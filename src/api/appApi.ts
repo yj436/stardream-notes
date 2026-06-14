@@ -110,14 +110,14 @@ const createMockAuthUser = async (identifier?: string) => {
 }
 
 const getMockAdminStats = async (): Promise<AdminStats> => {
-  const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts()])
+  const [users, posts, reports] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts(), mockApi.getAdminReports()])
   const animeRecords = await Promise.all(users.map((user) => mockApi.getAnimeRecords(user.id)))
   return {
     users: users.length,
     posts: posts.length,
     comments: posts.reduce((total, post) => total + post.commentCount, 0),
     animeRecords: animeRecords.flat().length,
-    reports: 0,
+    reports: reports.filter((report) => report.status === 'open' || report.status === 'reviewing').length,
   }
 }
 
@@ -127,7 +127,7 @@ const getMockAdminComments = async () => {
   return commentGroups.flat().map(normalizeComment)
 }
 
-const getMockReports = async (): Promise<Report[]> => []
+const getMockReports = async (): Promise<Report[]> => mockApi.getAdminReports()
 
 export const appApi = {
   getRuntimeInfo() {
@@ -146,7 +146,7 @@ export const appApi = {
 
   async getSystemHealth(): Promise<ApiHealth> {
     if (shouldUseMockApi) {
-      const [users, posts] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts()])
+      const [users, posts, reports] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts(), mockApi.getAdminReports()])
       return {
         ok: true,
         name: 'stardream-mock-api',
@@ -158,7 +158,7 @@ export const appApi = {
             users: users.length,
             posts: posts.length,
             comments: posts.reduce((total, post) => total + post.commentCount, 0),
-            reports: 0,
+            reports: reports.length,
           },
         },
       }
@@ -366,15 +366,10 @@ export const appApi = {
   async reportPost(id: string, payload: { reason: string; detail?: string }) {
     return withFallback(
       async () => (await client.post<Report>(`/posts/${id}/reports`, payload)).data,
-      async () => ({
-        id: `r_${Date.now()}`,
-        postId: id,
-        reporterId: 'mock-user',
-        reason: payload.reason,
-        detail: payload.detail,
-        status: 'open' as const,
-        createdAt: new Date().toISOString(),
-      }),
+      async () => {
+        const user = await createMockAuthUser()
+        return mockApi.reportPost(id, user.id, payload)
+      },
     )
   },
 
@@ -485,7 +480,11 @@ export const appApi = {
   async updateAdminReport(id: string, payload: { status: Report['status']; hidePost?: boolean }) {
     return withFallback(
       async () => (await client.patch<Report>(`/admin/reports/${id}`, payload)).data,
-      () => mockApi.updateAdminReport(id, payload),
+      async () => {
+        const report = await mockApi.updateAdminReport(id, payload)
+        if (!report) throw new Error('Report not found')
+        return report
+      },
     )
   },
 }

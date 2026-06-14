@@ -134,7 +134,8 @@
 }
 
 :root.dark .admin-table-head,
-:root.dark .admin-panel-head {
+:root.dark .admin-panel-head,
+:root.dark .admin-report-toolbar {
   background: rgba(23, 29, 48, 0.7);
 }
 
