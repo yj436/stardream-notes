@@ -264,6 +264,16 @@ const toDraft = (draft) => ({
   savedAt: draft?.savedAt?.toISOString(),
 })
 
+const toDraftSnapshot = (snapshot) => ({
+  id: snapshot.id,
+  title: snapshot.title,
+  content: snapshot.content,
+  tags: parse(snapshot.tags, []),
+  images: parse(snapshot.images, []),
+  savedAt: snapshot.createdAt.toISOString(),
+  createdAt: snapshot.createdAt.toISOString(),
+})
+
 const createExcerpt = (content) => {
   const clean = String(content ?? '').replace(/\s+/g, ' ').trim()
   return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的星梦笔记。'
@@ -282,6 +292,49 @@ const getDraft = async (userId) =>
       images: stringify([]),
     },
   })
+
+const hasDraftContent = ({ title = '', content = '', images = [] }) =>
+  Boolean(String(title).trim() || String(content).trim() || images.length)
+
+const createDraftSnapshot = async (userId, payload) => {
+  if (!hasDraftContent(payload)) return
+  const tags = payload.tags ?? []
+  const images = payload.images ?? []
+  const latest = await prisma.draftSnapshot.findFirst({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  })
+  if (
+    latest &&
+    latest.title === payload.title &&
+    latest.content === payload.content &&
+    latest.tags === stringify(tags) &&
+    latest.images === stringify(images)
+  ) {
+    return
+  }
+
+  await prisma.draftSnapshot.create({
+    data: {
+      id: createId('ds'),
+      userId,
+      title: payload.title,
+      content: payload.content,
+      tags: stringify(tags),
+      images: stringify(images),
+    },
+  })
+
+  const stale = await prisma.draftSnapshot.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    skip: 5,
+    select: { id: true },
+  })
+  if (stale.length) {
+    await prisma.draftSnapshot.deleteMany({ where: { id: { in: stale.map((item) => item.id) } } })
+  }
+}
 
 app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' })
@@ -454,6 +507,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
       savedAt: new Date(),
     },
   })
+  await prisma.draftSnapshot.deleteMany({ where: { userId: req.user.id } })
   res.status(201).json(toPost(post))
 })
 
@@ -682,6 +736,15 @@ app.get('/api/draft', requireAuth, async (req, res) => {
   res.json(toDraft(draft))
 })
 
+app.get('/api/draft/snapshots', requireAuth, async (req, res) => {
+  const snapshots = await prisma.draftSnapshot.findMany({
+    where: { userId: req.user.id },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  })
+  res.json(snapshots.map(toDraftSnapshot))
+})
+
 app.put('/api/draft', requireAuth, async (req, res) => {
   const { title = '', content = '', tags = [], images = [] } = req.body
   const draft = await prisma.draft.upsert({
@@ -694,6 +757,34 @@ app.put('/api/draft', requireAuth, async (req, res) => {
       content,
       tags: stringify(tags),
       images: stringify(images),
+      savedAt: new Date(),
+    },
+  })
+  await createDraftSnapshot(req.user.id, { title, content, tags, images })
+  res.json(toDraft(draft))
+})
+
+app.post('/api/draft/snapshots/:id/restore', requireAuth, async (req, res) => {
+  const snapshot = await prisma.draftSnapshot.findFirst({
+    where: { id: req.params.id, userId: req.user.id },
+  })
+  if (!snapshot) return res.status(404).json({ message: 'Draft snapshot not found' })
+  const draft = await prisma.draft.upsert({
+    where: { userId: req.user.id },
+    update: {
+      title: snapshot.title,
+      content: snapshot.content,
+      tags: snapshot.tags,
+      images: snapshot.images,
+      savedAt: new Date(),
+    },
+    create: {
+      id: `draft_${req.user.id}`,
+      userId: req.user.id,
+      title: snapshot.title,
+      content: snapshot.content,
+      tags: snapshot.tags,
+      images: snapshot.images,
       savedAt: new Date(),
     },
   })

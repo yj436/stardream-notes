@@ -11,9 +11,11 @@ import {
   Columns3,
   Eye,
   FileText,
+  History,
   ImagePlus,
   Link2,
   Minus,
+  RotateCcw,
   Save,
   Send,
   Smile,
@@ -71,6 +73,7 @@ const canPublish = computed(() => form.title.trim().length >= 4 && form.content.
 const editingPost = computed(() => blog.posts.find((post) => post.id === editingPostId.value))
 const wordCount = computed(() => form.content.replace(/\s/g, '').length)
 const readingMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 350)))
+const draftSnapshotCount = computed(() => blog.draftSnapshots.length)
 const paragraphCount = computed(() => form.content.split(/\n{2,}/).filter((item) => item.trim()).length)
 const outline = computed(() => extractArticleHeadings(form.content, 12, { minDepth: 1, maxDepth: 3 }))
 const outlineSummary = computed(() => (outline.value.length ? `${outline.value.length} 个标题` : '等待标题'))
@@ -96,6 +99,19 @@ const publishHint = computed(() => {
   if (contentWarnings.value.length) return '检测到敏感词提示，建议确认表达后再发布。'
   return editingPost.value ? '内容已满足保存修改条件。' : '内容已满足发布条件，可以投递到推荐流。'
 })
+
+const formatSnapshotTime = (value: string) =>
+  new Date(value).toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+const snapshotExcerpt = (content: string) => {
+  const clean = content.replace(/\s+/g, ' ').trim()
+  return clean.length > 54 ? `${clean.slice(0, 54)}...` : clean || '空白版本'
+}
 
 const appendMarkdownBlock = (text: string) => {
   const block = text.trimEnd()
@@ -195,6 +211,16 @@ const save = async () => {
 
 const handleEditorSave = () => {
   void save()
+}
+
+const restoreSnapshot = async (id: string) => {
+  const restored = await blog.restoreDraftSnapshot(id)
+  if (!restored) return
+  form.title = restored.title
+  form.content = restored.content
+  form.tagsText = restored.tags.join(',')
+  form.images = [...restored.images]
+  savedMessage.value = `已恢复版本：${new Date(restored.savedAt ?? '').toLocaleTimeString('zh-CN')}`
 }
 
 const addMockImage = () => {
@@ -438,6 +464,23 @@ watch(
         <button type="submit" class="primary-button"><Send :size="18" />{{ editingPost ? '保存修改' : '发布文章' }}</button>
         <span>{{ savedMessage }}</span>
       </div>
+      <section v-if="!editingPost" class="draft-history-panel">
+        <div class="draft-history-head">
+          <span class="section-kicker"><History :size="16" /> 草稿版本</span>
+          <small>最近 {{ draftSnapshotCount }}/5 个自动快照</small>
+        </div>
+        <div v-if="blog.draftSnapshots.length" class="draft-history-list">
+          <button v-for="snapshot in blog.draftSnapshots" :key="snapshot.id" type="button" @click="restoreSnapshot(snapshot.id)">
+            <span>
+              <strong>{{ snapshot.title || '未命名草稿' }}</strong>
+              <small>{{ snapshotExcerpt(snapshot.content) }}</small>
+            </span>
+            <em>{{ formatSnapshotTime(snapshot.createdAt) }}</em>
+            <RotateCcw :size="15" />
+          </button>
+        </div>
+        <p v-else class="empty-note">保存草稿后会保留最近 5 个版本，可随时恢复。</p>
+      </section>
     </form>
 
     <aside v-if="editorMode === 'split'" class="preview-panel editor-preview-rail">

@@ -11,6 +11,7 @@ import type {
   AnimeRecordPayload,
   Comment,
   Draft,
+  DraftSnapshot,
   HomeCarouselSlide,
   NewPostPayload,
   Post,
@@ -43,6 +44,7 @@ const storageKeys = {
   homeCarousel: 'stardream:home-carousel',
   animeRecords: 'stardream:anime-records',
   draft: 'stardream:draft',
+  draftSnapshots: 'stardream:draft-snapshots',
 }
 
 const dataVersion = 'acgn-blog-2026-06-12-reactions'
@@ -381,6 +383,7 @@ let reports = readStorage(storageKeys.reports, initialReports)
 let homeCarousel = readStorage(storageKeys.homeCarousel, buildDefaultHomeCarousel())
 let animeRecords = readStorage(storageKeys.animeRecords, initialAnimeRecords)
 let draft = readStorage(storageKeys.draft, initialDraft)
+let draftSnapshots = readStorage<DraftSnapshot[]>(storageKeys.draftSnapshots, [])
 
 const persistUsers = () => writeStorage(storageKeys.users, users)
 const persistPosts = () => writeStorage(storageKeys.posts, posts)
@@ -389,6 +392,34 @@ const persistReports = () => writeStorage(storageKeys.reports, reports)
 const persistHomeCarousel = () => writeStorage(storageKeys.homeCarousel, homeCarousel)
 const persistAnimeRecords = () => writeStorage(storageKeys.animeRecords, animeRecords)
 const persistDraft = () => writeStorage(storageKeys.draft, draft)
+const persistDraftSnapshots = () => writeStorage(storageKeys.draftSnapshots, draftSnapshots)
+
+const isMeaningfulDraft = (payload: Draft) =>
+  Boolean(payload.title?.trim() || payload.content?.trim() || payload.images?.length)
+
+const sameDraftSnapshot = (snapshot: DraftSnapshot | undefined, payload: Draft) =>
+  Boolean(
+    snapshot &&
+      snapshot.title === payload.title &&
+      snapshot.content === payload.content &&
+      JSON.stringify(snapshot.tags) === JSON.stringify(payload.tags) &&
+      JSON.stringify(snapshot.images) === JSON.stringify(payload.images),
+  )
+
+const createDraftSnapshot = (payload: Draft) => {
+  if (!isMeaningfulDraft(payload) || sameDraftSnapshot(draftSnapshots[0], payload)) return
+  const snapshot: DraftSnapshot = {
+    id: `ds_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+    title: payload.title,
+    content: payload.content,
+    tags: [...payload.tags],
+    images: [...payload.images],
+    savedAt: payload.savedAt,
+    createdAt: new Date().toISOString(),
+  }
+  draftSnapshots = [snapshot, ...draftSnapshots].slice(0, 5)
+  persistDraftSnapshots()
+}
 
 const createExcerpt = (content: string) => {
   const clean = content.replace(/\s+/g, ' ').trim()
@@ -626,9 +657,11 @@ export const mockApi = {
       user.id === authorId ? { ...user, stats: { ...user.stats, posts: user.stats.posts + 1 } } : user,
     )
     draft = { ...initialDraft, savedAt: new Date().toISOString() }
+    draftSnapshots = []
     persistPosts()
     persistUsers()
     persistDraft()
+    persistDraftSnapshots()
     return post
   },
 
@@ -661,9 +694,30 @@ export const mockApi = {
     return { ...draft }
   },
 
+  async getDraftSnapshots() {
+    await wait(70)
+    return [...draftSnapshots]
+  },
+
   async saveDraft(payload: Draft) {
     await wait(100)
     draft = { ...payload, savedAt: new Date().toISOString() }
+    persistDraft()
+    createDraftSnapshot(draft)
+    return { ...draft }
+  },
+
+  async restoreDraftSnapshot(id: string) {
+    await wait(100)
+    const snapshot = draftSnapshots.find((item) => item.id === id)
+    if (!snapshot) return { ...draft }
+    draft = {
+      title: snapshot.title,
+      content: snapshot.content,
+      tags: [...snapshot.tags],
+      images: [...snapshot.images],
+      savedAt: new Date().toISOString(),
+    }
     persistDraft()
     return { ...draft }
   },

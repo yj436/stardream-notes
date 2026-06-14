@@ -54,6 +54,7 @@
 :root.dark .rich-editor-head strong,
 :root.dark .editor-outline strong,
 :root.dark .editor-asset-strip strong,
+:root.dark .draft-history-list strong,
 :root.dark .admin-entity,
 :root.dark .admin-comment-copy,
 :root.dark .gallery-feature-card a,
@@ -105,6 +106,8 @@
 :root.dark .editor-preview-inline,
 :root.dark .editor-metrics span,
 :root.dark .editor-asset-chip,
+:root.dark .draft-history-panel,
+:root.dark .draft-history-list button,
 :root.dark textarea,
 :root.dark input,
 :root.dark select {

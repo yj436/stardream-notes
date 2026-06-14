@@ -29,6 +29,7 @@ model User {
   comments          Comment[]
   animeRecords      AnimeRecord[]
   draft             Draft?
+  draftSnapshots    DraftSnapshot[]
   reports           Report[]      @relation("Reporter")
   createdAt         DateTime      @default(now()) @db.DateTime(3)
   updatedAt         DateTime      @updatedAt @db.DateTime(3)
@@ -104,6 +105,19 @@ model Draft {
   images  String    @db.Text
   savedAt DateTime? @db.DateTime(3)
   user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DraftSnapshot {
+  id        String   @id @default(cuid()) @db.VarChar(64)
+  userId    String   @db.VarChar(64)
+  title     String   @db.VarChar(191)
+  content   String   @db.LongText
+  tags      String   @db.Text
+  images    String   @db.Text
+  createdAt DateTime @default(now()) @db.DateTime(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Report {

@@ -126,6 +126,11 @@ export interface Draft {
   savedAt?: string
 }
 
+export interface DraftSnapshot extends Draft {
+  id: string
+  createdAt: string
+}
+
 export interface NewPostPayload {
   title: string
   content: string

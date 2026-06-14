@@ -2116,6 +2116,82 @@ label {
   color: #af4f18;
 }
 
+.draft-history-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.draft-history-head,
+.draft-history-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.draft-history-head small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.draft-history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.draft-history-list button {
+  width: 100%;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #283452;
+  background: rgba(255, 255, 255, 0.78);
+  text-align: left;
+}
+
+.draft-history-list button:hover {
+  border-color: rgba(255, 111, 168, 0.45);
+  background: var(--pink-soft);
+}
+
+.draft-history-list button span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.draft-history-list strong,
+.draft-history-list small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.draft-history-list strong {
+  color: #1e2847;
+  font-size: 0.92rem;
+}
+
+.draft-history-list small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.draft-history-list em {
+  color: #7d6b86;
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .preview-panel {
   position: sticky;
   top: 92px;
@@ -4282,6 +4358,15 @@ label {
 
   .editor-modebar button {
     flex: 1 1 0;
+  }
+
+  .draft-history-list button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .draft-history-list em {
+    grid-column: 1 / -1;
   }
 
   .stardream-md-editor,

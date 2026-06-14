@@ -28,6 +28,7 @@ model User {
   posts               Post[]
   comments            Comment[]
   animeRecords        AnimeRecord[]
+  draftSnapshots      DraftSnapshot[]
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 }
@@ -90,6 +91,17 @@ model Draft {
   tags      String
   images    String
   savedAt   DateTime?
+}
+
+model DraftSnapshot {
+  id        String   @id
+  userId    String
+  title     String
+  content   String
+  tags      String
+  images    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Report {

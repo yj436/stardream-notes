@@ -10,6 +10,7 @@ import type {
   AuthResult,
   Comment,
   Draft,
+  DraftSnapshot,
   HomeCarouselSlide,
   LoginPayload,
   NewPostPayload,
@@ -82,6 +83,11 @@ const normalizeAnimeRecord = (record: AnimeRecord): AnimeRecord => ({
 const normalizeDraft = (draft: Draft): Draft => ({
   ...draft,
   images: draft.images.map(resolveAsset),
+})
+
+const normalizeDraftSnapshot = (snapshot: DraftSnapshot): DraftSnapshot => ({
+  ...snapshot,
+  images: snapshot.images.map(resolveAsset),
 })
 
 const normalizeCarouselSlide = (slide: HomeCarouselSlide): HomeCarouselSlide => ({
@@ -411,6 +417,13 @@ export const appApi = {
     )
   },
 
+  async getDraftSnapshots() {
+    return withFallback(
+      async () => (await client.get<DraftSnapshot[]>('/draft/snapshots')).data.map(normalizeDraftSnapshot),
+      async () => (await mockApi.getDraftSnapshots()).map(normalizeDraftSnapshot),
+    )
+  },
+
   async uploadImage(file: File) {
     const form = new FormData()
     form.append('image', file)
@@ -428,6 +441,13 @@ export const appApi = {
     return withFallback(
       async () => normalizeDraft((await client.put<Draft>('/draft', payload)).data),
       () => mockApi.saveDraft(payload),
+    )
+  },
+
+  async restoreDraftSnapshot(id: string) {
+    return withFallback(
+      async () => normalizeDraft((await client.post<Draft>(`/draft/snapshots/${id}/restore`)).data),
+      () => mockApi.restoreDraftSnapshot(id),
     )
   },
 

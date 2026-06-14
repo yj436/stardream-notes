@@ -9,6 +9,7 @@ import type {
   AnimeStatus,
   Comment,
   Draft,
+  DraftSnapshot,
   HomeCarouselSlide,
   LoginPayload,
   NewPostPayload,
@@ -38,6 +39,7 @@ interface BlogState {
   animeRecords: AnimeRecord[]
   homeCarouselSlides: HomeCarouselSlide[]
   draft: Draft
+  draftSnapshots: DraftSnapshot[]
   search: SearchResult
   adminStats: AdminStats | null
   adminUsers: User[]
@@ -61,6 +63,7 @@ export const useBlogStore = defineStore('blog', {
     animeRecords: [],
     homeCarouselSlides: [],
     draft: { title: '', content: '', tags: ['原创企划'], images: [] },
+    draftSnapshots: [],
     search: { posts: [], users: [], tags: [] },
     adminStats: null,
     adminUsers: [],
@@ -110,16 +113,18 @@ export const useBlogStore = defineStore('blog', {
             this.authToken = null
           }
           getNotifStore()
-          const [users, posts, homeCarouselSlides, draft] = await Promise.all([
+          const [users, posts, homeCarouselSlides, draft, draftSnapshots] = await Promise.all([
             appApi.getUsers(),
             appApi.getPosts(),
             appApi.getHomeCarousel(),
             me ? appApi.getDraft() : Promise.resolve(this.draft),
+            me ? appApi.getDraftSnapshots() : Promise.resolve([]),
           ])
           this.users = me ? [me, ...users.filter((user) => user.id !== me.id)] : users
           this.posts = posts
           this.homeCarouselSlides = homeCarouselSlides
           this.draft = draft
+          this.draftSnapshots = draftSnapshots
           this.search = await appApi.searchContent('')
         } finally {
           this.loading = false
@@ -140,6 +145,7 @@ export const useBlogStore = defineStore('blog', {
       this.currentUserId = result.user.id
       this.users = [result.user, ...this.users.filter((user) => user.id !== result.user.id)]
       this.draft = await appApi.getDraft()
+      this.draftSnapshots = await appApi.getDraftSnapshots()
       this.gainExp('DAILY_LOGIN')
       this.notify(`欢迎回来，${result.user.nickname}`, 'success')
       return result.user
@@ -151,6 +157,7 @@ export const useBlogStore = defineStore('blog', {
       this.currentUserId = result.user.id
       this.users = [result.user, ...this.users]
       this.draft = await appApi.getDraft()
+      this.draftSnapshots = await appApi.getDraftSnapshots()
       this.gainExp('DAILY_LOGIN')
       this.notify('注册成功，欢迎来到星梦笔记', 'success')
       return result.user
@@ -160,6 +167,7 @@ export const useBlogStore = defineStore('blog', {
       appApi.setToken(null)
       this.authToken = null
       this.currentUserId = ''
+      this.draftSnapshots = []
       this.draft = { title: '', content: '', tags: ['原创企划'], images: [] }
       this.notify('已退出登录', 'info')
     },
@@ -291,8 +299,17 @@ export const useBlogStore = defineStore('blog', {
     async saveDraft(payload: Draft) {
       if (!this.requireLogin()) return
       this.draft = await appApi.saveDraft(payload)
+      this.draftSnapshots = await appApi.getDraftSnapshots()
       this.gainExp('DRAFT_SAVE')
       this.notify('草稿已保存', 'success')
+    },
+
+    async restoreDraftSnapshot(id: string) {
+      if (!this.requireLogin()) return null
+      this.draft = await appApi.restoreDraftSnapshot(id)
+      this.draftSnapshots = await appApi.getDraftSnapshots()
+      this.notify('已恢复草稿版本', 'success')
+      return this.draft
     },
 
     async publishPost(payload: NewPostPayload) {
@@ -301,6 +318,7 @@ export const useBlogStore = defineStore('blog', {
       this.posts = [post, ...this.posts]
       this.users = await appApi.getUsers()
       this.draft = await appApi.getDraft()
+      this.draftSnapshots = []
       this.search = await appApi.searchContent('')
       this.gainExp('PUBLISH_POST')
       this.notify('新笔记已发布', 'success')
