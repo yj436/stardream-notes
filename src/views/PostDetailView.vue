@@ -9,6 +9,7 @@ import { useBlogStore } from '@/stores/blog'
 import type { Comment, PostReactionKey } from '@/types/content'
 import { extractArticleHeadings } from '@/utils/heading'
 import { buildAppUrl, updatePageMeta } from '@/composables/useSeoMeta'
+import { imageAlt, imageUrl } from '@/utils/image'
 
 const route = useRoute()
 const router = useRouter()
@@ -206,7 +207,12 @@ watch(
         </div>
 
         <div class="gallery-row" v-if="post.gallery.length">
-          <img v-for="(image, index) in post.gallery" :key="`${image}-${index}`" :src="image" alt="作品图" />
+          <img
+            v-for="(image, index) in post.gallery"
+            :key="`${imageUrl(image)}-${index}`"
+            :src="imageUrl(image)"
+            :alt="imageAlt(image, post.title)"
+          />
         </div>
 
         <div class="reaction-bar">

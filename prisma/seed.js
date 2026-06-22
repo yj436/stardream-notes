@@ -16,6 +16,7 @@ const asset = {
 }
 
 const json = (value) => JSON.stringify(value)
+const image = (url, alt) => ({ url, alt })
 const readJson = (value, fallback) => {
   try {
     return value ? JSON.parse(value) : fallback
@@ -133,7 +134,7 @@ const posts = [
     imagePosition: 'center',
     type: 'article',
     tags: json(['绘画教程', '星空', '原创企划']),
-    gallery: json([asset.starryDesk, asset.galaxySchool]),
+    gallery: json([image(asset.starryDesk, '星空书桌上的创作笔记封面'), image(asset.galaxySchool, '银河校园风格的原创企划插画')]),
     viewCount: 38620,
     likeCount: 2840,
     favoriteCount: 932,
@@ -154,7 +155,7 @@ const posts = [
     imagePosition: '70% 28%',
     type: 'gallery',
     tags: json(['Cosplay', '摄影', '布光']),
-    gallery: json([asset.moonlightCos, asset.creators]),
+    gallery: json([image(asset.moonlightCos, '月光影棚里的 Cos 布光成片'), image(asset.creators, '创作者角色设定参考图')]),
     viewCount: 15940,
     likeCount: 1296,
     favoriteCount: 441,
@@ -173,7 +174,7 @@ const posts = [
     imagePosition: '35% 55%',
     type: 'record',
     tags: json(['追番记录', '治愈系', '短评']),
-    gallery: json([asset.healingAnime]),
+    gallery: json([image(asset.healingAnime, '治愈系追番记录封面')]),
     viewCount: 21800,
     likeCount: 1720,
     favoriteCount: 508,
@@ -192,7 +193,7 @@ const posts = [
     imagePosition: '20% 40%',
     type: 'article',
     tags: json(['绘画教程', '水彩', '同人画']),
-    gallery: json([asset.sakuraWatercolor]),
+    gallery: json([image(asset.sakuraWatercolor, '樱花水彩花瓣练习封面')]),
     viewCount: 25840,
     likeCount: 2210,
     favoriteCount: 874,
@@ -212,7 +213,7 @@ const posts = [
     imagePosition: 'center',
     type: 'article',
     tags: json(['轻小说', '原创企划', '异世界']),
-    gallery: json([asset.novelKitchen]),
+    gallery: json([image(asset.novelKitchen, '轻小说异世界料理人厨房封面')]),
     viewCount: 38900,
     likeCount: 3150,
     favoriteCount: 1420,

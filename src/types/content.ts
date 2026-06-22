@@ -46,7 +46,7 @@ export interface Post {
   imagePosition?: string
   type: PostType
   tags: string[]
-  gallery: string[]
+  gallery: ImageAsset[]
   viewCount: number
   likeCount: number
   favoriteCount: number
@@ -57,6 +57,11 @@ export interface Post {
   isLiked?: boolean
   isFavorited?: boolean
   reactions?: Record<PostReactionKey, number>
+}
+
+export interface ImageAsset {
+  url: string
+  alt: string
 }
 
 export interface HomeCarouselSlide {
@@ -122,7 +127,7 @@ export interface Draft {
   title: string
   content: string
   tags: string[]
-  images: string[]
+  images: ImageAsset[]
   savedAt?: string
 }
 
@@ -135,7 +140,7 @@ export interface NewPostPayload {
   title: string
   content: string
   tags: string[]
-  images: string[]
+  images: ImageAsset[]
   type: PostType
 }
 

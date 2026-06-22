@@ -6,6 +6,7 @@ import coverMoonlightCos from '@/assets/images/cover-moonlight-cos.png'
 import coverNovelKitchen from '@/assets/images/cover-novel-kitchen.png'
 import coverSakuraWatercolor from '@/assets/images/cover-sakura-watercolor.png'
 import coverStarryDesk from '@/assets/images/cover-starry-desk.png'
+import { normalizeImageAssets } from '@/utils/image'
 import type {
   AnimeRecord,
   AnimeRecordPayload,
@@ -13,6 +14,7 @@ import type {
   Draft,
   DraftSnapshot,
   HomeCarouselSlide,
+  ImageAsset,
   NewPostPayload,
   Post,
   PostReactionKey,
@@ -49,6 +51,7 @@ const storageKeys = {
 
 const dataVersion = 'acgn-blog-2026-06-12-reactions'
 const emptyReactions: Record<PostReactionKey, number> = { heart: 0, laugh: 0, cry: 0, fire: 0 }
+const imageAsset = (url: string, alt: string): ImageAsset => ({ url, alt })
 
 const readStorage = <T>(key: string, fallback: T): T => {
   try {
@@ -159,7 +162,7 @@ const initialPosts: Post[] = [
     imagePosition: 'center',
     type: 'article',
     tags: ['绘画教程', '星空', '原创企划'],
-    gallery: [coverStarryDesk, coverGalaxySchool],
+    gallery: [imageAsset(coverStarryDesk, '星空书桌上的创作笔记封面'), imageAsset(coverGalaxySchool, '银河校园风格的原创企划插画')],
     viewCount: 38620,
     likeCount: 2840,
     favoriteCount: 932,
@@ -180,7 +183,7 @@ const initialPosts: Post[] = [
     imagePosition: '70% 28%',
     type: 'gallery',
     tags: ['Cosplay', '摄影', '布光'],
-    gallery: [coverMoonlightCos, creatorSheet],
+    gallery: [imageAsset(coverMoonlightCos, '月光影棚里的 Cos 布光成片'), imageAsset(creatorSheet, '创作者角色设定参考图')],
     viewCount: 15940,
     likeCount: 1296,
     favoriteCount: 441,
@@ -199,7 +202,7 @@ const initialPosts: Post[] = [
     imagePosition: '35% 55%',
     type: 'record',
     tags: ['追番记录', '治愈系', '短评'],
-    gallery: [coverHealingAnime],
+    gallery: [imageAsset(coverHealingAnime, '治愈系追番记录封面')],
     viewCount: 21800,
     likeCount: 1720,
     favoriteCount: 508,
@@ -218,7 +221,7 @@ const initialPosts: Post[] = [
     imagePosition: '20% 40%',
     type: 'article',
     tags: ['绘画教程', '水彩', '同人画'],
-    gallery: [coverSakuraWatercolor],
+    gallery: [imageAsset(coverSakuraWatercolor, '樱花水彩花瓣练习封面')],
     viewCount: 25840,
     likeCount: 2210,
     favoriteCount: 874,
@@ -236,7 +239,7 @@ const initialPosts: Post[] = [
       '睁开眼睛的时候，我站在巨大的魔法阵中央。\n\n“勇者大人，请拯救我们的世界。”王国公主单膝跪地。\n\n我沉默片刻，问她：“你们这里的厨房在哪里？”\n\n不是因为我不关心这个世界，而是我刚做完晚班，还没有吃饭。',
     type: 'article',
     tags: ['轻小说', '原创企划', '异世界'],
-    gallery: [coverNovelKitchen],
+    gallery: [imageAsset(coverNovelKitchen, '轻小说异世界料理人厨房封面')],
     coverUrl: coverNovelKitchen,
     imagePosition: 'center',
     viewCount: 38900,
@@ -255,7 +258,7 @@ const initialPosts: Post[] = [
       '春季番已经陆续完结，趁记忆还新鲜整理一份私人简评。\n\n值得追满的作品通常不是设定最复杂的，而是每一集都能把情绪推进一点。评论区也欢迎分享你的本季最佳。',
     type: 'record',
     tags: ['追番记录', '动画', '2026春番'],
-    gallery: [coverHealingAnime],
+    gallery: [imageAsset(coverHealingAnime, '春季番治愈系动画封面')],
     coverUrl: coverHealingAnime,
     imagePosition: '50% 60%',
     viewCount: 45200,
@@ -403,17 +406,19 @@ const sameDraftSnapshot = (snapshot: DraftSnapshot | undefined, payload: Draft) 
       snapshot.title === payload.title &&
       snapshot.content === payload.content &&
       JSON.stringify(snapshot.tags) === JSON.stringify(payload.tags) &&
-      JSON.stringify(snapshot.images) === JSON.stringify(payload.images),
+      JSON.stringify(normalizeImageAssets(snapshot.images, payload.title || '草稿图片')) ===
+        JSON.stringify(normalizeImageAssets(payload.images, payload.title || '草稿图片')),
   )
 
 const createDraftSnapshot = (payload: Draft) => {
   if (!isMeaningfulDraft(payload) || sameDraftSnapshot(draftSnapshots[0], payload)) return
+  const images = normalizeImageAssets(payload.images, payload.title || '草稿图片')
   const snapshot: DraftSnapshot = {
     id: `ds_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
     title: payload.title,
     content: payload.content,
     tags: [...payload.tags],
-    images: [...payload.images],
+    images,
     savedAt: payload.savedAt,
     createdAt: new Date().toISOString(),
   }
@@ -631,18 +636,20 @@ export const mockApi = {
 
   async publishPost(authorId: string, payload: NewPostPayload) {
     await wait(160)
-    const firstImage = payload.images[0] ?? heroImage
+    const images = normalizeImageAssets(payload.images, payload.title.trim() || '作品图')
+    const fallbackImage = imageAsset(heroImage, payload.title.trim() || '星梦笔记封面')
+    const firstImage = images[0] ?? fallbackImage
     const post: Post = {
       id: `p_${Date.now()}`,
       authorId,
       title: payload.title.trim(),
       excerpt: createExcerpt(payload.content),
       content: payload.content.trim(),
-      coverUrl: firstImage,
-      imagePosition: firstImage === creatorSheet ? '70% 28%' : 'center',
+      coverUrl: firstImage.url,
+      imagePosition: firstImage.url === creatorSheet ? '70% 28%' : 'center',
       type: payload.type,
       tags: payload.tags.length ? payload.tags : ['原创企划'],
-      gallery: payload.images.length ? payload.images : [heroImage],
+      gallery: images.length ? images : [fallbackImage],
       viewCount: 0,
       likeCount: 0,
       favoriteCount: 0,
@@ -701,7 +708,7 @@ export const mockApi = {
 
   async saveDraft(payload: Draft) {
     await wait(100)
-    draft = { ...payload, savedAt: new Date().toISOString() }
+    draft = { ...payload, images: normalizeImageAssets(payload.images, payload.title || '草稿图片'), savedAt: new Date().toISOString() }
     persistDraft()
     createDraftSnapshot(draft)
     return { ...draft }
@@ -715,7 +722,7 @@ export const mockApi = {
       title: snapshot.title,
       content: snapshot.content,
       tags: [...snapshot.tags],
-      images: [...snapshot.images],
+      images: normalizeImageAssets(snapshot.images, snapshot.title || '草稿图片'),
       savedAt: new Date().toISOString(),
     }
     persistDraft()

@@ -2306,6 +2306,19 @@ label {
   white-space: nowrap;
 }
 
+.editor-asset-copy {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.editor-asset-copy input {
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+}
+
 .editor-asset-chip button {
   min-height: 30px;
   padding: 5px 8px;

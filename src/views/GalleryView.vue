@@ -16,12 +16,13 @@ import {
 import TimestampPill from '@/components/TimestampPill.vue'
 import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
-import type { Post, PostType } from '@/types/content'
+import type { ImageAsset, Post, PostType } from '@/types/content'
+import { imageAlt, imageUrl, normalizeImageAsset } from '@/utils/image'
 
 type GallerySort = 'latest' | 'hot' | 'views'
 type GalleryItem = {
   id: string
-  image: string
+  image: ImageAsset
   post: Post
   index: number
   authorName: string
@@ -53,7 +54,8 @@ const sortOptions: Array<{ label: string; value: GallerySort }> = [
 const galleryItems = computed<GalleryItem[]>(() =>
   blog.posts.flatMap((post) => {
     const author = blog.users.find((user) => user.id === post.authorId)
-    const images = post.gallery.length ? post.gallery : post.coverUrl ? [post.coverUrl] : []
+    const fallback = normalizeImageAsset(post.coverUrl, post.title)
+    const images = post.gallery.length ? post.gallery : fallback ? [fallback] : []
     return images.map((image, index) => ({
       id: `${post.id}-${index}`,
       image,
@@ -149,7 +151,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
     <section
       class="page-hero gallery-hero"
       :style="{
-        backgroundImage: `linear-gradient(135deg, rgba(23, 30, 55, 0.16), rgba(23, 30, 55, 0.78)), url(${featuredItem?.image || imageAssets.starryDesk})`,
+        backgroundImage: `linear-gradient(135deg, rgba(23, 30, 55, 0.16), rgba(23, 30, 55, 0.78)), url(${featuredItem ? imageUrl(featuredItem.image) : imageAssets.starryDesk})`,
       }"
     >
       <div class="halo-sakura-layer" aria-hidden="true" />
@@ -208,7 +210,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
 
         <section v-if="featuredItem" class="side-card gallery-feature-card">
           <span class="section-kicker"><Eye :size="16" /> 当前主推</span>
-          <img :src="featuredItem.image" :alt="featuredItem.post.title" />
+          <img :src="imageUrl(featuredItem.image)" :alt="imageAlt(featuredItem.image, featuredItem.post.title)" />
           <RouterLink :to="`/post/${featuredItem.post.id}`">{{ featuredItem.post.title }}</RouterLink>
           <small>{{ featuredItem.authorName }} · {{ featuredItem.post.likeCount }} 赞</small>
         </section>
@@ -222,7 +224,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
           :class="['gallery-card', item.shape]"
           @click="openLightbox(item)"
         >
-          <img :src="item.image" :alt="item.post.title" :style="{ objectPosition: item.post.imagePosition ?? 'center' }" />
+          <img :src="imageUrl(item.image)" :alt="imageAlt(item.image, item.post.title)" :style="{ objectPosition: item.post.imagePosition ?? 'center' }" />
           <span class="gallery-card-overlay">
             <span class="gallery-card-title">{{ item.post.title }}</span>
             <span class="gallery-card-meta">
@@ -247,7 +249,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
           <ArrowLeft :size="22" />
         </button>
         <figure>
-          <img :src="activeItem.image" :alt="activeItem.post.title" />
+          <img :src="imageUrl(activeItem.image)" :alt="imageAlt(activeItem.image, activeItem.post.title)" />
           <figcaption>
             <div>
               <span class="section-kicker"><Images :size="16" /> {{ activeIndex + 1 }} / {{ filteredItems.length }}</span>

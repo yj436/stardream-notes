@@ -23,12 +23,13 @@ import {
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
-import type { PostType } from '@/types/content'
+import type { ImageAsset, PostType } from '@/types/content'
 import { formatDateTime, formatUnixTimestamp } from '@/utils/time'
 import { extractArticleHeadings, type ArticleHeading } from '@/utils/heading'
 import { appApi } from '@/api/appApi'
 import { moderateContent } from '@/composables/useModeration'
 import { useAppTheme } from '@/composables/useAppTheme'
+import { imageAlt, imageLabel, imageUrl, markdownImageAlt, normalizeImageAsset, normalizeImageAssets } from '@/utils/image'
 
 const blog = useBlogStore()
 const router = useRouter()
@@ -65,7 +66,7 @@ const form = reactive({
   content: '',
   tagsText: '原创企划,绘画教程',
   type: 'article' as PostType,
-  images: [] as string[],
+  images: [] as ImageAsset[],
 })
 
 const tags = computed(() => form.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean))
@@ -74,6 +75,7 @@ const editingPost = computed(() => blog.posts.find((post) => post.id === editing
 const wordCount = computed(() => form.content.replace(/\s/g, '').length)
 const readingMinutes = computed(() => Math.max(1, Math.ceil(wordCount.value / 350)))
 const draftSnapshotCount = computed(() => blog.draftSnapshots.length)
+const coverImage = computed(() => form.images[0])
 const paragraphCount = computed(() => form.content.split(/\n{2,}/).filter((item) => item.trim()).length)
 const outline = computed(() => extractArticleHeadings(form.content, 12, { minDepth: 1, maxDepth: 3 }))
 const outlineSummary = computed(() => (outline.value.length ? `${outline.value.length} 个标题` : '等待标题'))
@@ -140,6 +142,8 @@ const insertDivider = () => {
   appendMarkdownBlock('---')
 }
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 const lineToOffset = (line: number) => {
   const lines = form.content.split('\n')
   return lines.slice(0, Math.max(0, line - 1)).reduce((total, item) => total + item.length + 1, 0)
@@ -188,13 +192,18 @@ const triggerUpload = () => {
   uploadInputRef.value?.click()
 }
 
-const addImageAsset = (url: string) => {
-  if (!form.images.includes(url)) form.images.push(url)
+const addImageAsset = (url: string, alt = '作品图') => {
+  const asset = normalizeImageAsset({ url, alt }, alt)
+  if (!asset) return
+  const exists = form.images.some((image) => imageUrl(image) === asset.url)
+  if (!exists) form.images.push(asset)
 }
 
 const insertImageMarkdown = (url: string, alt = '作品图') => {
-  addImageAsset(url)
-  appendMarkdownBlock(`![${alt}](${url})`)
+  const asset = normalizeImageAsset({ url, alt }, alt)
+  if (!asset) return
+  addImageAsset(asset.url, asset.alt)
+  appendMarkdownBlock(`![${markdownImageAlt(asset.alt)}](${asset.url})`)
 }
 
 const createFallbackImage = () => (form.images.length % 2 === 0 ? imageAssets.hero : imageAssets.creators)
@@ -205,7 +214,7 @@ const save = async () => {
     await router.push('/login')
     return
   }
-  await blog.saveDraft({ title: form.title, content: form.content, tags: tags.value, images: form.images })
+  await blog.saveDraft({ title: form.title, content: form.content, tags: tags.value, images: normalizeImageAssets(form.images, form.title || '草稿图片') })
   savedMessage.value = `草稿已保存：${new Date(blog.draft.savedAt ?? '').toLocaleTimeString('zh-CN')}`
 }
 
@@ -219,7 +228,7 @@ const restoreSnapshot = async (id: string) => {
   form.title = restored.title
   form.content = restored.content
   form.tagsText = restored.tags.join(',')
-  form.images = [...restored.images]
+  form.images = normalizeImageAssets(restored.images, restored.title || '草稿图片')
   savedMessage.value = `已恢复版本：${new Date(restored.savedAt ?? '').toLocaleTimeString('zh-CN')}`
 }
 
@@ -227,8 +236,16 @@ const addMockImage = () => {
   insertImageMarkdown(createFallbackImage())
 }
 
-const removeImage = (image: string) => {
-  form.images = form.images.filter((item) => item !== image)
+const updateImageAlt = (url: string, alt: string) => {
+  const safeAlt = markdownImageAlt(alt)
+  form.images = form.images.map((image) => (imageUrl(image) === url ? { ...image, alt: safeAlt } : image))
+  const markdownPattern = new RegExp(`!\\[[^\\]]*\\]\\(${escapeRegExp(url)}\\)`, 'g')
+  form.content = form.content.replace(markdownPattern, `![${safeAlt}](${url})`)
+}
+
+const removeImage = (image: ImageAsset) => {
+  const url = imageUrl(image)
+  form.images = form.images.filter((item) => imageUrl(item) !== url)
 }
 
 const uploadImageFile = async (file: File) => {
@@ -260,13 +277,13 @@ const handleMdUploadImg = async (
   for (const file of files) {
     const url = await appApi.uploadImage(file)
     if (url) {
-      addImageAsset(url)
+      addImageAsset(url, file.name || '上传图片')
       uploaded.push({ url, alt: file.name || '上传图片', title: file.name || '上传图片' })
     }
   }
   if (!uploaded.length) {
     const fallback = createFallbackImage()
-    addImageAsset(fallback)
+    addImageAsset(fallback, '作品图')
     uploaded.push({ url: fallback, alt: '作品图', title: '模拟图片' })
     blog.notify('图片上传失败，已使用模拟图片替代', 'warning')
   } else {
@@ -292,7 +309,7 @@ const publish = async () => {
     return
   }
   if (moderation.severity === 'suggest') blog.notify(moderation.message, 'warning')
-  const payload = { title: form.title, content: form.content, tags: tags.value, images: form.images, type: form.type }
+  const payload = { title: form.title, content: form.content, tags: tags.value, images: normalizeImageAssets(form.images, form.title || '作品图'), type: form.type }
   const post = editingPostId.value ? await blog.updatePost(editingPostId.value, payload) : await blog.publishPost(payload)
   if (!post) return
   form.title = ''
@@ -318,22 +335,22 @@ onMounted(async () => {
     form.content = target.content
     form.tagsText = target.tags.join(',')
     form.type = target.type
-    form.images = [...target.gallery]
+    form.images = normalizeImageAssets(target.gallery, target.title || '作品图')
     return
   }
   form.title = blog.draft.title
   form.content = blog.draft.content
   form.tagsText = blog.draft.tags.join(',')
-  form.images = [...blog.draft.images]
+  form.images = normalizeImageAssets(blog.draft.images, blog.draft.title || '草稿图片')
 })
 
 watch(
-  () => [form.title, form.content, form.tagsText, form.type, form.images.length],
+  () => [form.title, form.content, form.tagsText, form.type, JSON.stringify(form.images)],
   () => {
     if (!blog.isAuthenticated || editingPostId.value) return
     if (autosaveTimer.value) window.clearTimeout(autosaveTimer.value)
     autosaveTimer.value = window.setTimeout(() => {
-      void blog.saveDraft({ title: form.title, content: form.content, tags: tags.value, images: form.images })
+      void blog.saveDraft({ title: form.title, content: form.content, tags: tags.value, images: normalizeImageAssets(form.images, form.title || '草稿图片') })
       savedMessage.value = `已自动保存：${new Date().toLocaleTimeString('zh-CN')}`
     }, 1600)
   },
@@ -489,8 +506,8 @@ watch(
       <div class="tag-row">
         <span v-for="tag in tags" :key="tag">#{{ tag }}</span>
       </div>
-      <div v-if="form.images[0]" class="preview-cover">
-        <img :src="form.images[0]" alt="预览封面" />
+      <div v-if="coverImage" class="preview-cover">
+        <img :src="imageUrl(coverImage)" :alt="imageAlt(coverImage, form.title || '预览封面')" />
       </div>
       <div class="editor-outline">
         <div class="editor-outline-head">
@@ -511,9 +528,17 @@ watch(
       </div>
       <div v-if="form.images.length" class="editor-asset-strip">
         <strong>图片资产</strong>
-        <div v-for="image in form.images" :key="image" class="editor-asset-chip">
-          <img :src="image" alt="文章图片" />
-          <span>{{ image.split('/').pop() || '文章图片' }}</span>
+        <div v-for="image in form.images" :key="image.url" class="editor-asset-chip">
+          <img :src="imageUrl(image)" :alt="imageAlt(image, form.title || '文章图片')" />
+          <div class="editor-asset-copy">
+            <span>{{ imageLabel(image) }}</span>
+            <input
+              :value="image.alt"
+              maxlength="80"
+              placeholder="图片替代文本，可用于无障碍和 SEO"
+              @input="updateImageAlt(image.url, ($event.target as HTMLInputElement).value)"
+            />
+          </div>
           <button type="button" title="移除图片" @click="removeImage(image)">移除</button>
         </div>
       </div>

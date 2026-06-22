@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { imageAssets, mockApi } from '@/api/mock'
+import { normalizeImageAsset, normalizeImageAssets } from '@/utils/image'
 import type {
   AdminStats,
   AnimeRecord,
@@ -70,7 +71,7 @@ const normalizeUser = (user: User): User => ({
 const normalizePost = (post: Post): Post => ({
   ...post,
   coverUrl: resolveAsset(post.coverUrl),
-  gallery: post.gallery.map(resolveAsset),
+  gallery: normalizeImageAssets(post.gallery, post.title).map((image) => ({ ...image, url: resolveAsset(image.url) })),
 })
 
 const normalizeComment = (comment: Comment): Comment => comment
@@ -82,12 +83,12 @@ const normalizeAnimeRecord = (record: AnimeRecord): AnimeRecord => ({
 
 const normalizeDraft = (draft: Draft): Draft => ({
   ...draft,
-  images: draft.images.map(resolveAsset),
+  images: normalizeImageAssets(draft.images, '草稿图片').map((image) => ({ ...image, url: resolveAsset(image.url) })),
 })
 
 const normalizeDraftSnapshot = (snapshot: DraftSnapshot): DraftSnapshot => ({
   ...snapshot,
-  images: snapshot.images.map(resolveAsset),
+  images: normalizeImageAssets(snapshot.images, '草稿图片').map((image) => ({ ...image, url: resolveAsset(image.url) })),
 })
 
 const normalizeCarouselSlide = (slide: HomeCarouselSlide): HomeCarouselSlide => ({
@@ -367,11 +368,13 @@ export const appApi = {
       async () => {
         const existing = await mockApi.getPostById(id)
         if (!existing) throw new Error('Post not found')
+        const images = normalizeImageAssets(payload.images, payload.title || existing.title)
+        const firstImage = images[0] ?? normalizeImageAsset(existing.coverUrl, existing.title)
         return normalizePost({
           ...existing,
           ...payload,
-          coverUrl: payload.images[0] ?? existing.coverUrl,
-          gallery: payload.images.length ? payload.images : existing.gallery,
+          coverUrl: firstImage?.url ?? existing.coverUrl,
+          gallery: images.length ? images : existing.gallery,
         })
       },
     )

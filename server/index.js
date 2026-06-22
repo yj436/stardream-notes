@@ -113,6 +113,22 @@ const parse = (value, fallback) => {
 }
 
 const stringify = (value) => JSON.stringify(value ?? [])
+const imageUrlOf = (image) => {
+  if (!image) return ''
+  return typeof image === 'string' ? image : String(image.url ?? '')
+}
+const imageAltOf = (image, fallback = '作品图') => {
+  if (!image || typeof image === 'string') return fallback
+  return String(image.alt ?? fallback).replace(/\s+/g, ' ').trim() || fallback
+}
+const imageAsset = (url, alt = '作品图') => ({ url, alt })
+const normalizeImageAssets = (images = [], fallbackAlt = '作品图') =>
+  (Array.isArray(images) ? images : [])
+    .map((image) => {
+      const url = imageUrlOf(image).trim()
+      return url ? imageAsset(url, imageAltOf(image, fallbackAlt)) : null
+    })
+    .filter(Boolean)
 const defaultStats = { posts: 0, followers: 0, following: 0, likes: 0 }
 const defaultReactions = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const reactionKeys = new Set(Object.keys(defaultReactions))
@@ -236,7 +252,7 @@ const toUser = (user) => {
 const toPost = (post) => ({
   ...post,
   tags: parse(post.tags, []),
-  gallery: parse(post.gallery, []),
+  gallery: normalizeImageAssets(parse(post.gallery, []), post.title),
   reactions: readReactions(post),
   createdAt: post.createdAt.toISOString(),
 })
@@ -260,7 +276,7 @@ const toDraft = (draft) => ({
   title: draft?.title ?? '',
   content: draft?.content ?? '',
   tags: parse(draft?.tags, ['原创企划']),
-  images: parse(draft?.images, []),
+  images: normalizeImageAssets(parse(draft?.images, []), draft?.title || '草稿图片'),
   savedAt: draft?.savedAt?.toISOString(),
 })
 
@@ -269,7 +285,7 @@ const toDraftSnapshot = (snapshot) => ({
   title: snapshot.title,
   content: snapshot.content,
   tags: parse(snapshot.tags, []),
-  images: parse(snapshot.images, []),
+  images: normalizeImageAssets(parse(snapshot.images, []), snapshot.title || '草稿图片'),
   savedAt: snapshot.createdAt.toISOString(),
   createdAt: snapshot.createdAt.toISOString(),
 })
@@ -299,7 +315,7 @@ const hasDraftContent = ({ title = '', content = '', images = [] }) =>
 const createDraftSnapshot = async (userId, payload) => {
   if (!hasDraftContent(payload)) return
   const tags = payload.tags ?? []
-  const images = payload.images ?? []
+  const images = normalizeImageAssets(payload.images ?? [], payload.title || '草稿图片')
   const latest = await prisma.draftSnapshot.findFirst({
     where: { userId },
     orderBy: { createdAt: 'desc' },
@@ -468,9 +484,11 @@ app.get('/api/posts/:id', async (req, res) => {
 })
 
 app.post('/api/posts', requireAuth, async (req, res) => {
-  const { title, content, tags = [], images = [], type = 'article' } = req.body
+  const { title, content, tags = [], images: rawImages = [], type = 'article' } = req.body
   if (!title || !content) return res.status(400).json({ message: 'title and content are required' })
-  const firstImage = images[0] ?? 'asset:hero'
+  const images = normalizeImageAssets(rawImages, title.trim() || '作品图')
+  const fallbackImage = imageAsset('asset:hero', title.trim() || '星梦笔记封面')
+  const firstImage = images[0] ?? fallbackImage
   const post = await prisma.post.create({
     data: {
       id: `p_${Date.now()}`,
@@ -478,11 +496,11 @@ app.post('/api/posts', requireAuth, async (req, res) => {
       title: title.trim(),
       excerpt: createExcerpt(content),
       content: content.trim(),
-      coverUrl: firstImage,
-      imagePosition: firstImage === 'asset:creators' ? '70% 28%' : 'center',
+      coverUrl: firstImage.url,
+      imagePosition: firstImage.url === 'asset:creators' ? '70% 28%' : 'center',
       type,
       tags: stringify(tags.length ? tags : ['原创企划']),
-      gallery: stringify(images.length ? images : ['asset:hero']),
+      gallery: stringify(images.length ? images : [fallbackImage]),
       reactions: stringify(defaultReactions),
     },
   })
@@ -515,17 +533,19 @@ app.put('/api/posts/:id', requireAuth, async (req, res) => {
   const existing = await prisma.post.findUnique({ where: { id: req.params.id } })
   if (!existing) return res.status(404).json({ message: 'Post not found' })
   if (existing.authorId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' })
-  const { title, content, tags = [], images = [], type = existing.type } = req.body
+  const { title, content, tags = [], images: rawImages = [], type = existing.type } = req.body
   if (!title || !content) return res.status(400).json({ message: 'title and content are required' })
-  const firstImage = images[0] ?? existing.coverUrl
+  const images = normalizeImageAssets(rawImages, title.trim() || '作品图')
+  const existingCover = imageAsset(existing.coverUrl, title.trim() || existing.title)
+  const firstImage = images[0] ?? existingCover
   const updated = await prisma.post.update({
     where: { id: existing.id },
     data: {
       title: title.trim(),
       excerpt: createExcerpt(content),
       content: content.trim(),
-      coverUrl: firstImage,
-      imagePosition: firstImage === 'asset:creators' ? '70% 28%' : 'center',
+      coverUrl: firstImage.url,
+      imagePosition: firstImage.url === 'asset:creators' ? '70% 28%' : 'center',
       type,
       tags: stringify(tags.length ? tags : ['原创企划']),
       gallery: stringify(images.length ? images : [firstImage]),
@@ -746,7 +766,8 @@ app.get('/api/draft/snapshots', requireAuth, async (req, res) => {
 })
 
 app.put('/api/draft', requireAuth, async (req, res) => {
-  const { title = '', content = '', tags = [], images = [] } = req.body
+  const { title = '', content = '', tags = [], images: rawImages = [] } = req.body
+  const images = normalizeImageAssets(rawImages, title || '草稿图片')
   const draft = await prisma.draft.upsert({
     where: { userId: req.user.id },
     update: { title, content, tags: stringify(tags), images: stringify(images), savedAt: new Date() },
