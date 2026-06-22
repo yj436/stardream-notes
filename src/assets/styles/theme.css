@@ -98,6 +98,8 @@
 :root.dark .admin-carousel-item-actions button,
 :root.dark .admin-input-with-icon,
 :root.dark .admin-image-picker button,
+:root.dark .admin-backup-stats span,
+:root.dark .admin-backup-message,
 :root.dark .toggle-row,
 :root.dark .settings-link-button,
 :root.dark .rich-editor-shell,

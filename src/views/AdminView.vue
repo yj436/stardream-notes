@@ -13,6 +13,7 @@ import {
   Clock3,
   Cloud,
   Database,
+  Download,
   FileText,
   Flag,
   Image as ImageIcon,
@@ -30,6 +31,7 @@ import {
   Server,
   ShieldCheck,
   Trash2,
+  Upload,
   Users,
   WifiOff,
   X,
@@ -39,7 +41,7 @@ import { appApi } from '@/api/appApi'
 import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
 import { useNotificationStore } from '@/composables/useNotificationStore'
-import type { ApiHealth, HomeCarouselSlide, Post, Report, User } from '@/types/content'
+import type { AdminBackupCounts, AdminBackupPayload, ApiHealth, HomeCarouselSlide, Post, Report, User } from '@/types/content'
 
 type AdminTab = 'users' | 'posts' | 'comments' | 'reports' | 'carousel'
 type ReportStatusFilter = 'all' | Report['status']
@@ -64,6 +66,9 @@ const selectedReportIds = ref<string[]>([])
 const carouselSaving = ref(false)
 const selectedCarouselId = ref('')
 const carouselDrafts = ref<HomeCarouselSlide[]>([])
+const backupBusy = ref(false)
+const backupFileInputRef = ref<HTMLInputElement | null>(null)
+const backupMessage = ref('')
 const runtimeInfo = appApi.getRuntimeInfo()
 const systemHealth = ref<ApiHealth | null>(null)
 const systemLoading = ref(false)
@@ -116,6 +121,64 @@ const sendBroadcast = () => {
     broadcastSent.value = false
   }, 2000)
   blog.notify('系统通知已发送', 'success')
+}
+
+const backupCountsLabel = (counts: AdminBackupCounts = {}) =>
+  `${counts.users ?? 0} 用户 · ${counts.posts ?? 0} 内容 · ${counts.comments ?? 0} 评论`
+
+const backupFileName = () => {
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+  return `stardream-backup-${stamp}.json`
+}
+
+const downloadAdminBackup = async () => {
+  backupBusy.value = true
+  try {
+    const backup = await appApi.exportAdminBackup()
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = backupFileName()
+    link.click()
+    URL.revokeObjectURL(url)
+    backupMessage.value = `已导出 ${backupCountsLabel(backup.counts)}`
+    blog.notify('JSON 备份已导出', 'success')
+  } catch (error) {
+    backupMessage.value = error instanceof Error ? error.message : '导出失败'
+    blog.notify('JSON 备份导出失败', 'warning')
+  } finally {
+    backupBusy.value = false
+  }
+}
+
+const triggerBackupImport = () => {
+  backupFileInputRef.value?.click()
+}
+
+const importBackupFile = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (!window.confirm('导入备份会覆盖当前站点数据，继续吗？')) {
+    input.value = ''
+    return
+  }
+  backupBusy.value = true
+  try {
+    const backup = JSON.parse(await file.text()) as AdminBackupPayload
+    const result = await appApi.importAdminBackup(backup)
+    await blog.bootstrap(true)
+    await refreshAdmin()
+    backupMessage.value = `已导入 ${backupCountsLabel(result.counts)}`
+    blog.notify('JSON 备份已导入', 'success')
+  } catch (error) {
+    backupMessage.value = error instanceof Error ? error.message : '导入失败'
+    blog.notify('JSON 备份导入失败', 'warning')
+  } finally {
+    input.value = ''
+    backupBusy.value = false
+  }
 }
 
 const refreshAdmin = async () => {
@@ -863,6 +926,32 @@ onMounted(async () => {
                 {{ broadcastSent ? '已发送' : '发送通知' }}
               </button>
             </form>
+          </section>
+
+          <section class="admin-side-panel admin-backup-panel">
+            <div class="admin-panel-head compact">
+              <div>
+                <span class="section-kicker"><Database :size="16" /> 数据备份</span>
+                <h2>JSON 备份</h2>
+              </div>
+            </div>
+            <div class="admin-backup-stats">
+              <span><Users :size="14" />{{ blog.adminUsers.length }}</span>
+              <span><FileText :size="14" />{{ blog.adminPosts.length }}</span>
+              <span><MessageSquareText :size="14" />{{ blog.adminComments.length }}</span>
+            </div>
+            <div class="admin-backup-actions">
+              <button type="button" class="primary-button compact" :disabled="backupBusy" @click="downloadAdminBackup">
+                <Download :size="15" />
+                {{ backupBusy ? '处理中' : '导出 JSON' }}
+              </button>
+              <button type="button" class="ghost-button compact" :disabled="backupBusy" @click="triggerBackupImport">
+                <Upload :size="15" />
+                导入 JSON
+              </button>
+              <input ref="backupFileInputRef" class="file-input-hidden" type="file" accept="application/json,.json" @change="importBackupFile" />
+            </div>
+            <small v-if="backupMessage" class="admin-backup-message">{{ backupMessage }}</small>
           </section>
 
           <section class="admin-side-panel">

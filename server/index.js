@@ -31,7 +31,7 @@ app.use(
     },
   }),
 )
-app.use(express.json({ limit: '1mb' }))
+app.use(express.json({ limit: '5mb' }))
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 app.use('/uploads', express.static(uploadsDir))
 
@@ -238,6 +238,62 @@ const getDatabaseHealth = async () => {
       message: error?.message,
     }
   }
+}
+
+const backupCollections = [
+  'users',
+  'posts',
+  'comments',
+  'animeRecords',
+  'drafts',
+  'draftSnapshots',
+  'reports',
+  'siteSettings',
+]
+
+const backupDateFields = {
+  users: ['createdAt', 'updatedAt'],
+  posts: ['createdAt'],
+  comments: ['createdAt'],
+  animeRecords: ['updatedAt'],
+  drafts: ['savedAt'],
+  draftSnapshots: ['createdAt'],
+  reports: ['createdAt'],
+  siteSettings: ['updatedAt'],
+}
+
+const backupJsonFields = {
+  users: ['favoriteCharacter', 'stats'],
+  posts: ['tags', 'gallery', 'reactions'],
+  drafts: ['tags', 'images'],
+  draftSnapshots: ['tags', 'images'],
+}
+
+const backupCounts = (data) =>
+  Object.fromEntries(backupCollections.map((key) => [key, Array.isArray(data[key]) ? data[key].length : 0]))
+
+const normalizeBackupRows = (rows, { dateFields = [], jsonFields = [] } = {}) =>
+  (Array.isArray(rows) ? rows : []).map((row) => {
+    const next = { ...row }
+    dateFields.forEach((field) => {
+      if (next[field]) next[field] = new Date(next[field])
+    })
+    jsonFields.forEach((field) => {
+      if (next[field] !== undefined && typeof next[field] !== 'string') next[field] = stringify(next[field])
+    })
+    return next
+  })
+
+const createRows = (model, rows) => (rows.length ? model.createMany({ data: rows }) : null)
+
+const readBackupPayload = (body) => (body?.backup?.data ? body.backup : body)
+
+const validateBackupPayload = (backup) => {
+  if (!backup?.data || typeof backup.data !== 'object') return 'Invalid backup payload'
+  const users = Array.isArray(backup.data.users) ? backup.data.users : []
+  if (!users.length) return 'Backup must include at least one user'
+  if (!users.some((user) => user?.role === 'admin')) return 'Backup must include at least one admin user'
+  return ''
 }
 
 const toUser = (user) => {
@@ -859,6 +915,91 @@ app.get('/api/admin/stats', requireAuth, requireAdmin, async (_req, res) => {
 app.get('/api/admin/users', requireAuth, requireAdmin, async (_req, res) => {
   const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } })
   res.json(users.map(toUser))
+})
+
+app.get('/api/admin/backup', requireAuth, requireAdmin, async (_req, res) => {
+  const [users, posts, comments, animeRecords, drafts, draftSnapshots, reports, siteSettings] = await Promise.all([
+    prisma.user.findMany({ orderBy: { createdAt: 'desc' } }),
+    prisma.post.findMany({ orderBy: { createdAt: 'desc' } }),
+    prisma.comment.findMany({ orderBy: { createdAt: 'desc' } }),
+    prisma.animeRecord.findMany({ orderBy: { updatedAt: 'desc' } }),
+    prisma.draft.findMany(),
+    prisma.draftSnapshot.findMany({ orderBy: { createdAt: 'desc' } }),
+    prisma.report.findMany({ orderBy: { createdAt: 'desc' } }),
+    prisma.siteSetting.findMany(),
+  ])
+  const data = { users, posts, comments, animeRecords, drafts, draftSnapshots, reports, siteSettings }
+  res.json({
+    version: 'stardream-backup-v1',
+    exportedAt: new Date().toISOString(),
+    source: 'api',
+    counts: backupCounts(data),
+    data,
+  })
+})
+
+app.post('/api/admin/backup/import', requireAuth, requireAdmin, async (req, res) => {
+  const backup = readBackupPayload(req.body)
+  const validationMessage = validateBackupPayload(backup)
+  if (validationMessage) return res.status(400).json({ message: validationMessage })
+
+  const rawData = backup.data
+  const siteSettings =
+    Array.isArray(rawData.siteSettings) && rawData.siteSettings.length
+      ? rawData.siteSettings
+      : Array.isArray(rawData.homeCarousel)
+        ? [{ key: homeCarouselKey, value: stringify(rawData.homeCarousel), updatedAt: new Date() }]
+        : []
+
+  const data = {
+    users: normalizeBackupRows(rawData.users, {
+      dateFields: backupDateFields.users,
+      jsonFields: backupJsonFields.users,
+    }),
+    posts: normalizeBackupRows(rawData.posts, {
+      dateFields: backupDateFields.posts,
+      jsonFields: backupJsonFields.posts,
+    }),
+    comments: normalizeBackupRows(rawData.comments, { dateFields: backupDateFields.comments }),
+    animeRecords: normalizeBackupRows(rawData.animeRecords, { dateFields: backupDateFields.animeRecords }),
+    drafts: normalizeBackupRows(rawData.drafts, {
+      dateFields: backupDateFields.drafts,
+      jsonFields: backupJsonFields.drafts,
+    }),
+    draftSnapshots: normalizeBackupRows(rawData.draftSnapshots, {
+      dateFields: backupDateFields.draftSnapshots,
+      jsonFields: backupJsonFields.draftSnapshots,
+    }),
+    reports: normalizeBackupRows(rawData.reports, { dateFields: backupDateFields.reports }),
+    siteSettings: normalizeBackupRows(siteSettings, { dateFields: backupDateFields.siteSettings }),
+  }
+
+  try {
+    await prisma.$transaction(
+      [
+        prisma.draftSnapshot.deleteMany(),
+        prisma.draft.deleteMany(),
+        prisma.comment.deleteMany(),
+        prisma.report.deleteMany(),
+        prisma.animeRecord.deleteMany(),
+        prisma.post.deleteMany(),
+        prisma.siteSetting.deleteMany(),
+        prisma.user.deleteMany(),
+        createRows(prisma.user, data.users),
+        createRows(prisma.post, data.posts),
+        createRows(prisma.comment, data.comments),
+        createRows(prisma.animeRecord, data.animeRecords),
+        createRows(prisma.draft, data.drafts),
+        createRows(prisma.draftSnapshot, data.draftSnapshots),
+        createRows(prisma.report, data.reports),
+        createRows(prisma.siteSetting, data.siteSettings),
+      ].filter(Boolean),
+    )
+  } catch (error) {
+    return res.status(400).json({ message: error?.message || 'Backup import failed' })
+  }
+
+  res.json({ ok: true, importedAt: new Date().toISOString(), counts: backupCounts(data) })
 })
 
 app.get('/api/admin/carousel', requireAuth, requireAdmin, async (_req, res) => {

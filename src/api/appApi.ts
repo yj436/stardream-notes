@@ -2,6 +2,8 @@ import axios from 'axios'
 import { imageAssets, mockApi } from '@/api/mock'
 import { normalizeImageAsset, normalizeImageAssets } from '@/utils/image'
 import type {
+  AdminBackupImportResult,
+  AdminBackupPayload,
   AdminStats,
   AnimeRecord,
   AnimeRecordPayload,
@@ -566,6 +568,20 @@ export const appApi = {
         if (!report) throw new Error('Report not found')
         return report
       },
+    )
+  },
+
+  async exportAdminBackup(): Promise<AdminBackupPayload> {
+    return withFallback(
+      async () => (await client.get<AdminBackupPayload>('/admin/backup')).data,
+      () => mockApi.exportAdminBackup(),
+    )
+  },
+
+  async importAdminBackup(backup: AdminBackupPayload): Promise<AdminBackupImportResult> {
+    return withFallback(
+      async () => (await client.post<AdminBackupImportResult>('/admin/backup/import', { backup })).data,
+      () => mockApi.importAdminBackup(backup),
     )
   },
 }

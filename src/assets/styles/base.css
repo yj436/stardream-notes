@@ -3841,6 +3841,62 @@ label {
   padding: 0 16px 16px;
 }
 
+.admin-backup-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.admin-backup-stats span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #33405f;
+  background: rgba(233, 238, 255, 0.68);
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.admin-backup-stats span:nth-child(2) {
+  background: rgba(222, 248, 244, 0.72);
+}
+
+.admin-backup-stats span:nth-child(3) {
+  background: rgba(255, 232, 241, 0.72);
+}
+
+.admin-backup-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.admin-backup-actions button {
+  width: 100%;
+  justify-content: center;
+}
+
+.admin-backup-message {
+  display: block;
+  margin: 0 16px 16px;
+  padding: 9px 10px;
+  border: 1px solid rgba(91, 124, 255, 0.2);
+  border-radius: var(--radius);
+  color: #435bb6;
+  background: rgba(233, 238, 255, 0.58);
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.5;
+}
+
 .admin-task-list {
   display: grid;
   gap: 8px;

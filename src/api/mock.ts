@@ -8,6 +8,9 @@ import coverSakuraWatercolor from '@/assets/images/cover-sakura-watercolor.png'
 import coverStarryDesk from '@/assets/images/cover-starry-desk.png'
 import { normalizeImageAssets } from '@/utils/image'
 import type {
+  AdminBackupCounts,
+  AdminBackupImportResult,
+  AdminBackupPayload,
   AnimeRecord,
   AnimeRecordPayload,
   Comment,
@@ -396,6 +399,86 @@ const persistHomeCarousel = () => writeStorage(storageKeys.homeCarousel, homeCar
 const persistAnimeRecords = () => writeStorage(storageKeys.animeRecords, animeRecords)
 const persistDraft = () => writeStorage(storageKeys.draft, draft)
 const persistDraftSnapshots = () => writeStorage(storageKeys.draftSnapshots, draftSnapshots)
+
+const backupCollections = [
+  'users',
+  'posts',
+  'comments',
+  'animeRecords',
+  'drafts',
+  'draftSnapshots',
+  'reports',
+  'homeCarousel',
+] as const
+
+const backupCounts = (data: AdminBackupPayload['data']): AdminBackupCounts =>
+  Object.fromEntries(backupCollections.map((key) => [key, Array.isArray(data[key]) ? data[key]?.length ?? 0 : 0]))
+
+const parseBackupJson = <T>(value: unknown, fallback: T): T => {
+  if (typeof value !== 'string') return (value ?? fallback) as T
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return fallback
+  }
+}
+
+const normalizeBackupDate = (value: unknown) =>
+  value ? new Date(String(value)).toISOString() : new Date().toISOString()
+
+const normalizeBackupUsers = (value: unknown): User[] =>
+  (Array.isArray(value) ? value : []).map((user) => ({
+    ...(user as User),
+    favoriteCharacter: parseBackupJson((user as { favoriteCharacter?: unknown }).favoriteCharacter, {
+      name: '未设置',
+      anime: '原创企划',
+      quote: '',
+    }),
+    stats: parseBackupJson((user as { stats?: unknown }).stats, { posts: 0, followers: 0, following: 0, likes: 0 }),
+  }))
+
+const normalizeBackupPosts = (value: unknown): Post[] =>
+  (Array.isArray(value) ? value : []).map((post) => ({
+    ...(post as Post),
+    tags: parseBackupJson((post as { tags?: unknown }).tags, []),
+    gallery: normalizeImageAssets(parseBackupJson((post as { gallery?: unknown }).gallery, []), (post as Post).title),
+    createdAt: normalizeBackupDate((post as { createdAt?: unknown }).createdAt),
+    reactions: {
+      ...emptyReactions,
+      ...parseBackupJson((post as { reactions?: unknown }).reactions, {}),
+    },
+  }))
+
+const normalizeBackupDraft = (value: unknown): Draft => {
+  const item = Array.isArray(value) ? value[0] : value
+  if (!item || typeof item !== 'object') return initialDraft
+  const draftLike = item as Draft
+  return {
+    title: draftLike.title ?? '',
+    content: draftLike.content ?? '',
+    tags: parseBackupJson((item as { tags?: unknown }).tags, ['原创企划']),
+    images: normalizeImageAssets(parseBackupJson((item as { images?: unknown }).images, []), draftLike.title || '草稿图片'),
+    savedAt: (item as { savedAt?: string }).savedAt,
+  }
+}
+
+const normalizeBackupDraftSnapshots = (value: unknown): DraftSnapshot[] =>
+  (Array.isArray(value) ? value : []).map((snapshot) => {
+    const item = snapshot as DraftSnapshot
+    return {
+      ...item,
+      tags: parseBackupJson((snapshot as { tags?: unknown }).tags, []),
+      images: normalizeImageAssets(parseBackupJson((snapshot as { images?: unknown }).images, []), item.title || '草稿图片'),
+      createdAt: normalizeBackupDate((snapshot as { createdAt?: unknown }).createdAt),
+    }
+  })
+
+const carouselFromSiteSettings = (settings: unknown) => {
+  const setting = Array.isArray(settings)
+    ? settings.find((item) => (item as { key?: string }).key === 'home.carousel')
+    : null
+  return parseBackupJson((setting as { value?: unknown } | null)?.value, [])
+}
 
 const isMeaningfulDraft = (payload: Draft) =>
   Boolean(payload.title?.trim() || payload.content?.trim() || payload.images?.length)
@@ -789,5 +872,77 @@ export const mockApi = {
     }
     persistReports()
     return reports.find((report) => report.id === id)
+  },
+
+  async exportAdminBackup(): Promise<AdminBackupPayload> {
+    await wait(120)
+    const data: AdminBackupPayload['data'] = {
+      users,
+      posts,
+      comments,
+      animeRecords,
+      reports,
+      homeCarousel,
+      drafts: [
+        {
+          id: `draft_${users[0]?.id ?? 'mock'}`,
+          userId: users[0]?.id ?? 'u_mika',
+          ...draft,
+        },
+      ],
+      draftSnapshots,
+    }
+    return {
+      version: 'stardream-backup-v1',
+      exportedAt: new Date().toISOString(),
+      source: 'mock',
+      counts: backupCounts(data),
+      data,
+    }
+  },
+
+  async importAdminBackup(backup: AdminBackupPayload): Promise<AdminBackupImportResult> {
+    await wait(180)
+    const data = backup?.data ?? {}
+    const nextUsers = normalizeBackupUsers(data.users)
+    if (!nextUsers.length || !nextUsers.some((user) => user.role === 'admin')) {
+      throw new Error('备份文件需要至少包含一个管理员账号')
+    }
+
+    users = nextUsers
+    posts = normalizeBackupPosts(data.posts)
+    comments = (Array.isArray(data.comments) ? data.comments : []) as Comment[]
+    animeRecords = (Array.isArray(data.animeRecords) ? data.animeRecords : []) as AnimeRecord[]
+    reports = (Array.isArray(data.reports) ? data.reports : []) as Report[]
+    draft = normalizeBackupDraft(data.drafts)
+    draftSnapshots = normalizeBackupDraftSnapshots(data.draftSnapshots)
+    homeCarousel = sanitizeHomeCarousel(
+      Array.isArray(data.homeCarousel) ? (data.homeCarousel as HomeCarouselSlide[]) : carouselFromSiteSettings(data.siteSettings),
+    )
+
+    persistUsers()
+    persistPosts()
+    persistComments()
+    persistReports()
+    persistAnimeRecords()
+    persistHomeCarousel()
+    persistDraft()
+    persistDraftSnapshots()
+
+    const importedData: AdminBackupPayload['data'] = {
+      users,
+      posts,
+      comments,
+      animeRecords,
+      reports,
+      homeCarousel,
+      drafts: [draft],
+      draftSnapshots,
+    }
+    return {
+      ok: true,
+      importedAt: new Date().toISOString(),
+      counts: backupCounts(importedData),
+    }
   },
 }

@@ -207,3 +207,30 @@ export interface ApiRuntimeInfo {
   isGitHubPagesHost: boolean
   fallbackEnabled: boolean
 }
+
+export type AdminBackupCollection =
+  | 'users'
+  | 'posts'
+  | 'comments'
+  | 'animeRecords'
+  | 'drafts'
+  | 'draftSnapshots'
+  | 'reports'
+  | 'siteSettings'
+  | 'homeCarousel'
+
+export type AdminBackupCounts = Partial<Record<AdminBackupCollection, number>>
+
+export interface AdminBackupPayload {
+  version: string
+  exportedAt: string
+  source: 'api' | 'mock'
+  counts: AdminBackupCounts
+  data: Partial<Record<AdminBackupCollection, unknown[]>>
+}
+
+export interface AdminBackupImportResult {
+  ok: boolean
+  importedAt: string
+  counts: AdminBackupCounts
+}
