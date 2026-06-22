@@ -10,6 +10,7 @@ import {
   BellRing,
   CheckCircle2,
   CircleGauge,
+  Clock3,
   Cloud,
   Database,
   FileText,
@@ -194,6 +195,37 @@ const apiHealthIcon = computed(() => {
 })
 const healthCounts = computed(() => systemHealth.value?.database?.counts)
 const apiEndpointLabel = computed(() => runtimeInfo.apiBaseUrl)
+const formatHealthCheckTime = (value?: string) => {
+  if (!value) return '尚未检测'
+  return new Date(value).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+}
+const healthDurationLabel = computed(() => {
+  if (systemLoading.value) return '检测中'
+  const duration = systemHealth.value?.durationMs ?? systemHealth.value?.database?.latencyMs
+  if (duration === undefined) return '等待数据'
+  return `${Math.max(0, Math.round(duration))} ms`
+})
+const healthRetryLabel = computed(() => {
+  const attempts = systemHealth.value?.attempts ?? 0
+  if (!attempts) return '未开始'
+  return attempts > 1 ? `已重试 ${attempts - 1} 次` : '一次通过'
+})
+const healthStatusCodeLabel = computed(() => {
+  if (runtimeInfo.mode === 'mock') return 'Mock'
+  const statusCode = systemHealth.value?.statusCode
+  return statusCode ? `HTTP ${statusCode}` : systemHealth.value?.ok ? 'HTTP 200' : '无响应'
+})
+const healthDetailRows = computed(() => [
+  { label: '最近检查', value: formatHealthCheckTime(systemHealth.value?.checkedAt), icon: Clock3 },
+  { label: '响应耗时', value: healthDurationLabel.value, icon: Activity },
+  { label: '重试状态', value: healthRetryLabel.value, icon: RefreshCw },
+  { label: '状态码', value: healthStatusCodeLabel.value, icon: Server },
+])
+const healthIssueMessage = computed(() => systemHealth.value?.error || systemHealth.value?.database?.message || '')
 
 const navItems = computed(() =>
   tabConfig.map((item) => ({
@@ -458,6 +490,17 @@ onMounted(async () => {
             {{ databaseHealthLabel }}
           </span>
         </div>
+        <div class="admin-health-details">
+          <span v-for="item in healthDetailRows" :key="item.label">
+            <component :is="item.icon" :size="13" :class="{ 'spin-icon': item.label === '重试状态' && systemLoading }" />
+            <small>{{ item.label }}</small>
+            <strong>{{ item.value }}</strong>
+          </span>
+        </div>
+        <p v-if="healthIssueMessage" class="admin-health-message">
+          <AlertTriangle :size="14" />
+          {{ healthIssueMessage }}
+        </p>
         <div v-if="healthCounts" class="admin-health-counts">
           <span><Users :size="13" />{{ healthCounts.users }}</span>
           <span><FileText :size="13" />{{ healthCounts.posts }}</span>

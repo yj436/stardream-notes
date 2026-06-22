@@ -158,15 +158,19 @@ export const appApi = {
   },
 
   async getSystemHealth(): Promise<ApiHealth> {
+    const startedAt = Date.now()
     if (shouldUseMockApi) {
       const [users, posts, reports] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts(), mockApi.getAdminReports()])
       return {
         ok: true,
         name: 'stardream-mock-api',
+        checkedAt: new Date().toISOString(),
+        durationMs: Date.now() - startedAt,
+        attempts: 1,
         database: {
           ok: true,
           provider: 'mock',
-          latencyMs: 0,
+          latencyMs: Date.now() - startedAt,
           counts: {
             users: users.length,
             posts: posts.length,
@@ -177,18 +181,38 @@ export const appApi = {
       }
     }
 
-    try {
-      return (await client.get<ApiHealth>('/health')).data
-    } catch (error) {
-      return {
-        ok: false,
-        name: 'stardream-api',
-        database: {
-          ok: false,
-          provider: 'unknown',
-          message: axios.isAxiosError(error) ? error.message : 'Health check failed',
-        },
+    let lastError: unknown = null
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        const response = await client.get<ApiHealth>('/health')
+        return {
+          ...response.data,
+          checkedAt: new Date().toISOString(),
+          durationMs: Date.now() - startedAt,
+          attempts: attempt,
+          statusCode: response.status,
+        }
+      } catch (error) {
+        lastError = error
+        if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 320))
       }
+    }
+
+    const statusCode = axios.isAxiosError(lastError) ? lastError.response?.status : undefined
+    const message = axios.isAxiosError(lastError) ? lastError.message : 'Health check failed'
+    return {
+      ok: false,
+      name: 'stardream-api',
+      checkedAt: new Date().toISOString(),
+      durationMs: Date.now() - startedAt,
+      attempts: 2,
+      statusCode,
+      error: message,
+      database: {
+        ok: false,
+        provider: 'unknown',
+        message,
+      },
     }
   },
 

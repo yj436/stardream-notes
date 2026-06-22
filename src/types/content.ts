@@ -193,6 +193,11 @@ export interface ApiHealth {
   ok: boolean
   name: string
   database?: DatabaseHealth
+  checkedAt?: string
+  durationMs?: number
+  attempts?: number
+  statusCode?: number
+  error?: string
 }
 
 export interface ApiRuntimeInfo {

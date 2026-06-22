@@ -47,6 +47,7 @@
 :root.dark .admin-panel-head h2,
 :root.dark .admin-kpi-card strong,
 :root.dark .admin-system-card strong,
+:root.dark .admin-health-details strong,
 :root.dark .admin-mini-chart strong,
 :root.dark .admin-carousel-toolbar strong,
 :root.dark .admin-carousel-item strong,
@@ -138,6 +139,7 @@
 :root.dark .share-card,
 :root.dark .reply-list,
 :root.dark .admin-system-card,
+:root.dark .admin-health-details span,
 :root.dark .admin-menu-item.active,
 :root.dark .admin-carousel-item.active,
 :root.dark .admin-image-picker button.active,
@@ -168,6 +170,11 @@
 
 :root.dark .archive-row {
   background: rgba(23, 29, 48, 0.88);
+}
+
+:root.dark .admin-health-message {
+  color: #ffb7ce;
+  background: rgba(157, 49, 84, 0.24);
 }
 
 :root.dark .profile-dropdown,
