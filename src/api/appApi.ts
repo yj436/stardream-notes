@@ -399,7 +399,7 @@ export const appApi = {
     }
 
     return withFallback(
-      async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query, timeout: 18000 })).data),
+      async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query, timeout: 35000 })).data),
       async () => normalizeTimelinePayload(await mockApi.getAnimeTimeline(query)),
     )
   },

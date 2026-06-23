@@ -39,6 +39,7 @@ jobs:
         env:
           TIMELINE_BEFORE: 3
           TIMELINE_AFTER: 7
+          JIKAN_DELAY_MS: 1600
 
       - name: Build static site
         run: npm run build

@@ -558,6 +558,33 @@ const jikanWeekdayFilters = {
   7: 'sunday',
 }
 
+const timelineSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const jikanPageLimit = Math.min(3, Math.max(1, Number(process.env.JIKAN_PAGE_LIMIT ?? 2)))
+const jikanDelayMs = Math.min(5000, Math.max(600, Number(process.env.JIKAN_DELAY_MS ?? 900)))
+
+const fetchJikanJson = async (url) => {
+  let lastError = null
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'StardreamNotes/1.0',
+          Accept: 'application/json',
+        },
+      })
+      if (response.ok) return response.json()
+      if (response.status !== 429 && response.status < 500) throw new Error(`MyAnimeList schedule HTTP ${response.status}`)
+      const retryAfter = Number(response.headers.get('retry-after'))
+      await timelineSleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : jikanDelayMs * (attempt + 2))
+      lastError = new Error(`MyAnimeList schedule HTTP ${response.status}`)
+    } catch (error) {
+      lastError = error
+      await timelineSleep(jikanDelayMs * (attempt + 1))
+    }
+  }
+  throw lastError ?? new Error('MyAnimeList schedule unavailable')
+}
+
 const malTimeToChina = (time) => {
   const match = /^(\d{1,2}):(\d{2})$/.exec(String(time ?? ''))
   if (!match) return { display: '时间待定', seconds: 20 * 60 * 60 }
@@ -617,26 +644,19 @@ const fetchMyAnimeListTimeline = async (category, before, after) => {
     const filter = jikanWeekdayFilters[weekday]
     if (!filter) continue
     const items = []
-    for (let page = 1; page <= 2; page += 1) {
+    for (let page = 1; page <= jikanPageLimit; page += 1) {
       const url = new URL('https://api.jikan.moe/v4/schedules')
       url.searchParams.set('filter', filter)
       url.searchParams.set('sfw', 'true')
       url.searchParams.set('limit', '25')
       url.searchParams.set('page', String(page))
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'StardreamNotes/1.0',
-          Accept: 'application/json',
-        },
-      })
-      if (!response.ok) throw new Error(`MyAnimeList schedule HTTP ${response.status}`)
-      const payload = await response.json()
+      const payload = await fetchJikanJson(url)
       items.push(...(Array.isArray(payload.data) ? payload.data : []))
       if (!payload.pagination?.has_next_page) break
-      await new Promise((resolve) => setTimeout(resolve, 360))
+      await timelineSleep(jikanDelayMs)
     }
     itemsByWeekday.set(weekday, items)
-    await new Promise((resolve) => setTimeout(resolve, 360))
+    await timelineSleep(jikanDelayMs)
   }
 
   days.forEach((day) => {
