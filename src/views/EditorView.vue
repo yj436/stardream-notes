@@ -65,6 +65,7 @@ const form = reactive({
   title: '',
   content: '',
   tagsText: '原创企划,绘画教程',
+  series: '',
   type: 'article' as PostType,
   images: [] as ImageAsset[],
 })
@@ -80,7 +81,9 @@ const paragraphCount = computed(() => form.content.split(/\n{2,}/).filter((item)
 const outline = computed(() => extractArticleHeadings(form.content, 12, { minDepth: 1, maxDepth: 3 }))
 const outlineSummary = computed(() => (outline.value.length ? `${outline.value.length} 个标题` : '等待标题'))
 const sensitiveWords = ['暴力', '血腥', '广告', '辱骂']
-const contentWarnings = computed(() => sensitiveWords.filter((word) => `${form.title} ${form.content} ${form.tagsText}`.includes(word)))
+const contentWarnings = computed(() =>
+  sensitiveWords.filter((word) => `${form.title} ${form.content} ${form.tagsText} ${form.series}`.includes(word)),
+)
 const writingScore = computed(() => publishChecks.value.filter((item) => item.ok).length / publishChecks.value.length)
 const writingStatus = computed(() => {
   if (writingScore.value >= 1 && !contentWarnings.value.length) return '可发布'
@@ -303,18 +306,26 @@ const publish = async () => {
     blog.notify('标题至少 4 个字，正文至少 20 个字', 'warning')
     return
   }
-  const moderation = moderateContent(`${form.title} ${form.content} ${form.tagsText}`)
+  const moderation = moderateContent(`${form.title} ${form.content} ${form.tagsText} ${form.series}`)
   if (moderation.severity === 'block') {
     blog.notify(moderation.message, 'warning')
     return
   }
   if (moderation.severity === 'suggest') blog.notify(moderation.message, 'warning')
-  const payload = { title: form.title, content: form.content, tags: tags.value, images: normalizeImageAssets(form.images, form.title || '作品图'), type: form.type }
+  const payload = {
+    title: form.title,
+    content: form.content,
+    tags: tags.value,
+    series: form.series.trim() || undefined,
+    images: normalizeImageAssets(form.images, form.title || '作品图'),
+    type: form.type,
+  }
   const post = editingPostId.value ? await blog.updatePost(editingPostId.value, payload) : await blog.publishPost(payload)
   if (!post) return
   form.title = ''
   form.content = ''
   form.tagsText = '原创企划'
+  form.series = ''
   form.type = 'article'
   form.images = []
   void router.push(`/post/${post.id}`)
@@ -334,6 +345,7 @@ onMounted(async () => {
     form.title = target.title
     form.content = target.content
     form.tagsText = target.tags.join(',')
+    form.series = target.series ?? ''
     form.type = target.type
     form.images = normalizeImageAssets(target.gallery, target.title || '作品图')
     return
@@ -341,11 +353,12 @@ onMounted(async () => {
   form.title = blog.draft.title
   form.content = blog.draft.content
   form.tagsText = blog.draft.tags.join(',')
+  form.series = ''
   form.images = normalizeImageAssets(blog.draft.images, blog.draft.title || '草稿图片')
 })
 
 watch(
-  () => [form.title, form.content, form.tagsText, form.type, JSON.stringify(form.images)],
+  () => [form.title, form.content, form.tagsText, form.series, form.type, JSON.stringify(form.images)],
   () => {
     if (!blog.isAuthenticated || editingPostId.value) return
     if (autosaveTimer.value) window.clearTimeout(autosaveTimer.value)
@@ -384,6 +397,10 @@ watch(
         <label>
           标签
           <input v-model="form.tagsText" placeholder="用英文逗号分隔，例如：原创企划,追番记录" />
+        </label>
+        <label>
+          系列
+          <input v-model="form.series" maxlength="60" placeholder="可选，例如：异世界料理人日记" />
         </label>
         <label>
           内容类型
@@ -503,6 +520,9 @@ watch(
     <aside v-if="editorMode === 'split'" class="preview-panel editor-preview-rail">
       <span class="section-kicker">实时预览</span>
       <h2>{{ form.title || '未命名笔记' }}</h2>
+      <RouterLink v-if="form.series.trim()" class="series-pill" :to="`/search?q=${encodeURIComponent(form.series.trim())}`">
+        系列 · {{ form.series.trim() }}
+      </RouterLink>
       <div class="tag-row">
         <span v-for="tag in tags" :key="tag">#{{ tag }}</span>
       </div>

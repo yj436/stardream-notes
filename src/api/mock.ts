@@ -165,6 +165,7 @@ const initialPosts: Post[] = [
     imagePosition: 'center',
     type: 'article',
     tags: ['绘画教程', '星空', '原创企划'],
+    series: '创作技法手记',
     gallery: [imageAsset(coverStarryDesk, '星空书桌上的创作笔记封面'), imageAsset(coverGalaxySchool, '银河校园风格的原创企划插画')],
     viewCount: 38620,
     likeCount: 2840,
@@ -186,6 +187,7 @@ const initialPosts: Post[] = [
     imagePosition: '70% 28%',
     type: 'gallery',
     tags: ['Cosplay', '摄影', '布光'],
+    series: '低成本 Cos 摄影',
     gallery: [imageAsset(coverMoonlightCos, '月光影棚里的 Cos 布光成片'), imageAsset(creatorSheet, '创作者角色设定参考图')],
     viewCount: 15940,
     likeCount: 1296,
@@ -205,6 +207,7 @@ const initialPosts: Post[] = [
     imagePosition: '35% 55%',
     type: 'record',
     tags: ['追番记录', '治愈系', '短评'],
+    series: '2026 追番手帐',
     gallery: [imageAsset(coverHealingAnime, '治愈系追番记录封面')],
     viewCount: 21800,
     likeCount: 1720,
@@ -224,6 +227,7 @@ const initialPosts: Post[] = [
     imagePosition: '20% 40%',
     type: 'article',
     tags: ['绘画教程', '水彩', '同人画'],
+    series: '创作技法手记',
     gallery: [imageAsset(coverSakuraWatercolor, '樱花水彩花瓣练习封面')],
     viewCount: 25840,
     likeCount: 2210,
@@ -242,6 +246,7 @@ const initialPosts: Post[] = [
       '睁开眼睛的时候，我站在巨大的魔法阵中央。\n\n“勇者大人，请拯救我们的世界。”王国公主单膝跪地。\n\n我沉默片刻，问她：“你们这里的厨房在哪里？”\n\n不是因为我不关心这个世界，而是我刚做完晚班，还没有吃饭。',
     type: 'article',
     tags: ['轻小说', '原创企划', '异世界'],
+    series: '异世界料理人日记',
     gallery: [imageAsset(coverNovelKitchen, '轻小说异世界料理人厨房封面')],
     coverUrl: coverNovelKitchen,
     imagePosition: 'center',
@@ -261,6 +266,7 @@ const initialPosts: Post[] = [
       '春季番已经陆续完结，趁记忆还新鲜整理一份私人简评。\n\n值得追满的作品通常不是设定最复杂的，而是每一集都能把情绪推进一点。评论区也欢迎分享你的本季最佳。',
     type: 'record',
     tags: ['追番记录', '动画', '2026春番'],
+    series: '2026 追番手帐',
     gallery: [imageAsset(coverHealingAnime, '春季番治愈系动画封面')],
     coverUrl: coverHealingAnime,
     imagePosition: '50% 60%',
@@ -732,6 +738,7 @@ export const mockApi = {
       imagePosition: firstImage.url === creatorSheet ? '70% 28%' : 'center',
       type: payload.type,
       tags: payload.tags.length ? payload.tags : ['原创企划'],
+      series: payload.series?.trim() || undefined,
       gallery: images.length ? images : [fallbackImage],
       viewCount: 0,
       likeCount: 0,
@@ -765,7 +772,7 @@ export const mockApi = {
     const foundPosts =
       type === 'all' || type === 'post'
         ? publicPosts.filter((post) =>
-            [post.title, post.excerpt, post.content, ...post.tags].some((text) => text.toLowerCase().includes(keyword)),
+            [post.title, post.excerpt, post.content, post.series ?? '', ...post.tags].some((text) => text.toLowerCase().includes(keyword)),
           )
         : []
     const foundUsers =

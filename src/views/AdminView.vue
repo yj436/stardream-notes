@@ -200,7 +200,7 @@ const filteredAdminUsers = computed(() =>
 )
 
 const filteredAdminPosts = computed(() =>
-  blog.adminPosts.filter((post) => includesQuery([post.title, post.type, post.status, post.tags.join(' ')])),
+  blog.adminPosts.filter((post) => includesQuery([post.title, post.type, post.status, post.series, post.tags.join(' ')])),
 )
 
 const filteredAdminComments = computed(() =>
@@ -801,7 +801,7 @@ onMounted(async () => {
             <div v-for="post in filteredAdminPosts" :key="post.id" class="admin-table-row">
               <RouterLink class="admin-entity text-only" :to="`/post/${post.id}`">
                 <strong>{{ post.title }}</strong>
-                <small>{{ post.tags.map((tag) => `#${tag}`).join(' ') }}</small>
+                <small>{{ [post.series ? `系列 · ${post.series}` : '', ...post.tags.map((tag) => `#${tag}`)].filter(Boolean).join(' ') }}</small>
               </RouterLink>
               <span class="admin-muted">{{ postAuthor(post) }}</span>
               <span class="admin-muted">{{ post.likeCount }} 赞 · {{ post.commentCount }} 评 · {{ post.viewCount }} 浏览</span>

@@ -72,6 +72,7 @@ const normalizeUser = (user: User): User => ({
 
 const normalizePost = (post: Post): Post => ({
   ...post,
+  series: post.series?.trim() || undefined,
   coverUrl: resolveAsset(post.coverUrl),
   gallery: normalizeImageAssets(post.gallery, post.title).map((image) => ({ ...image, url: resolveAsset(image.url) })),
 })

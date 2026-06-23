@@ -45,6 +45,7 @@ model Post {
   imagePosition String?   @db.VarChar(64)
   type          String    @db.VarChar(24)
   tags          String    @db.Text
+  series        String?   @db.VarChar(120)
   gallery       String    @db.Text
   viewCount     Int       @default(0)
   likeCount     Int       @default(0)

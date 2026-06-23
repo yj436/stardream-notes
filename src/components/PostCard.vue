@@ -37,6 +37,9 @@ const typeLabel = computed(() => {
 
       <RouterLink class="post-title" :to="`/post/${post.id}`">{{ post.title }}</RouterLink>
       <p>{{ post.excerpt }}</p>
+      <RouterLink v-if="post.series" class="series-pill compact" :to="`/search?q=${encodeURIComponent(post.series)}`">
+        系列 · {{ post.series }}
+      </RouterLink>
 
       <div class="tag-row">
         <RouterLink v-for="tag in post.tags.slice(0, 3)" :key="tag" :to="`/search?q=${encodeURIComponent(tag)}`">

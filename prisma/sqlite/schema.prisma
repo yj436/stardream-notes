@@ -43,6 +43,7 @@ model Post {
   imagePosition String?
   type          String
   tags          String
+  series        String?
   gallery       String
   viewCount     Int       @default(0)
   likeCount     Int       @default(0)

@@ -1434,6 +1434,37 @@ button:disabled {
   font-weight: 850;
 }
 
+.series-pill {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: 100%;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(91, 124, 255, 0.22);
+  border-radius: var(--radius);
+  color: #435bb6;
+  background: var(--blue-soft);
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.series-pill.compact {
+  min-height: 30px;
+  padding: 6px 9px;
+  overflow: hidden;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.series-pill.hero {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+}
+
 .post-actions button,
 .post-actions span,
 .article-actions button,
@@ -1592,6 +1623,39 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.series-card > strong {
+  color: #1e2847;
+}
+
+.series-link {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #2e3858;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.series-link small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.series-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 900;
+}
+
+.series-link.active {
+  color: #bb3c72;
+  border-color: rgba(255, 111, 168, 0.34);
+  background: var(--pink-soft);
 }
 
 .rank-row small {
@@ -1976,7 +2040,7 @@ label {
 
 .editor-meta-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.75fr) 180px;
   gap: 12px;
 }
 

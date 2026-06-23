@@ -46,6 +46,7 @@ export interface Post {
   imagePosition?: string
   type: PostType
   tags: string[]
+  series?: string
   gallery: ImageAsset[]
   viewCount: number
   likeCount: number
@@ -140,6 +141,7 @@ export interface NewPostPayload {
   title: string
   content: string
   tags: string[]
+  series?: string
   images: ImageAsset[]
   type: PostType
 }

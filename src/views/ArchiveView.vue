@@ -68,7 +68,7 @@ const typeLabel = (type: Post['type']) => ({ article: '文章', gallery: '作品
             <TimestampPill :value="post.createdAt" compact />
             <span class="post-kind-inline">{{ typeLabel(post.type) }}</span>
             <strong>{{ post.title }}</strong>
-            <small>{{ post.tags.map((tag) => `#${tag}`).join(' ') }}</small>
+            <small>{{ [post.series ? `系列 · ${post.series}` : '', ...post.tags.map((tag) => `#${tag}`)].filter(Boolean).join(' ') }}</small>
           </RouterLink>
         </div>
       </section>

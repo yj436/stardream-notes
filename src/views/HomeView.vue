@@ -310,7 +310,7 @@ onBeforeUnmount(stopHeroCarousel)
             <div class="featured-grid">
               <RouterLink v-for="post in featuredPosts" :key="post.id" class="feature-tile" :to="`/post/${post.id}`">
                 <img :src="post.coverUrl" :alt="post.title" :style="{ objectPosition: post.imagePosition ?? 'center' }" />
-                <span>#{{ post.tags[0] }}</span>
+                <span>{{ post.series ? `系列 · ${post.series}` : `#${post.tags[0]}` }}</span>
                 <strong>{{ post.title }}</strong>
               </RouterLink>
             </div>

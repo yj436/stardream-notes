@@ -308,6 +308,7 @@ const toUser = (user) => {
 const toPost = (post) => ({
   ...post,
   tags: parse(post.tags, []),
+  series: post.series ?? undefined,
   gallery: normalizeImageAssets(parse(post.gallery, []), post.title),
   reactions: readReactions(post),
   createdAt: post.createdAt.toISOString(),
@@ -349,6 +350,11 @@ const toDraftSnapshot = (snapshot) => ({
 const createExcerpt = (content) => {
   const clean = String(content ?? '').replace(/\s+/g, ' ').trim()
   return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的星梦笔记。'
+}
+
+const normalizeSeries = (value) => {
+  const text = String(value ?? '').trim()
+  return text ? text.slice(0, 120) : null
 }
 
 const getDraft = async (userId) =>
@@ -540,7 +546,7 @@ app.get('/api/posts/:id', async (req, res) => {
 })
 
 app.post('/api/posts', requireAuth, async (req, res) => {
-  const { title, content, tags = [], images: rawImages = [], type = 'article' } = req.body
+  const { title, content, tags = [], series = '', images: rawImages = [], type = 'article' } = req.body
   if (!title || !content) return res.status(400).json({ message: 'title and content are required' })
   const images = normalizeImageAssets(rawImages, title.trim() || '作品图')
   const fallbackImage = imageAsset('asset:hero', title.trim() || '星梦笔记封面')
@@ -556,6 +562,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
       imagePosition: firstImage.url === 'asset:creators' ? '70% 28%' : 'center',
       type,
       tags: stringify(tags.length ? tags : ['原创企划']),
+      series: normalizeSeries(series),
       gallery: stringify(images.length ? images : [fallbackImage]),
       reactions: stringify(defaultReactions),
     },
@@ -589,7 +596,7 @@ app.put('/api/posts/:id', requireAuth, async (req, res) => {
   const existing = await prisma.post.findUnique({ where: { id: req.params.id } })
   if (!existing) return res.status(404).json({ message: 'Post not found' })
   if (existing.authorId !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ message: 'Forbidden' })
-  const { title, content, tags = [], images: rawImages = [], type = existing.type } = req.body
+  const { title, content, tags = [], series = '', images: rawImages = [], type = existing.type } = req.body
   if (!title || !content) return res.status(400).json({ message: 'title and content are required' })
   const images = normalizeImageAssets(rawImages, title.trim() || '作品图')
   const existingCover = imageAsset(existing.coverUrl, title.trim() || existing.title)
@@ -604,6 +611,7 @@ app.put('/api/posts/:id', requireAuth, async (req, res) => {
       imagePosition: firstImage.url === 'asset:creators' ? '70% 28%' : 'center',
       type,
       tags: stringify(tags.length ? tags : ['原创企划']),
+      series: normalizeSeries(series),
       gallery: stringify(images.length ? images : [firstImage]),
     },
   })
@@ -881,7 +889,7 @@ app.get('/api/search', async (req, res) => {
     posts:
       type === 'all' || type === 'post'
         ? normalizedPosts.filter((post) =>
-            [post.title, post.excerpt, post.content, ...post.tags].some((text) => text.toLowerCase().includes(query)),
+            [post.title, post.excerpt, post.content, post.series ?? '', ...post.tags].some((text) => text.toLowerCase().includes(query)),
           )
         : [],
     users:

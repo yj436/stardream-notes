@@ -45,6 +45,12 @@ const relatedPosts = computed(() => {
     .filter((item) => item.id !== post.value?.id && item.tags.some((tag) => post.value?.tags.includes(tag)))
     .slice(0, 3)
 })
+const seriesPosts = computed(() => {
+  if (!post.value?.series) return []
+  return blog.posts
+    .filter((item) => item.series === post.value?.series)
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))
+})
 const articleHeadings = computed(() => {
   if (!post.value) return []
   return extractArticleHeadings(post.value.content)
@@ -192,6 +198,9 @@ watch(
           <div class="tag-row">
             <RouterLink v-for="tag in post.tags" :key="tag" :to="`/search?q=${encodeURIComponent(tag)}`">#{{ tag }}</RouterLink>
           </div>
+          <RouterLink v-if="post.series" class="series-pill hero" :to="`/search?q=${encodeURIComponent(post.series)}`">
+            系列 · {{ post.series }}
+          </RouterLink>
           <h1>{{ post.title }}</h1>
           <div class="article-meta meta-line">
             <span>{{ author.nickname }}</span>
@@ -280,6 +289,19 @@ watch(
           <span :style="{ width: `${readingProgress}%` }" />
         </div>
         <small class="article-progress-copy">已读 {{ readingProgress }}%</small>
+      </section>
+      <section v-if="seriesPosts.length > 1" class="side-card halo-widget series-card">
+        <span class="section-kicker"><BookOpen :size="16" /> 同系列阅读</span>
+        <strong>{{ post.series }}</strong>
+        <RouterLink
+          v-for="(item, index) in seriesPosts"
+          :key="item.id"
+          :class="['series-link', { active: item.id === post.id }]"
+          :to="`/post/${item.id}`"
+        >
+          <small>第 {{ index + 1 }} 篇</small>
+          <span>{{ item.title }}</span>
+        </RouterLink>
       </section>
       <section v-if="articleHeadings.length" class="side-card halo-widget article-toc">
         <span class="section-kicker"><ListTree :size="16" /> 文章目录</span>

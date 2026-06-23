@@ -42,6 +42,7 @@
 :root.dark .user-name,
 :root.dark .stat-item strong,
 :root.dark .side-card h2,
+:root.dark .series-card > strong,
 :root.dark .admin-brand-block strong,
 :root.dark .admin-topbar h1,
 :root.dark .admin-panel-head h2,
@@ -69,6 +70,8 @@
 :root.dark .stat-item,
 :root.dark .read-meta-grid span,
 :root.dark .article-toc button,
+:root.dark .series-link,
+:root.dark .series-pill,
 :root.dark .discover-stats span,
 :root.dark .gallery-console,
 :root.dark .gallery-search,
@@ -145,9 +148,16 @@
 :root.dark .admin-menu-item.active,
 :root.dark .admin-carousel-item.active,
 :root.dark .admin-image-picker button.active,
+:root.dark .series-link.active,
 :root.dark .editor-modebar button.active,
 :root.dark .gallery-tag-list button.active {
   background: linear-gradient(135deg, rgba(255, 141, 184, 0.1), rgba(145, 168, 255, 0.1), rgba(94, 234, 212, 0.08));
+}
+
+:root.dark .series-pill.hero {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.16);
 }
 
 :root.dark .admin-table-head,
