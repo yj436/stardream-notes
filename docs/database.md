@@ -27,7 +27,7 @@ Set this GitHub repository variable for the Pages build:
 VITE_API_BASE_URL=https://your-api-host.example.com/api
 ```
 
-If `VITE_API_BASE_URL` is empty, the GitHub Pages frontend keeps using local mock data for demo mode.
+If `VITE_API_BASE_URL` is empty, the GitHub Pages frontend keeps using the bundled public-source seed data.
 
 ## First Deploy
 
@@ -41,7 +41,7 @@ npm run db:doctor
 npm run start:api
 ```
 
-`db:seed` is idempotent: it upserts the built-in demo users and posts instead of clearing real data.
+`db:seed` is idempotent: it upserts the bundled public-source users, posts, and carousel entries instead of clearing real data.
 
 ## Node Host Settings
 
@@ -105,8 +105,8 @@ Healthy response shape:
     "provider": "mysql",
     "counts": {
       "users": 4,
-      "posts": 5,
-      "comments": 3,
+      "posts": 6,
+      "comments": 0,
       "reports": 0
     }
   }

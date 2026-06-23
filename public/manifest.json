@@ -1,7 +1,7 @@
 {
   "name": "星梦笔记",
   "short_name": "星梦笔记",
-  "description": "二次元轻博客社区 — ACGN创作与追番记录",
+  "description": "ACGN 公开资料博客，收录展会、漫画馆藏、正版平台和开放授权图片",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
