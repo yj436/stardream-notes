@@ -1,81 +1,80 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { Film, Star, Tv } from 'lucide-vue-next'
+import { computed, ref, type Component } from 'vue'
+import { Archive, Building2, ExternalLink, Film, Library, MonitorPlay } from 'lucide-vue-next'
 import { imageAssets } from '@/api/mock'
-import { useBlogStore } from '@/stores/blog'
 
-const blog = useBlogStore()
-const tab = ref<'all' | 'watching' | 'watched'>('all')
+type ResourceType = 'event' | 'archive' | 'platform'
+const tab = ref<'all' | ResourceType>('all')
 
-interface AnimeEntry {
+interface ResourceEntry {
   id: string
   title: string
   coverUrl: string
-  type: string
-  episodes: number
-  rating: number
+  type: ResourceType
+  period: string
+  sourceLabel: string
+  sourceUrl: string
   synopsis: string
   tags: string[]
-  fans: number
 }
 
-const sampleAnimes: AnimeEntry[] = [
+const resourceEntries: ResourceEntry[] = [
   {
-    id: 'a_gogo',
-    title: '银河放课后',
+    id: 'res_comiket',
+    title: 'Comic Market / Comiket',
+    coverUrl: imageAssets.moonlightCos,
+    type: 'event',
+    period: '官方信息以每届会期页面为准',
+    sourceLabel: 'Comic Market 官方',
+    sourceUrl: 'https://www.comiket.co.jp/index_e.html',
+    synopsis: '以同人志、自出版作品和创作者社群为核心的大型活动，适合放入同人文化、展会攻略和创作社群板块。',
+    tags: ['Comiket', '同人文化', '东京展会'],
+  },
+  {
+    id: 'res_animejapan',
+    title: 'AnimeJapan 2026',
     coverUrl: imageAssets.hero,
-    type: 'TV',
-    episodes: 12,
-    rating: 9,
-    synopsis: '放课后的天文社，一群少女用望远镜连接星空与日常的青春群像剧。',
-    tags: ['青春', '日常', '治愈'],
-    fans: 12400,
+    type: 'event',
+    period: '2026-03-28 至 2026-03-31',
+    sourceLabel: 'AnimeJapan 官方',
+    sourceUrl: 'https://anime-japan.jp/en/about/',
+    synopsis: '官方 About 页面列出公共日、商务日、展位、AJ Stage、官方商品和商务交流内容，适合作为动画产业资料入口。',
+    tags: ['AnimeJapan', '动画产业', 'Tokyo Big Sight'],
   },
   {
-    id: 'a_pixel',
-    title: '像素雨季',
+    id: 'res_kyoto_museum',
+    title: '京都国际漫画博物馆',
+    coverUrl: imageAssets.starryDesk,
+    type: 'archive',
+    period: '约 300,000 项资料可检索',
+    sourceLabel: '京都国际漫画博物馆',
+    sourceUrl: 'https://kyotomm.jp/en/',
+    synopsis: '官网提供馆藏、数据库、Manga Wall、Research Reference Room 等信息，适合做漫画史与馆藏资料板块。',
+    tags: ['漫画馆藏', '京都', '资料库'],
+  },
+  {
+    id: 'res_manga_plus',
+    title: 'MANGA Plus by SHUEISHA',
     coverUrl: imageAssets.creators,
-    type: 'TV',
-    episodes: 24,
-    rating: 8,
-    synopsis: '一座永远下着雨的小镇，每一帧都可以截屏当壁纸的奇幻日常。',
-    tags: ['奇幻', '美术神作', '慢节奏'],
-    fans: 8400,
-  },
-  {
-    id: 'a_studio',
-    title: '夏夜摄影棚',
-    coverUrl: imageAssets.hero,
-    type: 'Movie',
-    episodes: 1,
-    rating: 8,
-    synopsis: '一个夏天的末尾，少年用父母的旧相机拍下了最后一张拍立得。',
-    tags: ['剧场版', '夏日', '回忆'],
-    fans: 6600,
-  },
-  {
-    id: 'a_mahou',
-    title: '星屑魔法书',
-    coverUrl: imageAssets.creators,
-    type: 'TV',
-    episodes: 26,
-    rating: 9,
-    synopsis: '见习魔法使在图书馆发现了沉睡千年的星屑魔法，从此每翻一页书就打开一个新世界。',
-    tags: ['魔法', '冒险', '奇幻'],
-    fans: 15800,
+    type: 'platform',
+    period: '官方数字阅读服务',
+    sourceLabel: 'MANGA Plus',
+    sourceUrl: 'https://mangaplus.shueisha.co.jp/updates',
+    synopsis: '集英社官方漫画阅读入口，公开说明强调最新章节与日本同步更新，适合放入正版阅读与平台资料板块。',
+    tags: ['正版阅读', '漫画平台', 'SHUEISHA'],
   },
 ]
 
-const filtered = computed(() => {
-  if (tab.value === 'all') return sampleAnimes
-  return sampleAnimes.filter((a) => a.type === (tab.value === 'watching' ? 'TV' : 'Movie'))
-})
-
-const ratingColor = (rating: number) => {
-  if (rating >= 9) return 'var(--gold)'
-  if (rating >= 8) return 'var(--mint)'
-  return 'var(--muted)'
+const typeMeta: Record<ResourceType, { label: string; icon: Component }> = {
+  event: { label: '活动', icon: Building2 },
+  archive: { label: '馆藏', icon: Library },
+  platform: { label: '平台', icon: MonitorPlay },
 }
+
+const filtered = computed(() => {
+  if (tab.value === 'all') return resourceEntries
+  return resourceEntries.filter((entry) => entry.type === tab.value)
+})
 </script>
 
 <template>
@@ -83,39 +82,42 @@ const ratingColor = (rating: number) => {
     <div class="section-block">
       <div class="section-title">
         <div>
-          <span class="section-kicker"><Film :size="16" /> 番剧资料库</span>
-          <h1>发现 ACGN 作品</h1>
-          <p class="archive-summary">浏览番剧、角色与同好动态，找到下一个让你心动入坑的故事。</p>
+          <span class="section-kicker"><Film :size="16" /> ACGN 公开资料库</span>
+          <h1>发现真实资料入口</h1>
+          <p class="archive-summary">整理活动、馆藏和正版平台的公开来源，替代虚构番剧评分与不可验证热度。</p>
         </div>
         <div class="segmented compact">
           <button type="button" :class="{ active: tab === 'all' }" @click="tab = 'all'">全部</button>
-          <button type="button" :class="{ active: tab === 'watching' }" @click="tab = 'watching'">连载</button>
-          <button type="button" :class="{ active: tab === 'watched' }" @click="tab = 'watched'">剧场版</button>
+          <button type="button" :class="{ active: tab === 'event' }" @click="tab = 'event'">活动</button>
+          <button type="button" :class="{ active: tab === 'archive' }" @click="tab = 'archive'">馆藏</button>
+          <button type="button" :class="{ active: tab === 'platform' }" @click="tab = 'platform'">平台</button>
         </div>
       </div>
     </div>
 
     <div class="anime-grid">
-      <RouterLink v-for="anime in filtered" :key="anime.id" :to="`/search?q=${encodeURIComponent(anime.title)}`" class="anime-card">
+      <article v-for="entry in filtered" :key="entry.id" class="anime-card">
         <div class="anime-card-cover">
-          <img :src="anime.coverUrl" :alt="anime.title" />
-          <span class="anime-type-badge">{{ anime.type }}</span>
+          <img :src="entry.coverUrl" :alt="entry.title" />
+          <span class="anime-type-badge">{{ typeMeta[entry.type].label }}</span>
         </div>
         <div class="anime-card-body">
-          <strong>{{ anime.title }}</strong>
+          <strong>{{ entry.title }}</strong>
           <div class="anime-meta-row">
-            <Tv :size="14" />
-            <span>{{ anime.episodes }} 话</span>
-            <Star :size="14" :style="{ color: ratingColor(anime.rating) }" />
-            <span>{{ anime.rating }}/10</span>
+            <component :is="typeMeta[entry.type].icon" :size="14" />
+            <span>{{ entry.period }}</span>
           </div>
-          <p>{{ anime.synopsis }}</p>
+          <p>{{ entry.synopsis }}</p>
           <div class="tag-row">
-            <span v-for="tag in anime.tags" :key="tag">#{{ tag }}</span>
+            <RouterLink v-for="tag in entry.tags" :key="tag" :to="`/search?q=${encodeURIComponent(tag)}`">#{{ tag }}</RouterLink>
           </div>
-          <small>{{ anime.fans.toLocaleString() }} 位星梦同好</small>
+          <a class="text-button compact" :href="entry.sourceUrl" target="_blank" rel="noreferrer">
+            <Archive :size="14" />
+            {{ entry.sourceLabel }}
+            <ExternalLink :size="13" />
+          </a>
         </div>
-      </RouterLink>
+      </article>
     </div>
   </section>
 </template>

@@ -29,6 +29,7 @@ import type {
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const isGitHubPagesHost = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')
 const shouldUseMockApi = import.meta.env.VITE_USE_MOCK_API === 'true' || (!configuredApiBaseUrl && isGitHubPagesHost)
+const shouldFallbackToMockApi = shouldUseMockApi || !configuredApiBaseUrl
 const apiBaseUrl = configuredApiBaseUrl || '/api'
 
 const client = axios.create({
@@ -41,7 +42,7 @@ const runtimeInfo: ApiRuntimeInfo = {
   apiBaseUrl,
   configuredApiBaseUrl: configuredApiBaseUrl || null,
   isGitHubPagesHost,
-  fallbackEnabled: shouldUseMockApi,
+  fallbackEnabled: shouldFallbackToMockApi,
 }
 
 const tokenKey = 'stardream:auth-token'
@@ -104,7 +105,7 @@ const withFallback = async <T>(request: () => Promise<T>, fallback: () => Promis
   try {
     return await request()
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response && !isGitHubPagesHost) throw error
+    if (axios.isAxiosError(error) && error.response && !shouldFallbackToMockApi) throw error
     if (!isGitHubPagesHost) console.warn('API fallback to local mock:', error)
     return fallback()
   }
@@ -145,6 +146,35 @@ const getMockAdminComments = async () => {
 
 const getMockReports = async (): Promise<Report[]> => mockApi.getAdminReports()
 
+const getMockSystemHealth = async (startedAt: number): Promise<ApiHealth> => {
+  const [users, posts, reports] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts(), mockApi.getAdminReports()])
+  return {
+    ok: true,
+    name: 'stardream-mock-api',
+    checkedAt: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+    attempts: 1,
+    database: {
+      ok: true,
+      provider: 'mock',
+      latencyMs: Date.now() - startedAt,
+      counts: {
+        users: users.length,
+        posts: posts.length,
+        comments: posts.reduce((total, post) => total + post.commentCount, 0),
+        reports: reports.length,
+      },
+    },
+  }
+}
+
+const canUseAuthFallback = (error: unknown) => {
+  if (!shouldFallbackToMockApi) return false
+  if (!axios.isAxiosError(error)) return true
+  const status = error.response?.status
+  return !status || status >= 500
+}
+
 export const appApi = {
   getRuntimeInfo() {
     return runtimeInfo
@@ -163,25 +193,7 @@ export const appApi = {
   async getSystemHealth(): Promise<ApiHealth> {
     const startedAt = Date.now()
     if (shouldUseMockApi) {
-      const [users, posts, reports] = await Promise.all([mockApi.getUsers(), mockApi.getAdminPosts(), mockApi.getAdminReports()])
-      return {
-        ok: true,
-        name: 'stardream-mock-api',
-        checkedAt: new Date().toISOString(),
-        durationMs: Date.now() - startedAt,
-        attempts: 1,
-        database: {
-          ok: true,
-          provider: 'mock',
-          latencyMs: Date.now() - startedAt,
-          counts: {
-            users: users.length,
-            posts: posts.length,
-            comments: posts.reduce((total, post) => total + post.commentCount, 0),
-            reports: reports.length,
-          },
-        },
-      }
+      return getMockSystemHealth(startedAt)
     }
 
     let lastError: unknown = null
@@ -200,6 +212,8 @@ export const appApi = {
         if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 320))
       }
     }
+
+    if (shouldFallbackToMockApi) return getMockSystemHealth(startedAt)
 
     const statusCode = axios.isAxiosError(lastError) ? lastError.response?.status : undefined
     const message = axios.isAxiosError(lastError) ? lastError.message : 'Health check failed'
@@ -220,19 +234,26 @@ export const appApi = {
   },
 
   async login(payload: LoginPayload) {
-    if (shouldUseMockApi) {
+    const createMockLogin = async () => {
       const user = await createMockAuthUser(payload.identifier)
       const result = { token: 'mock-token', user }
       this.setToken(result.token)
       return result
     }
-    const result = (await client.post<AuthResult>('/auth/login', payload)).data
-    this.setToken(result.token)
-    return { ...result, user: normalizeUser(result.user) }
+    if (shouldUseMockApi) return createMockLogin()
+    try {
+      const result = (await client.post<AuthResult>('/auth/login', payload)).data
+      this.setToken(result.token)
+      return { ...result, user: normalizeUser(result.user) }
+    } catch (error) {
+      if (!canUseAuthFallback(error)) throw error
+      console.warn('Auth fallback to local mock:', error)
+      return createMockLogin()
+    }
   },
 
   async register(payload: RegisterPayload) {
-    if (shouldUseMockApi) {
+    const createMockRegister = async () => {
       const baseUser = await createMockAuthUser(payload.username)
       const user = normalizeUser({
         ...baseUser,
@@ -246,9 +267,16 @@ export const appApi = {
       this.setToken(result.token)
       return result
     }
-    const result = (await client.post<AuthResult>('/auth/register', payload)).data
-    this.setToken(result.token)
-    return { ...result, user: normalizeUser(result.user) }
+    if (shouldUseMockApi) return createMockRegister()
+    try {
+      const result = (await client.post<AuthResult>('/auth/register', payload)).data
+      this.setToken(result.token)
+      return { ...result, user: normalizeUser(result.user) }
+    } catch (error) {
+      if (!canUseAuthFallback(error)) throw error
+      console.warn('Auth fallback to local mock:', error)
+      return createMockRegister()
+    }
   },
 
   async getMe() {
@@ -256,7 +284,8 @@ export const appApi = {
     if (shouldUseMockApi) return createMockAuthUser()
     try {
       return normalizeUser((await client.get<User>('/auth/me')).data)
-    } catch {
+    } catch (error) {
+      if (canUseAuthFallback(error)) return createMockAuthUser()
       this.setToken(null)
       return null
     }
@@ -409,7 +438,14 @@ export const appApi = {
 
   async deletePost(id: string) {
     if (shouldUseMockApi) return
-    await client.delete(`/posts/${id}`)
+    await withFallback(
+      async () => {
+        await client.delete(`/posts/${id}`)
+      },
+      async () => {
+        await mockApi.deleteAdminPost(id)
+      },
+    )
   },
 
   async reportPost(id: string, payload: { reason: string; detail?: string }) {
@@ -547,7 +583,14 @@ export const appApi = {
       await mockApi.deleteAdminPost(id)
       return
     }
-    await client.delete(`/admin/posts/${id}`)
+    await withFallback(
+      async () => {
+        await client.delete(`/admin/posts/${id}`)
+      },
+      async () => {
+        await mockApi.deleteAdminPost(id)
+      },
+    )
   },
 
   async getAdminComments() {

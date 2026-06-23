@@ -28,7 +28,7 @@ const groups = computed(() => {
 
 const totalPosts = computed(() => sourcePosts.value.length)
 const latestPost = computed(() => groups.value[0]?.posts[0])
-const typeLabel = (type: Post['type']) => ({ article: '文章', gallery: '作品画廊', record: '追番' })[type]
+const typeLabel = (type: Post['type']) => ({ article: '资料图文', gallery: '活动图集', record: '平台资料' })[type]
 </script>
 
 <template>
@@ -36,10 +36,10 @@ const typeLabel = (type: Post['type']) => ({ article: '文章', gallery: '作品
     <section class="page-hero archive-hero" :style="{ backgroundImage: `linear-gradient(135deg, rgba(23, 30, 55, 0.2), rgba(23, 30, 55, 0.76)), url(${imageAssets.hero})` }">
       <div class="halo-sakura-layer" aria-hidden="true" />
       <div>
-        <span class="section-kicker"><Archive :size="16" /> Halo Archive</span>
-        <h1>按时间回看星梦笔记</h1>
+        <span class="section-kicker"><Archive :size="16" /> Source Archive</span>
+        <h1>按时间回看公开资料</h1>
         <p class="archive-summary">
-          {{ scope === 'all' ? '全站' : '我的' }}共 {{ totalPosts }} 篇内容
+          {{ scope === 'all' ? '全站' : '我的' }}共 {{ totalPosts }} 篇资料
           <template v-if="latestPost">，最新更新是《{{ latestPost.title }}》。</template>
         </p>
       </div>
@@ -60,7 +60,7 @@ const typeLabel = (type: Post['type']) => ({ article: '文章', gallery: '作品
           <div class="archive-month-head">
             <div>
               <span class="section-kicker"><CalendarDays :size="16" /> {{ group.label }}</span>
-              <h2>{{ group.posts.length }} 篇星梦记录</h2>
+              <h2>{{ group.posts.length }} 篇资料记录</h2>
             </div>
           </div>
           <RouterLink v-for="post in group.posts" :key="post.id" :to="`/post/${post.id}`" class="archive-row timeline-row">
@@ -74,6 +74,6 @@ const typeLabel = (type: Post['type']) => ({ article: '文章', gallery: '作品
       </section>
     </div>
 
-    <p v-if="!groups.length" class="empty-state">这个范围暂时没有可归档内容。</p>
+    <p v-if="!groups.length" class="empty-state">这个范围暂时没有可归档资料。</p>
   </section>
 </template>

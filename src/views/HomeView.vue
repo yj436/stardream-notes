@@ -4,19 +4,22 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Building2,
   CalendarDays,
   Camera,
+  Database,
   Flame,
   Hash,
   Heart,
+  Library,
   MessageCircle,
+  MonitorPlay,
   Palette,
   Pause,
   Play,
   Sparkles,
   Star,
   Tv,
-  Utensils,
 } from 'lucide-vue-next'
 import PostCard from '@/components/PostCard.vue'
 import SkeletonHome from '@/components/SkeletonHome.vue'
@@ -55,8 +58,8 @@ const fallbackHeroSlides = computed(() => {
       excerpt: post.excerpt,
       imageUrl: post.coverUrl || imageAssets.hero,
       imagePosition: post.imagePosition ?? 'center',
-      eyebrow: ['今日主推', '灵感封面', '读者热看', '创作更新', '编辑精选'][index] ?? '精选文章',
-      tag: post.tags[0] ?? '精选',
+      eyebrow: ['今日主推', '馆藏资料', '活动现场', '正版入口', '编辑精选'][index] ?? '精选资料',
+      tag: post.tags[0] ?? '资料精选',
       link: `/post/${post.id}`,
     }))
 })
@@ -72,8 +75,8 @@ const configuredHeroSlides = computed(() =>
         excerpt: slide.excerpt,
         imageUrl: slide.imageUrl || post?.coverUrl || imageAssets.hero,
         imagePosition: slide.imagePosition ?? post?.imagePosition ?? 'center',
-        eyebrow: slide.tag || ['今日主推', '灵感封面', '读者热看', '创作更新', '编辑精选'][index] || '精选文章',
-        tag: slide.tag || post?.tags[0] || '精选',
+        eyebrow: slide.tag || ['今日主推', '馆藏资料', '活动现场', '正版入口', '编辑精选'][index] || '精选资料',
+        tag: slide.tag || post?.tags[0] || '资料精选',
         link: slide.link || (post ? `/post/${post.id}` : '/discover'),
       }
     }),
@@ -85,62 +88,62 @@ const activeHeroSlide = computed(() => {
 })
 const topicRoutes = computed(() => [
   {
-    title: '绘画教程',
-    desc: '柔光上色、水彩入门与封面构图',
-    tag: '绘画教程',
-    icon: Palette,
+    title: '漫画馆藏',
+    desc: '京都国际漫画博物馆、馆藏检索与漫画史资料',
+    tag: '京都国际漫画博物馆',
+    icon: Library,
     image: imageAssets.starryDesk,
   },
   {
-    title: 'Cos 影棚',
-    desc: '低成本布光、服装手作与摄影幕后',
-    tag: 'Cosplay',
-    icon: Camera,
+    title: '展会与同人',
+    desc: 'Comic Market、东京 Big Sight 与创作者社群',
+    tag: 'Comiket',
+    icon: Building2,
     image: imageAssets.moonlightCos,
   },
   {
-    title: '追番记录',
-    desc: '想看、在看、看过的轻量时间线',
-    tag: '追番记录',
+    title: '动画产业',
+    desc: 'AnimeJapan、公共日、商务日与展会结构',
+    tag: 'AnimeJapan',
     icon: Tv,
-    image: imageAssets.healingAnime,
+    image: imageAssets.hero,
   },
   {
-    title: '轻小说连载',
-    desc: '原创企划、异世界料理和日常短篇',
-    tag: '轻小说',
-    icon: Utensils,
-    image: imageAssets.novelKitchen,
+    title: '正版阅读',
+    desc: 'MANGA Plus 等官方平台入口与内容规范',
+    tag: 'MANGA Plus',
+    icon: MonitorPlay,
+    image: imageAssets.creators,
   },
 ])
 const siteShowcase = [
   {
-    title: '阅读',
-    desc: '长文、目录和阅读进度',
+    title: '归档',
+    desc: '按时间回看公开资料卡',
     to: '/archive',
     icon: BookOpen,
     image: imageAssets.starryDesk,
   },
   {
-    title: '画廊',
-    desc: '瀑布流作品展示',
+    title: '图库',
+    desc: '开放授权图片与来源说明',
     to: '/gallery',
     icon: Camera,
     image: imageAssets.sakuraWatercolor,
   },
   {
     title: '写作',
-    desc: '富文本与文章大纲',
+    desc: '用富文本整理资料笔记',
     to: '/editor',
     icon: Palette,
     image: imageAssets.creators,
   },
   {
     title: '后台',
-    desc: '数据、审核和举报处理',
+    desc: '管理内容、轮播和数据状态',
     to: '/admin',
-    icon: Hash,
-    image: imageAssets.healingAnime,
+    icon: Database,
+    image: imageAssets.hero,
   },
 ]
 
@@ -196,15 +199,18 @@ onBeforeUnmount(stopHeroCarousel)
           <span />
         </div>
         <div class="halo-site-card hero-carousel-copy">
-          <span class="halo-avatar" :style="{ backgroundImage: `url(${activeHeroSlide.author?.avatarUrl})`, backgroundPosition: activeHeroSlide.author?.avatarPosition }" />
-          <span class="section-kicker"><Sparkles :size="16" /> Halo 二次元博客</span>
+          <span
+            class="halo-avatar"
+            :style="{ backgroundImage: activeHeroSlide.author?.avatarUrl ? `url(${activeHeroSlide.author.avatarUrl})` : undefined, backgroundPosition: activeHeroSlide.author?.avatarPosition }"
+          />
+          <span class="section-kicker"><Sparkles :size="16" /> ACGN 公开资料博客</span>
           <h1>星梦笔记</h1>
-          <p>梦之城、童话梦境、动漫创作与轻博客记录。</p>
+          <p>收录公开来源、开放授权图片与原创整理文本，把活动、馆藏、平台和日常场景做成可维护的博客资料库。</p>
           <strong class="hero-slide-title">{{ activeHeroSlide.title }}</strong>
           <div class="hero-actions">
             <RouterLink class="primary-button" :to="activeHeroSlide.link">
               <BookOpen :size="18" />
-              阅读主推文章
+              阅读主推资料
             </RouterLink>
             <RouterLink class="ghost-button" to="/discover">
               <Hash :size="18" />
@@ -264,8 +270,8 @@ onBeforeUnmount(stopHeroCarousel)
 
       <section class="feature-strip halo-notice">
         <div>
-          <span class="section-kicker"><Star :size="16" /> 星梦专题</span>
-          <h2>同人创作、追番记录、Cos 影棚和轻小说连载都在这里汇流。</h2>
+          <span class="section-kicker"><Star :size="16" /> 真实资料专题</span>
+          <h2>漫画馆藏、展会活动、正版平台和日常场景参考在这里汇流。</h2>
         </div>
         <RouterLink class="feature-link" to="/discover">探索话题 <ArrowRight :size="16" /></RouterLink>
       </section>
@@ -304,7 +310,7 @@ onBeforeUnmount(stopHeroCarousel)
             <div class="section-title">
               <div>
                 <span class="section-kicker"><Sparkles :size="16" /> 博客精选</span>
-                <h2>封面、标签、摘要和作者信息都服务于阅读入口</h2>
+                <h2>每篇内容都保留来源、图片授权和原创整理说明。</h2>
               </div>
             </div>
             <div class="featured-grid">
@@ -320,7 +326,7 @@ onBeforeUnmount(stopHeroCarousel)
             <div class="section-title">
               <div>
                 <span class="section-kicker"><BookOpen :size="16" /> 最新文章</span>
-                <h2>创作流</h2>
+                <h2>公开资料流</h2>
               </div>
               <RouterLink to="/archive">查看归档</RouterLink>
             </div>
@@ -334,27 +340,27 @@ onBeforeUnmount(stopHeroCarousel)
           <section class="side-card site-card">
             <span class="section-kicker"><Hash :size="16" /> 博客信息</span>
             <h2>欢迎来到星梦笔记</h2>
-            <p>参考 Halo Sakura / Dream 的二次元博客气质：沉浸头图、文章卡片、侧栏组件和轻量互动。</p>
+            <p>这里把 ACGN 相关公开页面、开放授权图片和原创整理文本统一收进一个轻博客界面，适合持续扩展但不堆砌素材。</p>
             <div class="stat-grid">
               <div class="stat-item"><strong>{{ blog.posts.length }}</strong><span>文章</span></div>
-              <div class="stat-item"><strong>{{ blog.users.length }}</strong><span>作者</span></div>
+              <div class="stat-item"><strong>{{ blog.users.length }}</strong><span>资料组</span></div>
               <div class="stat-item"><strong>{{ blog.tags.length }}</strong><span>标签</span></div>
             </div>
           </section>
 
           <section class="side-card halo-widget">
-            <span class="section-kicker"><Sparkles :size="16" /> 封面墙</span>
+            <span class="section-kicker"><Sparkles :size="16" /> 图片来源</span>
             <div class="cover-wall">
-              <img :src="imageAssets.starryDesk" alt="星空书桌封面" />
-              <img :src="imageAssets.sakuraWatercolor" alt="樱花水彩封面" />
-              <img :src="imageAssets.moonlightCos" alt="月光影棚封面" />
-              <img :src="imageAssets.healingAnime" alt="治愈追番封面" />
+              <img :src="imageAssets.starryDesk" alt="京都国际漫画博物馆主展区" />
+              <img :src="imageAssets.sakuraWatercolor" alt="漫画工具展示" />
+              <img :src="imageAssets.moonlightCos" alt="Comiket 现场 Cosplay 区域" />
+              <img :src="imageAssets.galaxySchool" alt="京都国际漫画博物馆户外阅读场景" />
             </div>
           </section>
 
           <section class="side-card halo-widget">
             <span class="section-kicker"><Sparkles :size="16" /> 站点公告</span>
-            <p class="notice-copy">今晚的推荐流已换上新封面，适合从一张图开始写一篇轻博客。</p>
+            <p class="notice-copy">本轮已将默认内容替换为公开来源资料，并在文档中记录图片作者、授权协议和原始链接。</p>
             <div class="topic-cloud">
               <RouterLink v-for="tag in sideTags" :key="tag" :to="`/search?q=${encodeURIComponent(tag)}`">#{{ tag }}</RouterLink>
             </div>
@@ -371,7 +377,7 @@ onBeforeUnmount(stopHeroCarousel)
           </section>
 
           <section class="side-card">
-            <span class="section-kicker">推荐作者</span>
+            <span class="section-kicker">资料组</span>
             <UserPanel v-for="user in creators" :key="user.id" :user="user" />
           </section>
         </aside>

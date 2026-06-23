@@ -39,10 +39,10 @@ const galleryQuery = ref('')
 const activeImageId = ref<string | null>(null)
 
 const typeOptions: Array<{ label: string; value: 'all' | PostType }> = [
-  { label: '全部作品', value: 'all' },
-  { label: '图文', value: 'article' },
-  { label: '作品画廊', value: 'gallery' },
-  { label: '追番图集', value: 'record' },
+  { label: '全部图片', value: 'all' },
+  { label: '资料图文', value: 'article' },
+  { label: '活动图集', value: 'gallery' },
+  { label: '平台资料', value: 'record' },
 ]
 
 const sortOptions: Array<{ label: string; value: GallerySort }> = [
@@ -61,7 +61,7 @@ const galleryItems = computed<GalleryItem[]>(() =>
       image,
       post,
       index,
-      authorName: author?.nickname ?? '星梦创作者',
+      authorName: author?.nickname ?? '资料整理者',
       authorAvatar: author?.avatarUrl,
       authorAvatarPosition: author?.avatarPosition,
       shape: index % 5 === 1 ? 'tall' : index % 5 === 3 ? 'wide' : 'square',
@@ -156,13 +156,13 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
     >
       <div class="halo-sakura-layer" aria-hidden="true" />
       <div>
-        <span class="section-kicker"><Images :size="16" /> Stardream Gallery</span>
-        <h1>星梦画廊</h1>
-        <p>插画、Cos、追番截图和创作过程图，按作品与标签汇成一条视觉流。</p>
+        <span class="section-kicker"><Images :size="16" /> Source Gallery</span>
+        <h1>开放授权图库</h1>
+        <p>活动现场、馆藏空间、创作工具和日常场景图，按来源文章与标签汇成一条可追溯视觉流。</p>
       </div>
       <RouterLink class="primary-button" to="/editor">
         <Camera :size="16" />
-        投稿作品
+        整理资料
       </RouterLink>
     </section>
 
@@ -186,8 +186,8 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
 
       <div class="gallery-stats">
         <span><Grid3X3 :size="15" />{{ galleryStats.images }} 张图片</span>
-        <span><Sparkles :size="15" />{{ galleryStats.posts }} 篇作品</span>
-        <span><Camera :size="15" />{{ galleryStats.creators }} 位创作者</span>
+        <span><Sparkles :size="15" />{{ galleryStats.posts }} 篇资料</span>
+        <span><Camera :size="15" />{{ galleryStats.creators }} 个资料组</span>
         <span><Heart :size="15" />{{ galleryStats.likes.toLocaleString('zh-CN') }} 热度</span>
       </div>
     </section>
@@ -209,7 +209,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
         </section>
 
         <section v-if="featuredItem" class="side-card gallery-feature-card">
-          <span class="section-kicker"><Eye :size="16" /> 当前主推</span>
+          <span class="section-kicker"><Eye :size="16" /> 当前资料图</span>
           <img :src="imageUrl(featuredItem.image)" :alt="imageAlt(featuredItem.image, featuredItem.post.title)" />
           <RouterLink :to="`/post/${featuredItem.post.id}`">{{ featuredItem.post.title }}</RouterLink>
           <small>{{ featuredItem.authorName }} · {{ featuredItem.post.likeCount }} 赞</small>
@@ -236,12 +236,12 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
           </span>
           <span class="gallery-expand"><Maximize2 :size="16" /></span>
         </button>
-        <p v-if="!filteredItems.length" class="empty-state">暂时没有符合条件的画廊作品。</p>
+        <p v-if="!filteredItems.length" class="empty-state">暂时没有符合条件的资料图片。</p>
       </main>
     </div>
 
     <Teleport to="body">
-      <div v-if="activeItem" class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="画廊大图预览">
+      <div v-if="activeItem" class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="资料图片预览">
         <button type="button" class="gallery-lightbox-close" aria-label="关闭预览" @click="closeLightbox">
           <X :size="22" />
         </button>
@@ -261,7 +261,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
             </div>
             <div class="gallery-lightbox-actions">
               <TimestampPill :value="activeItem.post.createdAt" compact />
-              <RouterLink class="primary-button" :to="`/post/${activeItem.post.id}`" @click="closeLightbox">阅读作品</RouterLink>
+              <RouterLink class="primary-button" :to="`/post/${activeItem.post.id}`" @click="closeLightbox">阅读资料</RouterLink>
             </div>
           </figcaption>
         </figure>

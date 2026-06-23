@@ -1,11 +1,10 @@
-import heroImage from '@/assets/images/stardream-hero.png'
-import creatorSheet from '@/assets/images/creator-sheet.png'
-import coverGalaxySchool from '@/assets/images/cover-galaxy-school.png'
-import coverHealingAnime from '@/assets/images/cover-healing-anime.png'
-import coverMoonlightCos from '@/assets/images/cover-moonlight-cos.png'
-import coverNovelKitchen from '@/assets/images/cover-novel-kitchen.png'
-import coverSakuraWatercolor from '@/assets/images/cover-sakura-watercolor.png'
-import coverStarryDesk from '@/assets/images/cover-starry-desk.png'
+﻿import tokyoBigSightNight from '@/assets/images/content-tokyo-big-sight-night.jpg'
+import digitalTablet from '@/assets/images/content-digital-tablet.jpg'
+import mangaMuseumMain from '@/assets/images/content-manga-museum-main.jpg'
+import mangaArtistTools from '@/assets/images/content-manga-artist-tools.jpg'
+import comiketCosplay from '@/assets/images/content-comiket-cosplay.jpg'
+import kareRaisu from '@/assets/images/content-kare-raisu.jpg'
+import mangaMuseumReading from '@/assets/images/content-manga-museum-reading.jpg'
 import { normalizeImageAssets } from '@/utils/image'
 import type {
   AdminBackupCounts,
@@ -30,14 +29,14 @@ import type {
 const wait = (ms = 120) => new Promise((resolve) => window.setTimeout(resolve, ms))
 
 export const imageAssets = {
-  hero: heroImage,
-  creators: creatorSheet,
-  starryDesk: coverStarryDesk,
-  sakuraWatercolor: coverSakuraWatercolor,
-  moonlightCos: coverMoonlightCos,
-  healingAnime: coverHealingAnime,
-  novelKitchen: coverNovelKitchen,
-  galaxySchool: coverGalaxySchool,
+  hero: tokyoBigSightNight,
+  creators: digitalTablet,
+  starryDesk: mangaMuseumMain,
+  sakuraWatercolor: mangaArtistTools,
+  moonlightCos: comiketCosplay,
+  healingAnime: tokyoBigSightNight,
+  novelKitchen: kareRaisu,
+  galaxySchool: mangaMuseumReading,
 }
 
 const storageKeys = {
@@ -52,9 +51,10 @@ const storageKeys = {
   draftSnapshots: 'stardream:draft-snapshots',
 }
 
-const dataVersion = 'acgn-blog-2026-06-12-reactions'
+const dataVersion = 'acgn-public-sources-2026-06-23'
 const emptyReactions: Record<PostReactionKey, number> = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const imageAsset = (url: string, alt: string): ImageAsset => ({ url, alt })
+const cloneData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 const readStorage = <T>(key: string, fallback: T): T => {
   try {
@@ -77,283 +77,316 @@ const resetIfNeeded = () => {
 
 resetIfNeeded()
 
+const sourceLinks = {
+  comiket: 'https://www.comiket.co.jp/index_e.html',
+  comiketOverseas: 'https://www.comiket.co.jp/info-a/TAFO/',
+  kyotoMangaMuseum: 'https://kyotomm.jp/en/',
+  kyotoCollection: 'https://kyotomm.jp/en/collection/',
+  animeJapan: 'https://anime-japan.jp/en/about/',
+  mangaPlus: 'https://mangaplus.shueisha.co.jp/updates',
+  mangaPlusApp: 'https://apps.apple.com/us/app/manga-plus-by-shueisha/id1442476536',
+  commonsSearch: 'https://search.creativecommons.org/',
+}
+
 const initialUsers: User[] = [
   {
-    id: 'u_mika',
-    username: 'mika-stars',
-    nickname: '米卡星屿',
-    avatarUrl: creatorSheet,
-    avatarPosition: '20% 25%',
-    coverUrl: coverGalaxySchool,
-    bio: '同人插画师，喜欢把星空、校园和柔光少女画进轻博客封面。',
+    id: 'u_editorial',
+    username: 'open-culture-desk',
+    email: 'admin@stardream.local',
+    nickname: '公开资料编辑部',
+    avatarUrl: digitalTablet,
+    avatarPosition: 'center',
+    coverUrl: tokyoBigSightNight,
+    bio: '站内资料整理账号：只收录公开来源、开放授权图片和原创整理文本。',
     level: 18,
-    creatorBadge: '认证画师',
+    creatorBadge: '站点编辑',
     favoriteCharacter: {
-      name: '星野璃',
-      anime: '原创企划《银河放课后》',
-      quote: '今天也要把梦画得亮一点。',
+      name: '资料来源',
+      anime: '站点内容治理',
+      quote: '每一张图、每一段说明都要能回到公开来源。',
     },
-    stats: { posts: 42, followers: 12800, following: 315, likes: 98600 },
-    isFollowing: true,
+    stats: { posts: 1, followers: 0, following: 0, likes: 0 },
+    role: 'admin',
+    status: 'active',
     theme: 'sakura',
   },
   {
-    id: 'u_rin',
-    username: 'rin-coslog',
-    nickname: '凛月记录本',
-    avatarUrl: creatorSheet,
-    avatarPosition: '72% 28%',
-    coverUrl: coverMoonlightCos,
-    bio: 'Coser / 服装手作 / 写一点舞台幕后和修图笔记。',
-    level: 14,
-    creatorBadge: 'Coser',
+    id: 'u_events',
+    username: 'event-archive',
+    email: 'events@stardream.local',
+    nickname: 'ACGN 活动档案组',
+    avatarUrl: comiketCosplay,
+    avatarPosition: 'center',
+    coverUrl: tokyoBigSightNight,
+    bio: '整理 Comic Market、AnimeJapan 等公开活动资料，偏重时间、地点、参与方式和现场图像来源。',
+    level: 15,
+    creatorBadge: '活动资料',
     favoriteCharacter: {
-      name: '月见遥',
-      anime: '原创企划《夏夜摄影棚》',
-      quote: '镜头会记住认真发光的人。',
+      name: '东京 Big Sight',
+      anime: '展会与同人文化',
+      quote: '活动信息先看官方页面，再写成读者能快速理解的资料卡。',
     },
-    stats: { posts: 28, followers: 6200, following: 188, likes: 40300 },
+    stats: { posts: 2, followers: 0, following: 0, likes: 0 },
+    role: 'creator',
+    status: 'active',
     theme: 'starlight',
   },
   {
-    id: 'u_nano',
-    username: 'nano-gamepad',
-    nickname: '纳诺手柄',
-    avatarUrl: creatorSheet,
-    avatarPosition: '42% 70%',
-    coverUrl: coverHealingAnime,
-    bio: 'Galgame、独立游戏和追番记录重度用户，偶尔写长评。',
-    level: 11,
+    id: 'u_manga',
+    username: 'manga-archive',
+    email: 'manga@stardream.local',
+    nickname: '漫画馆藏资料组',
+    avatarUrl: mangaMuseumMain,
+    avatarPosition: 'center',
+    coverUrl: mangaMuseumReading,
+    bio: '关注漫画馆藏、阅读空间、创作工具和漫画史材料，把博物馆公开信息转成站内资料。',
+    level: 14,
+    creatorBadge: '馆藏资料',
     favoriteCharacter: {
-      name: '浅川千叶',
-      anime: '原创企划《像素雨季》',
-      quote: '存档点就在下一盏路灯下。',
+      name: '京都国际漫画博物馆',
+      anime: '漫画文化资料',
+      quote: '漫画不只是一页读物，也是一套可以被保存、检索和研究的文化材料。',
     },
-    stats: { posts: 35, followers: 3400, following: 522, likes: 29100 },
+    stats: { posts: 1, followers: 0, following: 0, likes: 0 },
+    role: 'creator',
+    status: 'active',
     theme: 'mint',
   },
   {
-    id: 'u_sakura',
-    username: 'sakura-pen',
-    nickname: '樱笔绘卷',
-    avatarUrl: creatorSheet,
-    avatarPosition: '55% 18%',
-    coverUrl: coverSakuraWatercolor,
-    bio: '水彩插画师，专注和风与幻想题材角色设计。',
-    level: 22,
-    creatorBadge: '认证画师',
+    id: 'u_media',
+    username: 'legal-reading',
+    email: 'media@stardream.local',
+    nickname: '正版阅读与资料组',
+    avatarUrl: mangaArtistTools,
+    avatarPosition: 'center',
+    coverUrl: digitalTablet,
+    bio: '整理正版阅读入口、日常场景参考和创作素材规范，避免使用未经授权的截图、海报和正文摘录。',
+    level: 12,
+    creatorBadge: '资料整理',
     favoriteCharacter: {
-      name: '樱庭未央',
-      anime: '原创企划《花鸟风月》',
-      quote: '用画笔留下不会凋谢的瞬间。',
+      name: 'MANGA Plus',
+      anime: '正版阅读入口',
+      quote: '把入口讲清楚，比堆砌作品海报更适合长期维护。',
     },
-    stats: { posts: 56, followers: 18900, following: 210, likes: 142000 },
-    isFollowing: true,
-    theme: 'sakura',
+    stats: { posts: 2, followers: 0, following: 0, likes: 0 },
+    role: 'creator',
+    status: 'active',
+    theme: 'starlight',
   },
 ]
 
 const initialPosts: Post[] = [
   {
-    id: 'p_aurora',
-    authorId: 'u_mika',
-    title: '把星空画进博客封面：柔光上色流程拆解',
-    excerpt: '从草图、配色到柔光叠加，把一张 ACGN 风封面整理成可复用的创作笔记。',
-    content:
-      '这次练习的目标，是让封面在首页小卡片里也能保持清晰的情绪。\n\n## 先确定光源\n我会先用低饱和星蓝铺背景，再用樱粉和薄荷青做视觉锚点。人物周围不要堆太多特效，给标题和标签留下呼吸感。\n\n## 再处理层次\n柔光图层只负责氛围，真正的重点仍然放在眼睛、发丝和便签边缘。缩成卡片时，读者仍然能一眼看到主题。\n\n> 好看的二次元博客不是把页面填满，而是让每一张图都像一扇入口。',
-    coverUrl: coverStarryDesk,
+    id: 'p_comiket_guide',
+    authorId: 'u_events',
+    title: 'Comiket：从同人志即卖会看创作社群如何运转',
+    excerpt: '基于 Comic Market 官方信息和开放授权现场照片，整理同人创作、摊位日程和东京 Big Sight 场景。',
+    content: `这是一张给博客读者看的资料卡，正文由站点原创整理，不复制活动页面长文。
+
+## 可整理的信息
+- Comic Market 也常被称作 Comiket，核心场景是同人志、自出版作品和创作者社群。
+- 官方英文站提供面向海外参与者的说明入口；不同日期的社团、类型和入场规则需要以官方页面为准。
+- 站内使用的现场照片来自 Wikimedia Commons，照片记录的是 2013 年夏季 Comiket 84 的 Cosplay 区域。
+
+Comiket 适合放在 ACGN 博客首页，因为它同时连接创作、交流、展示和购买。相比虚构的同人创作教程，真实资料可以让读者知道活动如何组织，创作者为什么需要提前准备摊位、作品目录、交通与排队策略。
+
+## 资料来源
+- Comic Market 官方英文站：${sourceLinks.comiket}
+- Comic Market 海外参与者说明：${sourceLinks.comiketOverseas}
+- 图片来源：Wikimedia Commons / Guilhem Vellut / CC BY 2.0`,
+    coverUrl: comiketCosplay,
     imagePosition: 'center',
-    type: 'article',
-    tags: ['绘画教程', '星空', '原创企划'],
-    series: '创作技法手记',
-    gallery: [imageAsset(coverStarryDesk, '星空书桌上的创作笔记封面'), imageAsset(coverGalaxySchool, '银河校园风格的原创企划插画')],
-    viewCount: 38620,
-    likeCount: 2840,
-    favoriteCount: 932,
-    commentCount: 8,
-    createdAt: '2026-06-08T21:12:00+08:00',
     isPinned: true,
-    isFavorited: true,
-    reactions: { heart: 128, laugh: 12, cry: 36, fire: 91 },
-  },
-  {
-    id: 'p_cos',
-    authorId: 'u_rin',
-    title: '摄影棚里的月光感：低成本 Cos 布光清单',
-    excerpt: '一盏柔光灯、两张反光纸、三种角度，让小房间也能拍出舞台感。',
-    content:
-      '这套布光最重要的不是器材，而是先决定画面的情绪。\n\n主灯放在人物侧前方，背景用低亮度蓝紫色补一点夜色，最后用小灯串制造轮廓边缘。修图时不要把肤色推得过白，保留一点暖色会更像真人站在故事里。',
-    coverUrl: coverMoonlightCos,
-    imagePosition: '70% 28%',
     type: 'gallery',
-    tags: ['Cosplay', '摄影', '布光'],
-    series: '低成本 Cos 摄影',
-    gallery: [imageAsset(coverMoonlightCos, '月光影棚里的 Cos 布光成片'), imageAsset(creatorSheet, '创作者角色设定参考图')],
-    viewCount: 15940,
-    likeCount: 1296,
-    favoriteCount: 441,
-    commentCount: 5,
-    createdAt: '2026-06-07T18:35:00+08:00',
-    reactions: { heart: 84, laugh: 18, cry: 9, fire: 67 },
+    tags: ['Comiket', '同人文化', '东京展会'],
+    series: 'ACGN 公开资料笔记',
+    gallery: [
+      imageAsset(comiketCosplay, 'Comiket 84 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
+      imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-23T09:10:00+08:00',
+    reactions: { ...emptyReactions },
   },
   {
-    id: 'p_watch',
-    authorId: 'u_nano',
-    title: '六月追番清单：三部适合深夜看的治愈系',
-    excerpt: '无剧透短评，记录“想看 / 在看 / 看过”的轻量追番流程。',
-    content:
-      '本月想看一点节奏慢但余味长的故事。\n\n第一部适合睡前看，镜头很安静；第二部配乐很适合写作业；第三部虽然是奇幻设定，但人物关系特别生活化。我喜欢把每集看完的心情写成一句话，不追求完整影评，只留下当时的温度。',
-    coverUrl: coverHealingAnime,
-    imagePosition: '35% 55%',
-    type: 'record',
-    tags: ['追番记录', '治愈系', '短评'],
-    series: '2026 追番手帐',
-    gallery: [imageAsset(coverHealingAnime, '治愈系追番记录封面')],
-    viewCount: 21800,
-    likeCount: 1720,
-    favoriteCount: 508,
-    commentCount: 6,
-    createdAt: '2026-06-05T23:10:00+08:00',
-    reactions: { heart: 96, laugh: 10, cry: 58, fire: 24 },
-  },
-  {
-    id: 'p_sakura_1',
-    authorId: 'u_sakura',
-    title: '水彩入门：从零开始画一片樱花瓣',
-    excerpt: '用最简单的水彩技巧画出层次感，适合零基础同人画入门。',
-    content:
-      '水彩的魅力在于不可控的扩散感。\n\n先用清水打湿纸面，再用淡粉色薄涂第一层。等半干后，用稍微浓一点的粉色画出花瓣脉络。关键在于留白，不是画出来，而是留出来。',
-    coverUrl: coverSakuraWatercolor,
-    imagePosition: '20% 40%',
-    type: 'article',
-    tags: ['绘画教程', '水彩', '同人画'],
-    series: '创作技法手记',
-    gallery: [imageAsset(coverSakuraWatercolor, '樱花水彩花瓣练习封面')],
-    viewCount: 25840,
-    likeCount: 2210,
-    favoriteCount: 874,
-    commentCount: 12,
-    createdAt: '2026-06-09T14:22:00+08:00',
-    isPinned: true,
-    reactions: { heart: 115, laugh: 7, cry: 31, fire: 45 },
-  },
-  {
-    id: 'p_yuki_1',
-    authorId: 'u_mika',
-    title: '轻小说连载：异世界料理人日记・第一话',
-    excerpt: '被召唤到异世界的厨师，用料理征服魔王军的故事。',
-    content:
-      '睁开眼睛的时候，我站在巨大的魔法阵中央。\n\n“勇者大人，请拯救我们的世界。”王国公主单膝跪地。\n\n我沉默片刻，问她：“你们这里的厨房在哪里？”\n\n不是因为我不关心这个世界，而是我刚做完晚班，还没有吃饭。',
-    type: 'article',
-    tags: ['轻小说', '原创企划', '异世界'],
-    series: '异世界料理人日记',
-    gallery: [imageAsset(coverNovelKitchen, '轻小说异世界料理人厨房封面')],
-    coverUrl: coverNovelKitchen,
+    id: 'p_kyoto_manga_museum',
+    authorId: 'u_manga',
+    title: '京都国际漫画博物馆：把漫画从消费品变成可检索的文化资料',
+    excerpt: '京都国际漫画博物馆公开页面显示馆内约 300,000 项资料可检索，馆藏覆盖江户戏画、明治期杂志和复制原画。',
+    content: `京都国际漫画博物馆适合做成站内“漫画馆藏”板块，因为它说明漫画如何被保存、检索和研究。
+
+## 可整理的信息
+- 博物馆官网首页提供数据库检索入口，并说明馆内约 300,000 项资料可检索。
+- Collection 页面介绍馆藏包含 Edo giga、明治时期漫画杂志，以及被称为 Genga'(Dash) 的复制原画资料。
+- 官网还介绍 Manga Wall、Research Reference Room、Manga Studio 等面向参观和研究的空间。
+
+站内没有搬运漫画正文或馆内展品细节图，而是使用 Commons 上的室内空间与阅读场景照片。这类素材更适合博客：它呈现“漫画被阅读和保存的场域”，不会误用商业作品封面。
+
+## 资料来源
+- 京都国际漫画博物馆官网：${sourceLinks.kyotoMangaMuseum}
+- 馆藏介绍：${sourceLinks.kyotoCollection}
+- 图片来源：Wikimedia Commons / Kento Ikeda、Maplestrip、Tatyana Temirbulatova / CC BY 系列授权`,
+    coverUrl: mangaMuseumMain,
     imagePosition: 'center',
-    viewCount: 38900,
-    likeCount: 3150,
-    favoriteCount: 1420,
-    commentCount: 24,
-    createdAt: '2026-06-10T08:15:00+08:00',
-    reactions: { heart: 143, laugh: 76, cry: 14, fire: 118 },
+    isPinned: true,
+    type: 'article',
+    tags: ['京都国际漫画博物馆', '漫画馆藏', '资料整理'],
+    series: 'ACGN 公开资料笔记',
+    gallery: [
+      imageAsset(mangaMuseumMain, '京都国际漫画博物馆主展区，Kento Ikeda 摄，CC BY 2.0'),
+      imageAsset(mangaArtistTools, '京都国际漫画博物馆内的漫画工具展示，Maplestrip 摄，CC BY 3.0'),
+      imageAsset(mangaMuseumReading, '京都国际漫画博物馆户外阅读场景，Tatyana Temirbulatova 摄，CC BY 2.0'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-23T10:20:00+08:00',
+    reactions: { ...emptyReactions },
   },
   {
-    id: 'p_rei_1',
-    authorId: 'u_nano',
-    title: '2026 春季番完结简评：今年春天你追对了吗？',
-    excerpt: '无剧透盘点十部春季番，说说哪部值得补、哪部能出第二季。',
-    content:
-      '春季番已经陆续完结，趁记忆还新鲜整理一份私人简评。\n\n值得追满的作品通常不是设定最复杂的，而是每一集都能把情绪推进一点。评论区也欢迎分享你的本季最佳。',
+    id: 'p_animejapan_2026',
+    authorId: 'u_events',
+    title: 'AnimeJapan 2026：动画产业展会的公共日与商务日',
+    excerpt: '根据 AnimeJapan 官方 About 页面整理 2026 年会期、场馆和公共日、商务日的内容结构。',
+    content: `AnimeJapan 的价值不只在“看展”，也在于它把动画产业的展示、舞台、商品、商务交流放在同一套活动结构里。
+
+## 可整理的信息
+- AnimeJapan 2026 官方 About 页面显示，公共日场馆为 Tokyo Big Sight，日期为 2026 年 3 月 28 日至 3 月 29 日。
+- 商务日同样在 Tokyo Big Sight，日期为 2026 年 3 月 30 日至 3 月 31 日。
+- 页面列出的内容包括 Exhibit booths、AJ Stage、Organized events、Official merchandise，以及商务日的 seminar、business concierge 等。
+
+这篇文章使用东京 Big Sight 的开放授权夜景作为主图，而不使用活动主视觉或商业海报。这样更适合长期部署：图片可追溯，页面也不会因为活动素材版权而增加维护成本。
+
+## 资料来源
+- AnimeJapan 2026 About：${sourceLinks.animeJapan}
+- 图片来源：Wikimedia Commons / Masato Ohta / CC BY 2.0`,
+    coverUrl: tokyoBigSightNight,
+    imagePosition: 'center',
+    isPinned: true,
     type: 'record',
-    tags: ['追番记录', '动画', '2026春番'],
-    series: '2026 追番手帐',
-    gallery: [imageAsset(coverHealingAnime, '春季番治愈系动画封面')],
-    coverUrl: coverHealingAnime,
-    imagePosition: '50% 60%',
-    viewCount: 45200,
-    likeCount: 3890,
-    favoriteCount: 1250,
-    commentCount: 31,
-    createdAt: '2026-06-06T12:00:00+08:00',
-    reactions: { heart: 102, laugh: 28, cry: 41, fire: 88 },
+    tags: ['AnimeJapan', '动画产业', '东京展会'],
+    series: 'ACGN 活动资料',
+    gallery: [imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0')],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-23T11:05:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_manga_plus',
+    authorId: 'u_media',
+    title: 'MANGA Plus：同步连载服务如何改善海外正版阅读入口',
+    excerpt: 'MANGA Plus by SHUEISHA 是集英社官方漫画阅读服务，公开介绍强调与日本同步更新最新章节。',
+    content: `这篇资料不评价具体作品剧情，只整理“正版入口”本身。对博客来说，说明读者从哪里合法阅读，比使用未经授权的漫画截图更重要。
+
+## 可整理的信息
+- MANGA Plus by SHUEISHA 的应用商店页面称它是 Shueisha 的官方漫画阅读服务。
+- 公开页面介绍其最新章节可与日本同步阅读；免费章节范围会随服务规则调整，读者应以官方应用和网页为准。
+- 服务适合放在“正版阅读入口”板块，帮助读者找到官方平台，而不是在站内复制漫画内容。
+
+我们只写原创说明，不上传漫画分镜、彩页或商业封面。页面配图使用开放授权的数位板照片，表达“数字阅读与数字创作”的主题。
+
+## 资料来源
+- MANGA Plus 更新入口：${sourceLinks.mangaPlus}
+- App Store 介绍页：${sourceLinks.mangaPlusApp}
+- 图片来源：Wikimedia Commons / Piknuz / CC BY-SA 4.0`,
+    coverUrl: digitalTablet,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['MANGA Plus', '正版阅读', '漫画平台'],
+    series: '正版阅读入口',
+    gallery: [imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0')],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-23T11:35:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_open_licensed_images',
+    authorId: 'u_editorial',
+    title: '开放授权图片怎么进博客：从 Commons 图库到站内来源表',
+    excerpt: '把图片资源替换成可追溯资产后，站内需要记录作者、授权协议、来源链接和使用场景。',
+    content: `这一轮内容更新的重点，是让博客里的图片不再只是“好看”，而是可追溯、可替换、可维护。
+
+## 采集规则
+- 优先选择 Wikimedia Commons、Creative Commons 搜索入口和官方机构页面。
+- 图片进入站内前记录文件名、作者、授权协议和来源链接。
+- 文章正文使用原创整理，不复制新闻、官网长文或漫画正文。
+- 对可能包含非自由商业画面的活动照片保持谨慎；默认用场馆、工具、阅读空间和生活场景图替代。
+
+后台轮播图现在可以选择“东京 Big Sight 夜景”“京都漫画博物馆主展区”“Comiket 现场”“漫画工具展示”等真实资产。运营时换图不再依赖占位插画，也能在文档里找到每张图的授权说明。
+
+## 资料来源
+- Creative Commons Search：${sourceLinks.commonsSearch}
+- Wikimedia Commons 文件页见 docs/content-sources.md`,
+    coverUrl: mangaArtistTools,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['Wikimedia Commons', '开放授权', '内容治理'],
+    series: '站点内容治理',
+    gallery: [
+      imageAsset(mangaArtistTools, '漫画工具展示，Maplestrip 摄，CC BY 3.0'),
+      imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
+      imageAsset(mangaMuseumReading, '漫画博物馆户外阅读场景，Tatyana Temirbulatova 摄，CC BY 2.0'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-23T12:00:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_kare_popculture',
+    authorId: 'u_media',
+    title: '咖喱饭为什么适合写进轻小说与动画场景资料库',
+    excerpt: '用一张 CC0 的日式咖喱饭照片，替代虚构厨房插画，整理日常饮食场景如何服务轻小说叙事。',
+    content: `日常食物是轻小说、动画和漫画里很常见的场景锚点。它不需要夸张设定，也能帮助读者快速理解角色的生活节奏。
+
+## 可整理的信息
+- 站内使用的咖喱饭照片来自 Wikimedia Commons，文件说明为家庭制作的日式咖喱饭。
+- 该图片使用 CC0 公共领域贡献，适合作为“日常场景资料”配图。
+- 这类素材能替代虚构厨房图，让创作者在写饮食、便当、深夜餐桌时有真实参考。
+
+把“咖喱饭”写进场景时，可以关注气味、锅具、等待时间、共同分食和剩菜再加热，而不是只写菜名。真实照片提供的是质感，不是剧情本身。
+
+## 资料来源
+- Wikimedia Commons：Kare-Raisu.jpg
+- 图片作者 Ocdp，CC0 1.0`,
+    coverUrl: kareRaisu,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['日本咖喱', '场景资料', '日常叙事'],
+    series: '日常场景资料',
+    gallery: [imageAsset(kareRaisu, '家庭制作的日式咖喱饭，Ocdp 摄，CC0 1.0')],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-23T12:25:00+08:00',
+    reactions: { ...emptyReactions },
   },
 ]
 
-const initialComments: Comment[] = [
-  {
-    id: 'c_1',
-    postId: 'p_aurora',
-    userId: 'u_rin',
-    content: '“给标题和标签留下呼吸感”这句太有用了，我每次都忍不住把星星撒满全图。',
-    likeCount: 42,
-    createdAt: '2026-06-08T22:01:00+08:00',
-  },
-  {
-    id: 'c_2',
-    postId: 'p_aurora',
-    userId: 'u_nano',
-    content: '小卡片可读性这个角度很棒，感觉适合做成系列教程。',
-    likeCount: 31,
-    createdAt: '2026-06-09T09:18:00+08:00',
-  },
-  {
-    id: 'c_3',
-    postId: 'p_cos',
-    userId: 'u_mika',
-    content: '反光纸那段学到了，周末就试试。',
-    likeCount: 18,
-    createdAt: '2026-06-08T11:45:00+08:00',
-  },
-]
-
-const initialAnimeRecords: AnimeRecord[] = [
-  {
-    id: 'a_1',
-    userId: 'u_nano',
-    title: '银河放课后',
-    coverUrl: heroImage,
-    status: 'watching',
-    rating: 9,
-    review: '美术太舒服，像把日记写进星云里。',
-    updatedAt: '2026-06-08T20:00:00+08:00',
-  },
-  {
-    id: 'a_2',
-    userId: 'u_nano',
-    title: '像素雨季',
-    coverUrl: creatorSheet,
-    status: 'watched',
-    rating: 8,
-    review: '节奏慢，但结尾那场雨很值。',
-    updatedAt: '2026-06-02T19:30:00+08:00',
-  },
-]
-
-const initialReports: Report[] = [
-  {
-    id: 'r_sample_open',
-    postId: 'p_yuki_1',
-    reporterId: 'u_nano',
-    reason: '内容需要复核',
-    detail: '标题和正文里有少量容易误解的表达，建议管理员看一眼。',
-    status: 'open',
-    createdAt: '2026-06-12T20:12:00+08:00',
-  },
-  {
-    id: 'r_sample_reviewing',
-    postId: 'p_cos',
-    reporterId: 'u_mika',
-    reason: '版权或素材说明',
-    detail: '图片素材来源说明不够完整。',
-    status: 'reviewing',
-    createdAt: '2026-06-12T21:30:00+08:00',
-  },
-]
+const initialComments: Comment[] = []
+const initialAnimeRecords: AnimeRecord[] = []
+const initialReports: Report[] = []
 
 const initialDraft: Draft = {
   title: '',
   content: '',
-  tags: ['原创企划'],
+  tags: ['公开资料整理'],
   images: [],
 }
 
@@ -366,7 +399,7 @@ const buildDefaultHomeCarousel = (sourcePosts: Post[] = initialPosts): HomeCarou
     excerpt: post.excerpt,
     imageUrl: post.coverUrl,
     imagePosition: post.imagePosition ?? 'center',
-    tag: post.tags[0] ?? ['今日主推', '灵感封面', '读者热看', '创作更新', '编辑精选'][index] ?? '精选',
+    tag: post.tags[0] ?? ['今日主推', '馆藏资料', '活动现场', '正版入口', '编辑精选'][index] ?? '精选',
     link: `/post/${post.id}`,
     sourcePostId: post.id,
     enabled: true,
@@ -377,17 +410,16 @@ const buildDefaultHomeCarousel = (sourcePosts: Post[] = initialPosts): HomeCarou
 const sanitizeHomeCarousel = (slides: HomeCarouselSlide[]) =>
   slides.slice(0, 8).map((slide, index) => ({
     id: slide.id || `hero_custom_${Date.now()}_${index}`,
-    title: slide.title?.trim() || '星梦笔记主视觉',
-    excerpt: slide.excerpt?.trim() || '记录创作、追番和作品画廊的轻博客入口。',
-    imageUrl: slide.imageUrl || heroImage,
+    title: slide.title?.trim() || '公开资料主视觉',
+    excerpt: slide.excerpt?.trim() || '收录公开来源、开放授权图片和原创整理文本。',
+    imageUrl: slide.imageUrl || tokyoBigSightNight,
     imagePosition: slide.imagePosition || 'center',
-    tag: slide.tag?.trim() || '精选',
+    tag: slide.tag?.trim() || '资料精选',
     link: slide.link?.trim() || '/',
     sourcePostId: slide.sourcePostId,
     enabled: Boolean(slide.enabled),
     updatedAt: new Date().toISOString(),
   }))
-
 let users = readStorage(storageKeys.users, initialUsers)
 let posts = readStorage(storageKeys.posts, initialPosts)
 let comments = readStorage(storageKeys.comments, initialComments)
@@ -405,6 +437,27 @@ const persistHomeCarousel = () => writeStorage(storageKeys.homeCarousel, homeCar
 const persistAnimeRecords = () => writeStorage(storageKeys.animeRecords, animeRecords)
 const persistDraft = () => writeStorage(storageKeys.draft, draft)
 const persistDraftSnapshots = () => writeStorage(storageKeys.draftSnapshots, draftSnapshots)
+
+const resetCoreSeedDataIfNeeded = () => {
+  const hasSourceUsers = users.some((user) => user.id === 'u_editorial')
+  const hasSourcePosts = posts.some((post) => post.id === 'p_comiket_guide')
+  if (hasSourceUsers && hasSourcePosts && homeCarousel.length) return
+
+  users = cloneData(initialUsers)
+  posts = cloneData(initialPosts)
+  comments = cloneData(initialComments)
+  reports = cloneData(initialReports)
+  homeCarousel = buildDefaultHomeCarousel(posts)
+  animeRecords = cloneData(initialAnimeRecords)
+  persistUsers()
+  persistPosts()
+  persistComments()
+  persistReports()
+  persistHomeCarousel()
+  persistAnimeRecords()
+}
+
+resetCoreSeedDataIfNeeded()
 
 const backupCollections = [
   'users',
@@ -437,7 +490,7 @@ const normalizeBackupUsers = (value: unknown): User[] =>
     ...(user as User),
     favoriteCharacter: parseBackupJson((user as { favoriteCharacter?: unknown }).favoriteCharacter, {
       name: '未设置',
-      anime: '原创企划',
+      anime: '公开资料整理',
       quote: '',
     }),
     stats: parseBackupJson((user as { stats?: unknown }).stats, { posts: 0, followers: 0, following: 0, likes: 0 }),
@@ -462,8 +515,8 @@ const normalizeBackupDraft = (value: unknown): Draft => {
   return {
     title: draftLike.title ?? '',
     content: draftLike.content ?? '',
-    tags: parseBackupJson((item as { tags?: unknown }).tags, ['原创企划']),
-    images: normalizeImageAssets(parseBackupJson((item as { images?: unknown }).images, []), draftLike.title || '草稿图片'),
+    tags: parseBackupJson((item as { tags?: unknown }).tags, ['公开资料整理']),
+    images: normalizeImageAssets(parseBackupJson((item as { images?: unknown }).images, []), draftLike.title || '资料图片'),
     savedAt: (item as { savedAt?: string }).savedAt,
   }
 }
@@ -474,7 +527,7 @@ const normalizeBackupDraftSnapshots = (value: unknown): DraftSnapshot[] =>
     return {
       ...item,
       tags: parseBackupJson((snapshot as { tags?: unknown }).tags, []),
-      images: normalizeImageAssets(parseBackupJson((snapshot as { images?: unknown }).images, []), item.title || '草稿图片'),
+      images: normalizeImageAssets(parseBackupJson((snapshot as { images?: unknown }).images, []), item.title || '资料图片'),
       createdAt: normalizeBackupDate((snapshot as { createdAt?: unknown }).createdAt),
     }
   })
@@ -495,13 +548,13 @@ const sameDraftSnapshot = (snapshot: DraftSnapshot | undefined, payload: Draft) 
       snapshot.title === payload.title &&
       snapshot.content === payload.content &&
       JSON.stringify(snapshot.tags) === JSON.stringify(payload.tags) &&
-      JSON.stringify(normalizeImageAssets(snapshot.images, payload.title || '草稿图片')) ===
-        JSON.stringify(normalizeImageAssets(payload.images, payload.title || '草稿图片')),
+      JSON.stringify(normalizeImageAssets(snapshot.images, payload.title || '资料图片')) ===
+        JSON.stringify(normalizeImageAssets(payload.images, payload.title || '资料图片')),
   )
 
 const createDraftSnapshot = (payload: Draft) => {
   if (!isMeaningfulDraft(payload) || sameDraftSnapshot(draftSnapshots[0], payload)) return
-  const images = normalizeImageAssets(payload.images, payload.title || '草稿图片')
+  const images = normalizeImageAssets(payload.images, payload.title || '资料图片')
   const snapshot: DraftSnapshot = {
     id: `ds_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
     title: payload.title,
@@ -517,7 +570,7 @@ const createDraftSnapshot = (payload: Draft) => {
 
 const createExcerpt = (content: string) => {
   const clean = content.replace(/\s+/g, ' ').trim()
-  return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的星梦笔记。'
+  return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的公开资料笔记。'
 }
 
 const isPublicPost = (post: Post) => (post.status ?? 'published') === 'published'
@@ -703,7 +756,7 @@ export const mockApi = {
       id: `a_${Date.now()}`,
       userId,
       title: payload.title.trim(),
-      coverUrl: payload.status === 'watched' ? creatorSheet : heroImage,
+      coverUrl: payload.status === 'watched' ? mangaMuseumReading : digitalTablet,
       status: payload.status,
       rating: payload.rating,
       review: payload.review.trim(),
@@ -725,8 +778,8 @@ export const mockApi = {
 
   async publishPost(authorId: string, payload: NewPostPayload) {
     await wait(160)
-    const images = normalizeImageAssets(payload.images, payload.title.trim() || '作品图')
-    const fallbackImage = imageAsset(heroImage, payload.title.trim() || '星梦笔记封面')
+    const images = normalizeImageAssets(payload.images, payload.title.trim() || '作品图片')
+    const fallbackImage = imageAsset(tokyoBigSightNight, payload.title.trim() || '公开资料笔记封面')
     const firstImage = images[0] ?? fallbackImage
     const post: Post = {
       id: `p_${Date.now()}`,
@@ -735,9 +788,9 @@ export const mockApi = {
       excerpt: createExcerpt(payload.content),
       content: payload.content.trim(),
       coverUrl: firstImage.url,
-      imagePosition: firstImage.url === creatorSheet ? '70% 28%' : 'center',
+      imagePosition: 'center',
       type: payload.type,
-      tags: payload.tags.length ? payload.tags : ['原创企划'],
+      tags: payload.tags.length ? payload.tags : ['公开资料整理'],
       series: payload.series?.trim() || undefined,
       gallery: images.length ? images : [fallbackImage],
       viewCount: 0,
@@ -798,7 +851,7 @@ export const mockApi = {
 
   async saveDraft(payload: Draft) {
     await wait(100)
-    draft = { ...payload, images: normalizeImageAssets(payload.images, payload.title || '草稿图片'), savedAt: new Date().toISOString() }
+    draft = { ...payload, images: normalizeImageAssets(payload.images, payload.title || '资料图片'), savedAt: new Date().toISOString() }
     persistDraft()
     createDraftSnapshot(draft)
     return { ...draft }
@@ -812,7 +865,7 @@ export const mockApi = {
       title: snapshot.title,
       content: snapshot.content,
       tags: [...snapshot.tags],
-      images: normalizeImageAssets(snapshot.images, snapshot.title || '草稿图片'),
+      images: normalizeImageAssets(snapshot.images, snapshot.title || '资料图片'),
       savedAt: new Date().toISOString(),
     }
     persistDraft()
@@ -893,7 +946,7 @@ export const mockApi = {
       drafts: [
         {
           id: `draft_${users[0]?.id ?? 'mock'}`,
-          userId: users[0]?.id ?? 'u_mika',
+          userId: users[0]?.id ?? 'u_editorial',
           ...draft,
         },
       ],

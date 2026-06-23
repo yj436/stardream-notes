@@ -12,9 +12,9 @@ const props = defineProps<{
 }>()
 
 const blog = useBlogStore()
-const authorName = computed(() => props.author?.nickname ?? '星梦作者')
+const authorName = computed(() => props.author?.nickname ?? '资料整理者')
 const typeLabel = computed(() => {
-  const labels = { article: '文章', gallery: '画廊', record: '追番' }
+  const labels = { article: '资料', gallery: '图集', record: '平台' }
   return labels[props.post.type]
 })
 </script>

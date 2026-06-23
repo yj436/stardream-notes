@@ -63,9 +63,9 @@ export const EXP_EVENTS = {
 
 export const LEVEL_TITLES: Record<number, string> = {
   1: '星梦新人',
-  5: '追番旅人',
-  10: '同好画师',
-  15: '创作者',
+  5: '资料旅人',
+  10: '来源整理者',
+  15: '资料编辑',
   20: '星梦达人',
 }
 

@@ -8,8 +8,8 @@ const props = defineProps<{
 }>()
 
 const typeLabel = computed(() => {
-  const labels: Record<string, string> = { article: '文章', gallery: '作品集', record: '追番' }
-  return labels[props.post.type] ?? '笔记'
+  const labels: Record<string, string> = { article: '资料', gallery: '图集', record: '平台' }
+  return labels[props.post.type] ?? '资料'
 })
 </script>
 

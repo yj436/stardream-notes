@@ -82,14 +82,14 @@ const tabConfig = [
 ]
 
 const builtinCarouselImages: CarouselImageChoice[] = [
-  { label: '星梦主视觉', desc: '沉浸式首页背景', url: imageAssets.hero, position: 'center' },
-  { label: '星空书桌', desc: '写作与插画氛围', url: imageAssets.starryDesk, position: 'center' },
-  { label: '樱花水彩', desc: '柔和插画教程', url: imageAssets.sakuraWatercolor, position: '20% 40%' },
-  { label: '月光影棚', desc: 'Cos 影棚展示', url: imageAssets.moonlightCos, position: '70% 28%' },
-  { label: '治愈追番', desc: '追番记录入口', url: imageAssets.healingAnime, position: '35% 55%' },
-  { label: '轻小说厨房', desc: '连载故事主图', url: imageAssets.novelKitchen, position: 'center' },
-  { label: '银河校园', desc: '原创企划封面', url: imageAssets.galaxySchool, position: 'center' },
-  { label: '创作者设定', desc: '写作工作台入口', url: imageAssets.creators, position: '70% 28%' },
+  { label: '东京 Big Sight 夜景', desc: '展会与动画产业主视觉', url: imageAssets.hero, position: 'center' },
+  { label: '京都漫画博物馆展区', desc: '漫画馆藏资料', url: imageAssets.starryDesk, position: 'center' },
+  { label: '漫画工具展示', desc: '创作工具与内容治理', url: imageAssets.sakuraWatercolor, position: 'center' },
+  { label: 'Comiket 现场', desc: '同人文化与活动摄影', url: imageAssets.moonlightCos, position: 'center' },
+  { label: '动画产业展会场馆', desc: 'AnimeJapan 资料入口', url: imageAssets.healingAnime, position: 'center' },
+  { label: '日式咖喱饭', desc: '日常场景资料', url: imageAssets.novelKitchen, position: 'center' },
+  { label: '漫画博物馆户外阅读', desc: '阅读空间与资料场景', url: imageAssets.galaxySchool, position: 'center' },
+  { label: '数位板绘制', desc: '数字创作与正版阅读入口', url: imageAssets.creators, position: 'center' },
 ]
 
 const reportStatusOptions: Array<{ key: ReportStatusFilter; label: string }> = [

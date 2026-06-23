@@ -325,7 +325,7 @@ watch(
       <div class="section-title">
         <div>
           <span class="section-kicker"><MessageCircle :size="16" /> 评论</span>
-          <h2>{{ comments.length }} 条同好留言</h2>
+          <h2>{{ comments.length }} 条资料留言</h2>
         </div>
       </div>
       <form class="comment-form" @submit.prevent="submitComment">

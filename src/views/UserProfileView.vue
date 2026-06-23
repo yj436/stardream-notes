@@ -39,9 +39,9 @@ const themeOptions: Array<{ label: string; value: ProfileTheme }> = [
 ]
 
 const statusLabels: Record<AnimeStatus, string> = {
-  want_to_watch: '想看',
-  watching: '在看',
-  watched: '看过',
+  want_to_watch: '待整理',
+  watching: '整理中',
+  watched: '已整理',
 }
 
 const syncProfileForm = () => {
@@ -73,7 +73,7 @@ const saveProfile = async () => {
     theme: profileForm.theme,
     favoriteCharacter: {
       name: profileForm.characterName.trim() || '未设置',
-      anime: profileForm.characterAnime.trim() || '原创企划',
+      anime: profileForm.characterAnime.trim() || '公开资料整理',
       quote: profileForm.characterQuote.trim() || '今天也要继续发光。',
     },
   })
@@ -81,7 +81,7 @@ const saveProfile = async () => {
 
 const addRecord = async () => {
   if (!recordForm.title.trim() || !recordForm.review.trim()) {
-    blog.notify('作品名和短评不能为空', 'warning')
+    blog.notify('资料标题和摘要不能为空', 'warning')
     return
   }
   await blog.addAnimeRecord({
@@ -130,8 +130,8 @@ watch(user, syncProfileForm)
 
     <StatGrid
       :items="[
-        { label: '笔记', value: user.stats.posts },
-        { label: '粉丝', value: user.stats.followers.toLocaleString() },
+        { label: '资料', value: user.stats.posts },
+        { label: '关注者', value: user.stats.followers.toLocaleString() },
         { label: '关注', value: user.stats.following },
         { label: '获赞', value: user.stats.likes.toLocaleString() },
       ]"
@@ -155,15 +155,15 @@ watch(user, syncProfileForm)
               <option v-for="theme in themeOptions" :key="theme.value" :value="theme.value">{{ theme.label }}</option>
             </select>
           </label>
-          <label>本命角色<input v-model="profileForm.characterName" /></label>
-          <label>出自作品<input v-model="profileForm.characterAnime" /></label>
-          <label>角色台词<input v-model="profileForm.characterQuote" /></label>
+          <label>关注对象<input v-model="profileForm.characterName" /></label>
+          <label>所属板块<input v-model="profileForm.characterAnime" /></label>
+          <label>整理原则<input v-model="profileForm.characterQuote" /></label>
           <button type="button" class="primary-button" @click="saveProfile"><Save :size="18" />保存空间</button>
         </div>
 
         <div class="section-title">
           <div>
-            <span class="section-kicker"><Star :size="16" /> 本命角色</span>
+            <span class="section-kicker"><Star :size="16" /> 资料焦点</span>
             <h2>{{ user.favoriteCharacter.name }}</h2>
           </div>
         </div>
@@ -174,19 +174,19 @@ watch(user, syncProfileForm)
 
         <div class="section-title compact-title">
           <div>
-            <span class="section-kicker"><Clapperboard :size="16" /> 追番记录</span>
-            <h2>最近看过</h2>
+            <span class="section-kicker"><Clapperboard :size="16" /> 资料记录</span>
+            <h2>最近整理</h2>
           </div>
         </div>
         <form v-if="isOwnProfile" class="record-form" @submit.prevent="addRecord">
-          <input v-model="recordForm.title" placeholder="作品名" />
+          <input v-model="recordForm.title" placeholder="资料标题" />
           <select v-model="recordForm.status">
-            <option value="want_to_watch">想看</option>
-            <option value="watching">在看</option>
-            <option value="watched">看过</option>
+            <option value="want_to_watch">待整理</option>
+            <option value="watching">整理中</option>
+            <option value="watched">已整理</option>
           </select>
           <input v-model.number="recordForm.rating" type="number" min="1" max="10" />
-          <textarea v-model="recordForm.review" rows="3" placeholder="一句短评" />
+          <textarea v-model="recordForm.review" rows="3" placeholder="一句摘要" />
           <button type="submit" class="ghost-button"><Plus :size="18" />添加记录</button>
         </form>
         <div class="record-list">
@@ -209,7 +209,7 @@ watch(user, syncProfileForm)
         <div class="section-title">
           <div>
             <span class="section-kicker">个人时间线</span>
-            <h2>公开笔记</h2>
+            <h2>公开资料</h2>
           </div>
         </div>
         <div class="post-list">

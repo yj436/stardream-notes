@@ -32,7 +32,7 @@ const submit = async () => {
   <section class="auth-layout">
     <div class="auth-card section-block">
       <span class="section-kicker">{{ isLogin ? '欢迎回来' : '加入星梦' }}</span>
-      <h1>{{ isLogin ? '登录星梦笔记' : '注册创作者账号' }}</h1>
+      <h1>{{ isLogin ? '登录星梦笔记' : '注册资料账号' }}</h1>
       <p>登录后可以发布文章、评论互动、管理个人空间；管理员账号可进入后台。</p>
 
       <div class="segmented auth-switch">

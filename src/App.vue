@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
       <span class="star-dust s2" />
       <span class="star-dust s3" />
     </div>
-    <div class="pull-indicator" :class="{ active: pullRefreshing }">释放刷新星梦笔记</div>
+    <div class="pull-indicator" :class="{ active: pullRefreshing }">释放刷新公开资料流</div>
     <main class="app-shell" @touchstart.passive="onTouchStart" @touchmove.passive="onTouchMove" @touchend="onTouchEnd">
       <RouterView v-slot="{ Component }">
         <transition name="page-transition" mode="out-in">
@@ -79,18 +79,17 @@ onBeforeUnmount(() => {
         <span class="brand-mark"><Sparkles :size="18" /></span>
         <div>
           <strong>星梦笔记</strong>
-          <small>ACGN 创作、追番记录与轻博客归档</small>
-          <small>This content uses sample data owned and copyrighted by Live2D Inc.</small>
+          <small>ACGN 公开资料、开放授权图片与轻博客归档</small>
         </div>
       </div>
       <div class="footer-links">
         <RouterLink to="/discover">话题</RouterLink>
         <RouterLink to="/archive">归档</RouterLink>
-        <RouterLink to="/editor">写笔记</RouterLink>
+        <RouterLink to="/editor">写资料</RouterLink>
       </div>
     </footer>
     <div class="floating-tools" aria-label="快捷工具">
-      <RouterLink to="/editor" aria-label="写笔记"><Edit3 :size="18" /></RouterLink>
+      <RouterLink to="/editor" aria-label="写资料"><Edit3 :size="18" /></RouterLink>
       <RouterLink to="/search" aria-label="搜索"><Search :size="18" /></RouterLink>
       <button type="button" aria-label="回到顶部" @click="scrollToTop"><ArrowUp :size="18" /></button>
     </div>

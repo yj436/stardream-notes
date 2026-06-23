@@ -10,19 +10,19 @@ import type { PostType } from '@/types/content'
 const blog = useBlogStore()
 const selectedTag = ref('全部')
 const selectedType = ref<'all' | PostType>('all')
-const selectedSort = ref<'hot' | 'latest' | 'comments'>('hot')
-const ranked = computed(() => blog.hotPosts.slice(0, 5))
+const selectedSort = ref<'hot' | 'latest' | 'comments'>('latest')
+const ranked = computed(() => blog.posts.slice(0, 5))
 
 const typeOptions: Array<{ label: string; value: 'all' | PostType }> = [
   { label: '全部', value: 'all' },
-  { label: '文章', value: 'article' },
-  { label: '画廊', value: 'gallery' },
-  { label: '追番', value: 'record' },
+  { label: '资料图文', value: 'article' },
+  { label: '活动图集', value: 'gallery' },
+  { label: '平台资料', value: 'record' },
 ]
 
 const sortOptions: Array<{ label: string; value: 'hot' | 'latest' | 'comments' }> = [
-  { label: '热度', value: 'hot' },
   { label: '最新', value: 'latest' },
+  { label: '热度', value: 'hot' },
   { label: '评论', value: 'comments' },
 ]
 
@@ -51,12 +51,12 @@ const resultStats = computed(() => ({
     <section class="page-hero topic-hero" :style="{ backgroundImage: `linear-gradient(135deg, rgba(23, 30, 55, 0.18), rgba(23, 30, 55, 0.78)), url(${imageAssets.creators})` }">
       <div class="halo-sakura-layer" aria-hidden="true" />
       <div>
-        <span class="section-kicker"><Hash :size="16" /> Halo Topic</span>
-        <h1>按兴趣找到同好</h1>
-        <p>用标签、榜单和创作者卡片组织内容入口，像二次元博客首页一样从氛围进入阅读。</p>
+        <span class="section-kicker"><Hash :size="16" /> Source Topic</span>
+        <h1>按公开资料找内容</h1>
+        <p>用标签、来源文章和资料组卡片组织入口，快速找到展会、馆藏、正版平台和场景参考。</p>
       </div>
       <RouterLink class="ghost-button" to="/anime">
-        <Film :size="16" /> 番剧资料库
+        <Film :size="16" /> ACGN 资料库
       </RouterLink>
     </section>
 
@@ -71,11 +71,11 @@ const resultStats = computed(() => ({
       <div class="topic-grid">
         <button type="button" :class="{ active: selectedTag === '全部' }" @click="selectedTag = '全部'">
           <span>#全部</span>
-          <small>{{ blog.posts.length }} 篇笔记</small>
+          <small>{{ blog.posts.length }} 篇资料</small>
         </button>
         <button v-for="tag in blog.tags" :key="tag" type="button" :class="{ active: selectedTag === tag }" @click="selectedTag = tag">
           <span>#{{ tag }}</span>
-          <small>{{ blog.posts.filter((post) => post.tags.includes(tag)).length }} 篇笔记</small>
+          <small>{{ blog.posts.filter((post) => post.tags.includes(tag)).length }} 篇资料</small>
         </button>
       </div>
     </div>
@@ -84,7 +84,7 @@ const resultStats = computed(() => ({
       <section class="section-block">
         <div class="section-title">
           <div>
-            <span class="section-kicker"><Sparkles :size="16" /> 作品精选</span>
+            <span class="section-kicker"><Sparkles :size="16" /> 资料精选</span>
             <h2>{{ selectedTag }} · {{ filteredPosts.length }} 条内容</h2>
           </div>
         </div>
@@ -107,16 +107,16 @@ const resultStats = computed(() => ({
         </div>
         <div class="post-list">
           <PostCard v-for="post in filteredPosts" :key="post.id" :post="post" :author="blog.users.find((user) => user.id === post.authorId)" />
-          <p v-if="!filteredPosts.length" class="empty-state">这个组合暂时还没有笔记，换个标签试试。</p>
+          <p v-if="!filteredPosts.length" class="empty-state">这个组合暂时没有资料，换个标签试试。</p>
         </div>
       </section>
 
       <aside class="side-card rank-card">
-        <span class="section-kicker"><Crown :size="16" /> 本周榜单</span>
+        <span class="section-kicker"><Crown :size="16" /> 资料索引</span>
         <RouterLink v-for="(post, index) in ranked" :key="post.id" :to="`/post/${post.id}`" class="rank-row">
           <strong>{{ index + 1 }}</strong>
           <span>{{ post.title }}</span>
-          <small>{{ post.likeCount }} 赞</small>
+          <small>{{ post.tags[0] }}</small>
         </RouterLink>
       </aside>
     </div>
@@ -124,8 +124,8 @@ const resultStats = computed(() => ({
     <section class="section-block">
       <div class="section-title">
         <div>
-          <span class="section-kicker">推荐创作者</span>
-          <h2>新的同好雷达</h2>
+          <span class="section-kicker">推荐资料组</span>
+          <h2>来源整理账号</h2>
         </div>
       </div>
       <div class="creator-grid">

@@ -62,7 +62,7 @@ export const useBlogStore = defineStore('blog', {
     commentsByPost: {},
     animeRecords: [],
     homeCarouselSlides: [],
-    draft: { title: '', content: '', tags: ['原创企划'], images: [] },
+    draft: { title: '', content: '', tags: ['公开资料整理'], images: [] },
     draftSnapshots: [],
     search: { posts: [], users: [], tags: [] },
     adminStats: null,
@@ -168,7 +168,7 @@ export const useBlogStore = defineStore('blog', {
       this.authToken = null
       this.currentUserId = ''
       this.draftSnapshots = []
-      this.draft = { title: '', content: '', tags: ['原创企划'], images: [] }
+      this.draft = { title: '', content: '', tags: ['公开资料整理'], images: [] }
       this.notify('已退出登录', 'info')
     },
 
@@ -194,12 +194,12 @@ export const useBlogStore = defineStore('blog', {
       if (updated?.authorId && updated.authorId !== this.currentUserId) {
         getNotifStore()?.add({
           type: 'like',
-          message: `${this.currentUser?.nickname ?? '有人'} 点赞了你的笔记《${updated.title}》`,
+          message: `${this.currentUser?.nickname ?? '有人'} 点赞了你的资料《${updated.title}》`,
           fromUserId: this.currentUserId,
           targetId: postId,
         })
       }
-      this.notify(updated?.isLiked ? '已点亮这篇笔记' : '已取消点赞', 'info')
+      this.notify(updated?.isLiked ? '已点亮这篇资料' : '已取消点赞', 'info')
     },
 
     async toggleFavorite(postId: string) {
@@ -243,7 +243,7 @@ export const useBlogStore = defineStore('blog', {
       if (updated?.authorId && updated.authorId !== this.currentUserId) {
         getNotifStore()?.add({
           type: 'comment',
-          message: `${this.currentUser?.nickname ?? '有人'} 评论了你的笔记《${updated.title}》`,
+          message: `${this.currentUser?.nickname ?? '有人'} 评论了你的资料《${updated.title}》`,
           fromUserId: this.currentUserId,
           targetId: postId,
         })
@@ -281,7 +281,7 @@ export const useBlogStore = defineStore('blog', {
       if (!this.requireLogin()) return
       const record = await appApi.addAnimeRecord(this.currentUserId, payload)
       this.animeRecords = [record, ...this.animeRecords]
-      this.notify('追番记录已添加', 'success')
+      this.notify('资料记录已添加', 'success')
     },
 
     async updateAnimeStatus(recordId: string, status: AnimeStatus) {
@@ -289,7 +289,7 @@ export const useBlogStore = defineStore('blog', {
       const updated = await appApi.updateAnimeStatus(recordId, status)
       if (!updated) return
       this.animeRecords = this.animeRecords.map((record) => (record.id === recordId ? updated : record))
-      this.notify('追番状态已更新', 'info')
+      this.notify('资料记录状态已更新', 'info')
     },
 
     async runSearch(query: string, type: 'all' | 'post' | 'user' | 'tag' = 'all') {
@@ -321,7 +321,7 @@ export const useBlogStore = defineStore('blog', {
       this.draftSnapshots = []
       this.search = await appApi.searchContent('')
       this.gainExp('PUBLISH_POST')
-      this.notify('新笔记已发布', 'success')
+      this.notify('新资料已发布', 'success')
       return post
     },
 

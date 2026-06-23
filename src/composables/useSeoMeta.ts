@@ -1,8 +1,8 @@
-import siteCoverUrl from '@/assets/images/stardream-hero.png'
+import siteCoverUrl from '@/assets/images/content-tokyo-big-sight-night.jpg'
 
 const SITE_NAME = '星梦笔记'
-const DEFAULT_TITLE = '星梦笔记 | 二次元轻博客社区'
-const DEFAULT_DESCRIPTION = '星梦笔记是一个记录 ACGN 创作、追番短评、作品画廊和轻博客灵感的个人社区。'
+const DEFAULT_TITLE = '星梦笔记 | ACGN 公开资料博客'
+const DEFAULT_DESCRIPTION = '星梦笔记收录 ACGN 公开来源、开放授权图片和原创整理文本，覆盖展会、漫画馆藏、正版平台与场景资料。'
 const DEFAULT_TYPE = 'website'
 const MAX_DESCRIPTION_LENGTH = 160
 

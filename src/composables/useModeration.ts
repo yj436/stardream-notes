@@ -34,7 +34,7 @@ export function moderateContent(text: string): ModerationResult {
 }
 
 export function moderateImageCheck(): ModerationResult {
-  // 模拟图片审核 — 真实场景对接阿里云/网易易盾
+  // 本地基础审核占位；真实场景可对接第三方内容安全服务。
   return { passed: true, flaggedWords: [], severity: 'clean', message: '图片检查通过（模拟）' }
 }
 

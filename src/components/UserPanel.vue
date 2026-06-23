@@ -23,7 +23,7 @@ const blog = useBlogStore()
     </div>
     <p class="user-bio">{{ user.bio }}</p>
     <div class="character-chip">
-      <span><Sparkles :size="14" /> 本命角色</span>
+      <span><Sparkles :size="14" /> 资料焦点</span>
       <strong>{{ user.favoriteCharacter.name }}</strong>
       <small>{{ user.favoriteCharacter.anime }}</small>
     </div>
