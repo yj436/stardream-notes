@@ -33,6 +33,8 @@ const isGitHubPagesHost = typeof window !== 'undefined' && window.location.hostn
 const shouldUseMockApi = import.meta.env.VITE_USE_MOCK_API === 'true' || (!configuredApiBaseUrl && isGitHubPagesHost)
 const shouldFallbackToMockApi = shouldUseMockApi || !configuredApiBaseUrl
 const apiBaseUrl = configuredApiBaseUrl || '/api'
+const staticBaseUrl = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`
+const staticAnimeTimelineUrl = `${staticBaseUrl}data/anime-timeline.json`
 
 const client = axios.create({
   baseURL: apiBaseUrl,
@@ -114,6 +116,23 @@ const normalizeTimelinePayload = (payload: AnimeTimelinePayload): AnimeTimelineP
     })),
   })),
 })
+
+const filterTimelinePayload = (payload: AnimeTimelinePayload, query: AnimeTimelineQuery): AnimeTimelinePayload => {
+  const category = query.category && query.category !== 'all' ? query.category : null
+  if (!category) return payload
+  return {
+    ...payload,
+    days: payload.days.map((day) => ({
+      ...day,
+      episodes: day.episodes.filter((episode) => episode.kind === category),
+    })),
+  }
+}
+
+const getStaticAnimeTimeline = async (query: AnimeTimelineQuery): Promise<AnimeTimelinePayload> => {
+  const payload = (await axios.get<AnimeTimelinePayload>(staticAnimeTimelineUrl, { timeout: 18000 })).data
+  return normalizeTimelinePayload(filterTimelinePayload(payload, query))
+}
 
 const normalizeDraft = (draft: Draft): Draft => ({
   ...draft,
@@ -371,6 +390,14 @@ export const appApi = {
   },
 
   async getAnimeTimeline(query: AnimeTimelineQuery = {}) {
+    if (isGitHubPagesHost && !configuredApiBaseUrl) {
+      try {
+        return await getStaticAnimeTimeline(query)
+      } catch {
+        return normalizeTimelinePayload(await mockApi.getAnimeTimeline(query))
+      }
+    }
+
     return withFallback(
       async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query, timeout: 18000 })).data),
       async () => normalizeTimelinePayload(await mockApi.getAnimeTimeline(query)),

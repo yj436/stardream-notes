@@ -3,6 +3,8 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: ['main']
+  schedule:
+    - cron: '20 20 * * *'
   workflow_dispatch:
 
 permissions:
@@ -31,6 +33,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Export anime timeline data
+        run: npm run content:timeline
+        env:
+          TIMELINE_BEFORE: 3
+          TIMELINE_AFTER: 7
 
       - name: Build static site
         run: npm run build
