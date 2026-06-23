@@ -64,7 +64,7 @@ const editorFooters: Footers[] = ['markdownTotal', '=', 'scrollSwitch']
 const form = reactive({
   title: '',
   content: '',
-  tagsText: '公开资料整理,来源核验',
+  tagsText: '番剧,COS,游戏',
   series: '',
   type: 'article' as PostType,
   images: [] as ImageAsset[],
@@ -92,7 +92,7 @@ const writingStatus = computed(() => {
 })
 
 const publishChecks = computed(() => [
-  { label: '已登录资料账号', ok: blog.isAuthenticated },
+  { label: '已登录编辑账号', ok: blog.isAuthenticated },
   { label: '标题不少于 4 个字', ok: form.title.trim().length >= 4 },
   { label: '正文不少于 20 个字', ok: form.content.trim().length >= 20 },
   { label: '至少设置 1 个标签', ok: tags.value.length > 0 },
@@ -184,9 +184,9 @@ const focusEditorLine = async (item: ArticleHeading) => {
 
 const insertTemplate = (type: 'inspiration' | 'tutorial' | 'review') => {
   const templates = {
-    inspiration: `## 资料主题\n\n- 资料对象：\n- 所属板块：展会 / 馆藏 / 平台 / 场景\n- 读者需要知道的一句话：\n\n## 核心事实\n\n1. \n2. \n3. \n\n## 资料来源\n\n- [来源名称](https://example.com)`,
-    tutorial: `## 图片来源说明\n\n- 文件名：\n- 作者：\n- 授权协议：\n- 原始链接：\n\n## 站内使用方式\n\n1. 对应文章或板块\n2. 是否裁切或压缩\n3. 需要保留的署名信息\n\n## 风险检查\n\n- 是否包含商业海报或作品截图：否\n- 是否已记录授权：是`,
-    review: `## 结构化摘要\n\n这篇资料基于公开页面原创整理，不复制来源长文。\n\n## 关键结论\n\n- \n- \n- \n\n## 放进博客的意义\n\n说明它适合出现在首页、画廊、归档或后台轮播中的原因。`,
+    inspiration: `## ACGN 主题\n\n- 内容对象：\n- 所属板块：番剧 / COS / 游戏 / 图廊\n- 读者需要知道的一句话：\n\n## 核心看点\n\n1. \n2. \n3. \n\n## 来源与版权\n\n- [来源名称](https://example.com)`,
+    tutorial: `## 图片来源说明\n\n- 文件名：\n- 作者 / 权利方：\n- 授权协议或版权归属：\n- 原始链接：\n\n## 站内使用方式\n\n1. 对应文章或板块\n2. 是否裁切或压缩\n3. 需要保留的署名信息\n\n## 风险检查\n\n- 是否包含商业海报或游戏截图：否\n- 是否已记录授权或权利归属：是`,
+    review: `## 结构化摘要\n\n这篇内容基于公开页面原创整理，不复制来源长文。\n\n## 关键结论\n\n- \n- \n- \n\n## 放进博客的意义\n\n说明它适合出现在首页、图廊、归档或后台轮播中的原因。`,
   }
   appendMarkdownBlock(templates[type])
 }
@@ -287,7 +287,7 @@ const handleMdUploadImg = async (
   if (!uploaded.length) {
     const fallback = createFallbackImage()
     addImageAsset(fallback, '作品图')
-    uploaded.push({ url: fallback, alt: '资料图片', title: '内置图片' })
+    uploaded.push({ url: fallback, alt: 'ACGN 图片', title: '内置图片' })
     blog.notify('图片上传失败，已使用内置图片替代', 'warning')
   } else {
     blog.notify(`已上传 ${uploaded.length} 张图片`, 'success')
@@ -324,7 +324,7 @@ const publish = async () => {
   if (!post) return
   form.title = ''
   form.content = ''
-  form.tagsText = '公开资料整理'
+  form.tagsText = '番剧,COS,游戏'
   form.series = ''
   form.type = 'article'
   form.images = []
@@ -390,24 +390,24 @@ watch(
 
       <label>
         标题
-          <input v-model="form.title" maxlength="80" placeholder="例如：AnimeJapan 2026：公共日与商务日资料整理" />
+          <input v-model="form.title" maxlength="80" placeholder="例如：Tokyo Game Show 2026：游戏板块资料整理" />
       </label>
 
       <div class="editor-meta-grid">
         <label>
           标签
-          <input v-model="form.tagsText" placeholder="用英文逗号分隔，例如：公开资料整理,AnimeJapan" />
+          <input v-model="form.tagsText" placeholder="用英文逗号分隔，例如：番剧,COS,游戏" />
         </label>
         <label>
           系列
-          <input v-model="form.series" maxlength="60" placeholder="可选，例如：ACGN 公开资料笔记" />
+          <input v-model="form.series" maxlength="60" placeholder="可选，例如：COS 影廊 / 游戏档案部" />
         </label>
         <label>
           内容类型
           <select v-model="form.type">
-            <option value="article">资料图文</option>
+            <option value="article">番剧图文</option>
             <option value="gallery">活动图集</option>
-            <option value="record">平台资料</option>
+            <option value="record">游戏资料</option>
           </select>
         </label>
       </div>
@@ -432,7 +432,7 @@ watch(
         </div>
 
         <div class="editor-snippet-row">
-          <button type="button" class="text-button" @click="insertTemplate('inspiration')">资料主题</button>
+          <button type="button" class="text-button" @click="insertTemplate('inspiration')">ACGN 主题</button>
           <button type="button" class="text-button" @click="insertTemplate('tutorial')">图片归因</button>
           <button type="button" class="text-button" @click="insertTemplate('review')">结构摘要</button>
           <button type="button" class="text-button" title="插入链接" @click="insertLink"><Link2 :size="16" />链接</button>
@@ -450,7 +450,7 @@ watch(
           language="zh-CN"
           preview-theme="github"
           code-theme="atom"
-          placeholder="写下资料摘要、来源链接、图片授权和整理说明... 支持粘贴/上传图片、表格、任务列表和代码块。"
+          placeholder="写下番剧看点、COS 图集说明、游戏资料、来源链接和版权标注... 支持粘贴/上传图片、表格、任务列表和代码块。"
           :theme="isDark ? 'dark' : 'light'"
           :preview="editorMode === 'split'"
           :input-box-width="editorMode === 'write' ? '100%' : '54%'"

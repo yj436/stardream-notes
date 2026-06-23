@@ -39,10 +39,10 @@ const galleryQuery = ref('')
 const activeImageId = ref<string | null>(null)
 
 const typeOptions: Array<{ label: string; value: 'all' | PostType }> = [
-  { label: '全部图片', value: 'all' },
-  { label: '资料图文', value: 'article' },
-  { label: '活动图集', value: 'gallery' },
-  { label: '平台资料', value: 'record' },
+  { label: '全部图廊', value: 'all' },
+  { label: '番剧图文', value: 'article' },
+  { label: 'COS 图集', value: 'gallery' },
+  { label: '游戏资料', value: 'record' },
 ]
 
 const sortOptions: Array<{ label: string; value: GallerySort }> = [
@@ -61,7 +61,7 @@ const galleryItems = computed<GalleryItem[]>(() =>
       image,
       post,
       index,
-      authorName: author?.nickname ?? '资料整理者',
+      authorName: author?.nickname ?? '板块编辑',
       authorAvatar: author?.avatarUrl,
       authorAvatarPosition: author?.avatarPosition,
       shape: index % 5 === 1 ? 'tall' : index % 5 === 3 ? 'wide' : 'square',
@@ -151,18 +151,18 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
     <section
       class="page-hero gallery-hero"
       :style="{
-        backgroundImage: `linear-gradient(135deg, rgba(23, 30, 55, 0.16), rgba(23, 30, 55, 0.78)), url(${featuredItem ? imageUrl(featuredItem.image) : imageAssets.starryDesk})`,
+        backgroundImage: `linear-gradient(135deg, rgba(23, 30, 55, 0.12), rgba(23, 30, 55, 0.76)), url(${featuredItem ? imageUrl(featuredItem.image) : imageAssets.cosplayStage})`,
       }"
     >
       <div class="halo-sakura-layer" aria-hidden="true" />
       <div>
-        <span class="section-kicker"><Images :size="16" /> Source Gallery</span>
-        <h1>开放授权图库</h1>
-        <p>活动现场、馆藏空间、创作工具和日常场景图，按来源文章与标签汇成一条可追溯视觉流。</p>
+        <span class="section-kicker"><Images :size="16" /> Anime · Cosplay · Game Gallery</span>
+        <h1>ACGN 图廊</h1>
+        <p>把番剧资料图、COS 现场、游戏硬件和日常番场景按文章与标签汇成一条可追溯视觉流。</p>
       </div>
       <RouterLink class="primary-button" to="/editor">
         <Camera :size="16" />
-        整理资料
+        投稿图集
       </RouterLink>
     </section>
 
@@ -170,7 +170,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
       <div class="gallery-toolbar">
         <label class="gallery-search">
           <Search :size="17" />
-          <input v-model="galleryQuery" placeholder="搜索标题、作者、标签..." />
+          <input v-model="galleryQuery" placeholder="搜索 番剧、COS、游戏、标签..." />
         </label>
         <div class="segmented compact">
           <button v-for="option in typeOptions" :key="option.value" type="button" :class="{ active: selectedType === option.value }" @click="selectedType = option.value">
@@ -186,8 +186,8 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
 
       <div class="gallery-stats">
         <span><Grid3X3 :size="15" />{{ galleryStats.images }} 张图片</span>
-        <span><Sparkles :size="15" />{{ galleryStats.posts }} 篇资料</span>
-        <span><Camera :size="15" />{{ galleryStats.creators }} 个资料组</span>
+        <span><Sparkles :size="15" />{{ galleryStats.posts }} 篇内容</span>
+        <span><Camera :size="15" />{{ galleryStats.creators }} 个板块组</span>
         <span><Heart :size="15" />{{ galleryStats.likes.toLocaleString('zh-CN') }} 热度</span>
       </div>
     </section>
@@ -209,7 +209,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
         </section>
 
         <section v-if="featuredItem" class="side-card gallery-feature-card">
-          <span class="section-kicker"><Eye :size="16" /> 当前资料图</span>
+          <span class="section-kicker"><Eye :size="16" /> 当前图廊图</span>
           <img :src="imageUrl(featuredItem.image)" :alt="imageAlt(featuredItem.image, featuredItem.post.title)" />
           <RouterLink :to="`/post/${featuredItem.post.id}`">{{ featuredItem.post.title }}</RouterLink>
           <small>{{ featuredItem.authorName }} · {{ featuredItem.post.likeCount }} 赞</small>
@@ -236,12 +236,12 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
           </span>
           <span class="gallery-expand"><Maximize2 :size="16" /></span>
         </button>
-        <p v-if="!filteredItems.length" class="empty-state">暂时没有符合条件的资料图片。</p>
+        <p v-if="!filteredItems.length" class="empty-state">暂时没有符合条件的图廊图片。</p>
       </main>
     </div>
 
     <Teleport to="body">
-      <div v-if="activeItem" class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="资料图片预览">
+      <div v-if="activeItem" class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="图廊图片预览">
         <button type="button" class="gallery-lightbox-close" aria-label="关闭预览" @click="closeLightbox">
           <X :size="22" />
         </button>
@@ -261,7 +261,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
             </div>
             <div class="gallery-lightbox-actions">
               <TimestampPill :value="activeItem.post.createdAt" compact />
-              <RouterLink class="primary-button" :to="`/post/${activeItem.post.id}`" @click="closeLightbox">阅读资料</RouterLink>
+              <RouterLink class="primary-button" :to="`/post/${activeItem.post.id}`" @click="closeLightbox">阅读内容</RouterLink>
             </div>
           </figcaption>
         </figure>

@@ -116,6 +116,45 @@ export interface AnimeRecordPayload {
   review: string
 }
 
+export type AnimeTimelineKind = 'anime' | 'guochuang'
+
+export interface AnimeTimelineEpisode {
+  id: string
+  kind: AnimeTimelineKind
+  title: string
+  pubIndex: string
+  pubTime: string
+  pubTimestamp: number
+  published: boolean
+  isDelayed: boolean
+  delayReason?: string
+  seasonId: number
+  episodeId: number
+  coverUrl: string
+  squareCoverUrl?: string
+  sourceUrl: string
+}
+
+export interface AnimeTimelineDay {
+  date: string
+  dateTimestamp: number
+  dayOfWeek: number
+  isToday: boolean
+  episodes: AnimeTimelineEpisode[]
+}
+
+export interface AnimeTimelinePayload {
+  source: 'bilibili' | 'mock'
+  fetchedAt: string
+  days: AnimeTimelineDay[]
+}
+
+export interface AnimeTimelineQuery {
+  category?: 'all' | AnimeTimelineKind
+  before?: number
+  after?: number
+}
+
 export interface ProfileUpdatePayload {
   nickname: string
   bio: string

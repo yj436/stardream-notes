@@ -136,7 +136,11 @@ const publicPostWhere = { status: 'published' }
 const readStats = (user) => parse(user?.stats, defaultStats)
 const readReactions = (post) => ({ ...defaultReactions, ...parse(post?.reactions, {}) })
 const homeCarouselKey = 'home.carousel'
-const defaultCarouselTags = ['Featured', 'Cover', 'Popular', 'New', 'Editor pick']
+const defaultCarouselTags = ['番剧前哨', 'COS图廊', '游戏现场', '图廊治理', '编辑精选']
+const timelineKinds = {
+  anime: 1,
+  guochuang: 4,
+}
 
 const cleanCarouselText = (value, fallback) => {
   const text = String(value ?? '').trim()
@@ -147,8 +151,8 @@ const sanitizeCarouselSlides = (slides) =>
   Array.isArray(slides)
     ? slides.slice(0, 8).map((slide, index) => ({
         id: cleanCarouselText(slide?.id, `hero_custom_${Date.now()}_${index}`),
-        title: cleanCarouselText(slide?.title, 'Stardream Notes'),
-        excerpt: cleanCarouselText(slide?.excerpt, 'Featured writing, gallery work, and anime notes.'),
+        title: cleanCarouselText(slide?.title, '星梦番剧馆'),
+        excerpt: cleanCarouselText(slide?.excerpt, '番剧、COS、游戏与图廊内容精选。'),
         imageUrl: cleanCarouselText(slide?.imageUrl, 'asset:hero'),
         imagePosition: cleanCarouselText(slide?.imagePosition, 'center'),
         tag: cleanCarouselText(slide?.tag, defaultCarouselTags[index] ?? 'Featured'),
@@ -300,7 +304,7 @@ const toUser = (user) => {
   const { passwordHash: _passwordHash, ...safeUser } = user
   return {
     ...safeUser,
-    favoriteCharacter: parse(user.favoriteCharacter, { name: '未设置', anime: '原创企划', quote: '' }),
+    favoriteCharacter: parse(user.favoriteCharacter, { name: '未设置', anime: 'ACGN 内容企划', quote: '' }),
     stats: readStats(user),
   }
 }
@@ -332,7 +336,7 @@ const toAnimeRecord = (record) => ({
 const toDraft = (draft) => ({
   title: draft?.title ?? '',
   content: draft?.content ?? '',
-  tags: parse(draft?.tags, ['原创企划']),
+  tags: parse(draft?.tags, ['番剧', 'COS', '游戏']),
   images: normalizeImageAssets(parse(draft?.images, []), draft?.title || '草稿图片'),
   savedAt: draft?.savedAt?.toISOString(),
 })
@@ -352,6 +356,78 @@ const createExcerpt = (content) => {
   return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的星梦笔记。'
 }
 
+const toHttpsUrl = (value = '') => {
+  const text = String(value ?? '').trim()
+  return text.startsWith('http://') ? `https://${text.slice(7)}` : text
+}
+
+const clampTimelineRange = (value, fallback) => {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return fallback
+  return Math.min(7, Math.max(0, Math.floor(number)))
+}
+
+const normalizeTimelineEpisode = (episode, kind) => ({
+  id: `${kind}_${episode.episode_id || episode.season_id || episode.title}`,
+  kind,
+  title: String(episode.title ?? '').trim() || '未命名番剧',
+  pubIndex: String(episode.pub_index ?? '').trim() || '待更新',
+  pubTime: String(episode.pub_time ?? '').trim() || '--:--',
+  pubTimestamp: Number(episode.pub_ts ?? 0),
+  published: Number(episode.published ?? 0) === 1,
+  isDelayed: Number(episode.delay ?? 0) === 1,
+  delayReason: String(episode.delay_reason ?? '').trim() || undefined,
+  seasonId: Number(episode.season_id ?? 0),
+  episodeId: Number(episode.episode_id ?? 0),
+  coverUrl: toHttpsUrl(episode.cover || episode.square_cover || episode.ep_cover),
+  squareCoverUrl: toHttpsUrl(episode.square_cover || episode.cover),
+  sourceUrl: episode.season_id ? `https://www.bilibili.com/bangumi/play/ss${episode.season_id}` : 'https://www.bilibili.com/anime/timeline/',
+})
+
+const fetchTimelineKind = async (kind, before, after) => {
+  const url = new URL('https://api.bilibili.com/pgc/web/timeline')
+  url.searchParams.set('types', String(timelineKinds[kind]))
+  url.searchParams.set('before', String(before))
+  url.searchParams.set('after', String(after))
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 StardreamNotes/1.0',
+      Referer: kind === 'guochuang' ? 'https://www.bilibili.com/guochuang/' : 'https://www.bilibili.com/anime/timeline/',
+    },
+  })
+  if (!response.ok) throw new Error(`Bilibili timeline ${kind} HTTP ${response.status}`)
+  const payload = await response.json()
+  if (payload.code !== 0 || !Array.isArray(payload.result)) {
+    throw new Error(payload.message || `Bilibili timeline ${kind} failed`)
+  }
+  return payload.result.map((day) => ({
+    date: String(day.date ?? ''),
+    dateTimestamp: Number(day.date_ts ?? 0),
+    dayOfWeek: Number(day.day_of_week ?? 0),
+    isToday: Number(day.is_today ?? 0) === 1,
+    episodes: (Array.isArray(day.episodes) ? day.episodes : []).map((episode) => normalizeTimelineEpisode(episode, kind)),
+  }))
+}
+
+const mergeTimelineDays = (dayGroups) => {
+  const map = new Map()
+  dayGroups.flat().forEach((day) => {
+    const key = day.dateTimestamp || day.date
+    const existing = map.get(key) ?? {
+      date: day.date,
+      dateTimestamp: day.dateTimestamp,
+      dayOfWeek: day.dayOfWeek,
+      isToday: false,
+      episodes: [],
+    }
+    existing.isToday = existing.isToday || day.isToday
+    existing.episodes.push(...day.episodes)
+    existing.episodes.sort((a, b) => a.pubTimestamp - b.pubTimestamp || a.pubTime.localeCompare(b.pubTime))
+    map.set(key, existing)
+  })
+  return [...map.values()].sort((a, b) => a.dateTimestamp - b.dateTimestamp)
+}
+
 const normalizeSeries = (value) => {
   const text = String(value ?? '').trim()
   return text ? text.slice(0, 120) : null
@@ -366,7 +442,7 @@ const getDraft = async (userId) =>
       userId,
       title: '',
       content: '',
-      tags: stringify(['原创企划']),
+      tags: stringify(['番剧', 'COS', '游戏']),
       images: stringify([]),
     },
   })
@@ -424,6 +500,24 @@ app.get('/api/health', async (_req, res) => {
   res.status(database.ok ? 200 : 503).json({ ok: database.ok, name: 'stardream-api', database })
 })
 
+app.get('/api/anime-timeline', async (req, res) => {
+  const category = ['anime', 'guochuang'].includes(String(req.query.category)) ? String(req.query.category) : 'all'
+  const before = clampTimelineRange(req.query.before, 3)
+  const after = clampTimelineRange(req.query.after, 7)
+  const kinds = category === 'all' ? Object.keys(timelineKinds) : [category]
+
+  try {
+    const dayGroups = await Promise.all(kinds.map((kind) => fetchTimelineKind(kind, before, after)))
+    res.json({
+      source: 'bilibili',
+      fetchedAt: new Date().toISOString(),
+      days: mergeTimelineDays(dayGroups),
+    })
+  } catch (error) {
+    res.status(502).json({ message: error instanceof Error ? error.message : 'Anime timeline fetch failed' })
+  }
+})
+
 app.post('/api/auth/register', async (req, res) => {
   const { username, nickname, email, password } = req.body
   if (!username || !nickname || !email || !password) {
@@ -444,11 +538,11 @@ app.post('/api/auth/register', async (req, res) => {
       avatarUrl: 'asset:creators',
       avatarPosition: '20% 25%',
       coverUrl: 'asset:hero',
-      bio: '刚刚来到星梦笔记的新创作者。',
+      bio: '刚刚来到星梦笔记的新创作者，准备整理番剧、COS、游戏和图廊内容。',
       level: 1,
       favoriteCharacter: JSON.stringify({
         name: '未设置',
-        anime: '原创企划',
+        anime: 'ACGN 内容企划',
         quote: '今天也要继续发光。',
       }),
       stats: JSON.stringify({ posts: 0, followers: 0, following: 0, likes: 0 }),
@@ -500,7 +594,7 @@ app.put('/api/users/:id/profile', requireAuth, async (req, res) => {
       bio,
       creatorBadge: creatorBadge || null,
       theme: theme || 'sakura',
-      favoriteCharacter: JSON.stringify(favoriteCharacter ?? { name: '未设置', anime: '原创企划', quote: '' }),
+      favoriteCharacter: JSON.stringify(favoriteCharacter ?? { name: '未设置', anime: 'ACGN 内容企划', quote: '' }),
     },
   })
   res.json(toUser(user))
@@ -561,7 +655,7 @@ app.post('/api/posts', requireAuth, async (req, res) => {
       coverUrl: firstImage.url,
       imagePosition: firstImage.url === 'asset:creators' ? '70% 28%' : 'center',
       type,
-      tags: stringify(tags.length ? tags : ['原创企划']),
+      tags: stringify(tags.length ? tags : ['番剧', 'COS', '游戏']),
       series: normalizeSeries(series),
       gallery: stringify(images.length ? images : [fallbackImage]),
       reactions: stringify(defaultReactions),
@@ -577,13 +671,13 @@ app.post('/api/posts', requireAuth, async (req, res) => {
   }
   await prisma.draft.upsert({
     where: { userId: req.user.id },
-    update: { title: '', content: '', tags: stringify(['原创企划']), images: stringify([]), savedAt: new Date() },
+    update: { title: '', content: '', tags: stringify(['番剧', 'COS', '游戏']), images: stringify([]), savedAt: new Date() },
     create: {
       id: `draft_${req.user.id}`,
       userId: req.user.id,
       title: '',
       content: '',
-      tags: stringify(['原创企划']),
+      tags: stringify(['番剧', 'COS', '游戏']),
       images: stringify([]),
       savedAt: new Date(),
     },
@@ -610,7 +704,7 @@ app.put('/api/posts/:id', requireAuth, async (req, res) => {
       coverUrl: firstImage.url,
       imagePosition: firstImage.url === 'asset:creators' ? '70% 28%' : 'center',
       type,
-      tags: stringify(tags.length ? tags : ['原创企划']),
+      tags: stringify(tags.length ? tags : ['番剧', 'COS', '游戏']),
       series: normalizeSeries(series),
       gallery: stringify(images.length ? images : [firstImage]),
     },

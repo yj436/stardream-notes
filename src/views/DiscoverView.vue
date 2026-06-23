@@ -15,9 +15,9 @@ const ranked = computed(() => blog.posts.slice(0, 5))
 
 const typeOptions: Array<{ label: string; value: 'all' | PostType }> = [
   { label: '全部', value: 'all' },
-  { label: '资料图文', value: 'article' },
+  { label: '番剧图文', value: 'article' },
   { label: '活动图集', value: 'gallery' },
-  { label: '平台资料', value: 'record' },
+  { label: '游戏资料', value: 'record' },
 ]
 
 const sortOptions: Array<{ label: string; value: 'hot' | 'latest' | 'comments' }> = [
@@ -52,11 +52,11 @@ const resultStats = computed(() => ({
       <div class="halo-sakura-layer" aria-hidden="true" />
       <div>
         <span class="section-kicker"><Hash :size="16" /> Source Topic</span>
-        <h1>按公开资料找内容</h1>
-        <p>用标签、来源文章和资料组卡片组织入口，快速找到展会、馆藏、正版平台和场景参考。</p>
+        <h1>按二次元板块找内容</h1>
+        <p>用标签、文章和板块组卡片组织入口，快速找到番剧、COS、游戏和日常番场景。</p>
       </div>
       <RouterLink class="ghost-button" to="/anime">
-        <Film :size="16" /> ACGN 资料库
+        <Film :size="16" /> ACGN 资料馆
       </RouterLink>
     </section>
 
@@ -71,11 +71,11 @@ const resultStats = computed(() => ({
       <div class="topic-grid">
         <button type="button" :class="{ active: selectedTag === '全部' }" @click="selectedTag = '全部'">
           <span>#全部</span>
-          <small>{{ blog.posts.length }} 篇资料</small>
+          <small>{{ blog.posts.length }} 篇内容</small>
         </button>
         <button v-for="tag in blog.tags" :key="tag" type="button" :class="{ active: selectedTag === tag }" @click="selectedTag = tag">
           <span>#{{ tag }}</span>
-          <small>{{ blog.posts.filter((post) => post.tags.includes(tag)).length }} 篇资料</small>
+          <small>{{ blog.posts.filter((post) => post.tags.includes(tag)).length }} 篇内容</small>
         </button>
       </div>
     </div>
@@ -84,7 +84,7 @@ const resultStats = computed(() => ({
       <section class="section-block">
         <div class="section-title">
           <div>
-            <span class="section-kicker"><Sparkles :size="16" /> 资料精选</span>
+            <span class="section-kicker"><Sparkles :size="16" /> ACGN 精选</span>
             <h2>{{ selectedTag }} · {{ filteredPosts.length }} 条内容</h2>
           </div>
         </div>
@@ -107,12 +107,12 @@ const resultStats = computed(() => ({
         </div>
         <div class="post-list">
           <PostCard v-for="post in filteredPosts" :key="post.id" :post="post" :author="blog.users.find((user) => user.id === post.authorId)" />
-          <p v-if="!filteredPosts.length" class="empty-state">这个组合暂时没有资料，换个标签试试。</p>
+          <p v-if="!filteredPosts.length" class="empty-state">这个组合暂时没有内容，换个标签试试。</p>
         </div>
       </section>
 
       <aside class="side-card rank-card">
-        <span class="section-kicker"><Crown :size="16" /> 资料索引</span>
+        <span class="section-kicker"><Crown :size="16" /> 板块索引</span>
         <RouterLink v-for="(post, index) in ranked" :key="post.id" :to="`/post/${post.id}`" class="rank-row">
           <strong>{{ index + 1 }}</strong>
           <span>{{ post.title }}</span>
@@ -124,8 +124,8 @@ const resultStats = computed(() => ({
     <section class="section-block">
       <div class="section-title">
         <div>
-          <span class="section-kicker">推荐资料组</span>
-          <h2>来源整理账号</h2>
+          <span class="section-kicker">推荐板块组</span>
+          <h2>内容编辑账号</h2>
         </div>
       </div>
       <div class="creator-grid">

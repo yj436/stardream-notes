@@ -3,6 +3,8 @@ import digitalTablet from '@/assets/images/content-digital-tablet.jpg'
 import mangaMuseumMain from '@/assets/images/content-manga-museum-main.jpg'
 import mangaArtistTools from '@/assets/images/content-manga-artist-tools.jpg'
 import comiketCosplay from '@/assets/images/content-comiket-cosplay.jpg'
+import comiketCosplayers from '@/assets/images/content-comiket-cosplayers.jpg'
+import gameController from '@/assets/images/content-game-controller.jpg'
 import kareRaisu from '@/assets/images/content-kare-raisu.jpg'
 import mangaMuseumReading from '@/assets/images/content-manga-museum-reading.jpg'
 import { normalizeImageAssets } from '@/utils/image'
@@ -10,6 +12,9 @@ import type {
   AdminBackupCounts,
   AdminBackupImportResult,
   AdminBackupPayload,
+  AnimeTimelineDay,
+  AnimeTimelinePayload,
+  AnimeTimelineQuery,
   AnimeRecord,
   AnimeRecordPayload,
   Comment,
@@ -34,6 +39,8 @@ export const imageAssets = {
   starryDesk: mangaMuseumMain,
   sakuraWatercolor: mangaArtistTools,
   moonlightCos: comiketCosplay,
+  cosplayStage: comiketCosplayers,
+  gameController,
   healingAnime: tokyoBigSightNight,
   novelKitchen: kareRaisu,
   galaxySchool: mangaMuseumReading,
@@ -51,7 +58,7 @@ const storageKeys = {
   draftSnapshots: 'stardream:draft-snapshots',
 }
 
-const dataVersion = 'acgn-public-sources-2026-06-23'
+const dataVersion = 'acgn-fandom-gallery-2026-06-23'
 const emptyReactions: Record<PostReactionKey, number> = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const imageAsset = (url: string, alt: string): ImageAsset => ({ url, alt })
 const cloneData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -85,46 +92,48 @@ const sourceLinks = {
   animeJapan: 'https://anime-japan.jp/en/about/',
   mangaPlus: 'https://mangaplus.shueisha.co.jp/updates',
   mangaPlusApp: 'https://apps.apple.com/us/app/manga-plus-by-shueisha/id1442476536',
+  tokyoGameShow2026: 'https://tgs.cesa.or.jp/en/',
+  tokyoGameShowTrade: 'https://www.trade.gov/japan-trade-events',
   commonsSearch: 'https://search.creativecommons.org/',
 }
 
 const initialUsers: User[] = [
   {
     id: 'u_editorial',
-    username: 'open-culture-desk',
+    username: 'stardream-desk',
     email: 'admin@stardream.local',
-    nickname: '公开资料编辑部',
+    nickname: '星梦编辑台',
     avatarUrl: digitalTablet,
     avatarPosition: 'center',
     coverUrl: tokyoBigSightNight,
-    bio: '站内资料整理账号：只收录公开来源、开放授权图片和原创整理文本。',
+    bio: '维护番剧、COS、游戏和图廊四个主板块，负责来源、版权标注和首页轮播。',
     level: 18,
-    creatorBadge: '站点编辑',
+    creatorBadge: '站点主理',
     favoriteCharacter: {
-      name: '资料来源',
-      anime: '站点内容治理',
-      quote: '每一张图、每一段说明都要能回到公开来源。',
+      name: '星梦笔记',
+      anime: 'ACGN 图廊运营',
+      quote: '可以有番剧味、同人味和玩家味，也要把来源与权利归属写清楚。',
     },
-    stats: { posts: 1, followers: 0, following: 0, likes: 0 },
+    stats: { posts: 2, followers: 0, following: 0, likes: 0 },
     role: 'admin',
     status: 'active',
     theme: 'sakura',
   },
   {
-    id: 'u_events',
-    username: 'event-archive',
-    email: 'events@stardream.local',
-    nickname: 'ACGN 活动档案组',
-    avatarUrl: comiketCosplay,
+    id: 'u_anime',
+    username: 'anime-room',
+    email: 'anime@stardream.local',
+    nickname: '番剧放映室',
+    avatarUrl: tokyoBigSightNight,
     avatarPosition: 'center',
-    coverUrl: tokyoBigSightNight,
-    bio: '整理 Comic Market、AnimeJapan 等公开活动资料，偏重时间、地点、参与方式和现场图像来源。',
+    coverUrl: mangaMuseumReading,
+    bio: '整理 AnimeJapan、新番入口、正版阅读平台和动画制作相关资料。',
     level: 15,
-    creatorBadge: '活动资料',
+    creatorBadge: '番剧板块',
     favoriteCharacter: {
-      name: '东京 Big Sight',
-      anime: '展会与同人文化',
-      quote: '活动信息先看官方页面，再写成读者能快速理解的资料卡。',
+      name: 'AnimeJapan',
+      anime: '番剧前哨站',
+      quote: '新番情报先看官方入口，再写成读者能快速浏览的番剧卡。',
     },
     stats: { posts: 2, followers: 0, following: 0, likes: 0 },
     role: 'creator',
@@ -132,20 +141,20 @@ const initialUsers: User[] = [
     theme: 'starlight',
   },
   {
-    id: 'u_manga',
-    username: 'manga-archive',
-    email: 'manga@stardream.local',
-    nickname: '漫画馆藏资料组',
-    avatarUrl: mangaMuseumMain,
+    id: 'u_cos',
+    username: 'cos-gallery',
+    email: 'cos@stardream.local',
+    nickname: 'COS 影廊记录',
+    avatarUrl: comiketCosplayers,
     avatarPosition: 'center',
-    coverUrl: mangaMuseumReading,
-    bio: '关注漫画馆藏、阅读空间、创作工具和漫画史材料，把博物馆公开信息转成站内资料。',
+    coverUrl: comiketCosplay,
+    bio: '收集 Comiket、Cosplay 活动照片与拍摄礼仪资料，让图廊有现场感。',
     level: 14,
-    creatorBadge: '馆藏资料',
+    creatorBadge: 'COS 图廊',
     favoriteCharacter: {
-      name: '京都国际漫画博物馆',
-      anime: '漫画文化资料',
-      quote: '漫画不只是一页读物，也是一套可以被保存、检索和研究的文化材料。',
+      name: 'Comiket',
+      anime: '同人现场',
+      quote: '一张好图不只是角色服装，也包括场地、队列、授权和拍摄边界。',
     },
     stats: { posts: 1, followers: 0, following: 0, likes: 0 },
     role: 'creator',
@@ -153,22 +162,22 @@ const initialUsers: User[] = [
     theme: 'mint',
   },
   {
-    id: 'u_media',
-    username: 'legal-reading',
-    email: 'media@stardream.local',
-    nickname: '正版阅读与资料组',
-    avatarUrl: mangaArtistTools,
+    id: 'u_game',
+    username: 'game-archive',
+    email: 'game@stardream.local',
+    nickname: '游戏档案部',
+    avatarUrl: gameController,
     avatarPosition: 'center',
-    coverUrl: digitalTablet,
-    bio: '整理正版阅读入口、日常场景参考和创作素材规范，避免使用未经授权的截图、海报和正文摘录。',
-    level: 12,
-    creatorBadge: '资料整理',
+    coverUrl: gameController,
+    bio: '整理 Tokyo Game Show、主机硬件、试玩动线和玩家文化资料。',
+    level: 13,
+    creatorBadge: '游戏板块',
     favoriteCharacter: {
-      name: 'MANGA Plus',
-      anime: '正版阅读入口',
-      quote: '把入口讲清楚，比堆砌作品海报更适合长期维护。',
+      name: 'Tokyo Game Show',
+      anime: '玩家现场',
+      quote: '游戏板块要能看到展会、硬件、试玩和玩家动线。',
     },
-    stats: { posts: 2, followers: 0, following: 0, likes: 0 },
+    stats: { posts: 1, followers: 0, following: 0, likes: 0 },
     role: 'creator',
     status: 'active',
     theme: 'starlight',
@@ -177,32 +186,32 @@ const initialUsers: User[] = [
 
 const initialPosts: Post[] = [
   {
-    id: 'p_comiket_guide',
-    authorId: 'u_events',
-    title: 'Comiket：从同人志即卖会看创作社群如何运转',
-    excerpt: '基于 Comic Market 官方信息和开放授权现场照片，整理同人创作、摊位日程和东京 Big Sight 场景。',
-    content: `这是一张给博客读者看的资料卡，正文由站点原创整理，不复制活动页面长文。
+    id: 'p_animejapan_2026',
+    authorId: 'u_anime',
+    title: '2026 春季番剧前哨：AnimeJapan 公共日与 AJ Stage 看点整理',
+    excerpt: '把 AnimeJapan 2026 官方 About 信息整理成番剧板块入口：公共日、商务日、舞台、展位和官方周边都能在这里串起来。',
+    content: `番剧板块不应该只是一串虚构评分，它需要能回到官方活动和正版入口。AnimeJapan 适合作为“新番情报前哨”，因为它把动画产业展示、舞台活动、商品和商务交流放在同一个场景里。
 
 ## 可整理的信息
-- Comic Market 也常被称作 Comiket，核心场景是同人志、自出版作品和创作者社群。
-- 官方英文站提供面向海外参与者的说明入口；不同日期的社团、类型和入场规则需要以官方页面为准。
-- 站内使用的现场照片来自 Wikimedia Commons，照片记录的是 2013 年夏季 Comiket 84 的 Cosplay 区域。
+- AnimeJapan 2026 官方 About 页面显示，公共日场馆为 Tokyo Big Sight，日期为 2026 年 3 月 28 日至 3 月 29 日。
+- 商务日同样在 Tokyo Big Sight，日期为 2026 年 3 月 30 日至 3 月 31 日。
+- 页面列出的内容包括 Exhibit booths、AJ Stage、Organized events、Official merchandise，以及商务日的 seminar、business concierge 等。
 
-Comiket 适合放在 ACGN 博客首页，因为它同时连接创作、交流、展示和购买。相比虚构的同人创作教程，真实资料可以让读者知道活动如何组织，创作者为什么需要提前准备摊位、作品目录、交通与排队策略。
+## 站内呈现方式
+首页把这篇作为“番剧前哨”主推，不搬运商业海报和截图；图廊使用场馆、创作工具和正版入口相关图片，并在正文标出来源。后续如果加入某部番剧海报，应把图片来源、权利归属、是否官方允许传播写在图注或来源文档里。
 
 ## 资料来源
-- Comic Market 官方英文站：${sourceLinks.comiket}
-- Comic Market 海外参与者说明：${sourceLinks.comiketOverseas}
-- 图片来源：Wikimedia Commons / Guilhem Vellut / CC BY 2.0`,
-    coverUrl: comiketCosplay,
+- AnimeJapan 2026 About：${sourceLinks.animeJapan}
+- 场馆图片：Wikimedia Commons / Masato Ohta / CC BY 2.0`,
+    coverUrl: tokyoBigSightNight,
     imagePosition: 'center',
     isPinned: true,
-    type: 'gallery',
-    tags: ['Comiket', '同人文化', '东京展会'],
-    series: 'ACGN 公开资料笔记',
+    type: 'record',
+    tags: ['番剧', 'AnimeJapan', '新番情报'],
+    series: '番剧放映室',
     gallery: [
-      imageAsset(comiketCosplay, 'Comiket 84 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
       imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
+      imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
     ],
     viewCount: 0,
     likeCount: 0,
@@ -212,85 +221,92 @@ Comiket 适合放在 ACGN 博客首页，因为它同时连接创作、交流、
     reactions: { ...emptyReactions },
   },
   {
-    id: 'p_kyoto_manga_museum',
-    authorId: 'u_manga',
-    title: '京都国际漫画博物馆：把漫画从消费品变成可检索的文化资料',
-    excerpt: '京都国际漫画博物馆公开页面显示馆内约 300,000 项资料可检索，馆藏覆盖江户戏画、明治期杂志和复制原画。',
-    content: `京都国际漫画博物馆适合做成站内“漫画馆藏”板块，因为它说明漫画如何被保存、检索和研究。
+    id: 'p_comiket_cos_gallery',
+    authorId: 'u_cos',
+    title: 'Comiket COS 图廊：从角色扮演区看同人现场氛围',
+    excerpt: '使用 Comiket 69 与 Comiket 84 的可追溯照片，把 COS 板块做成角色、场地、队列和拍摄礼仪并重的图廊。',
+    content: `COS 图廊要有“现场感”，但不能只堆角色照片。Comiket 的照片很适合作为基础素材：它既能看到角色扮演，也能看到同人活动的空间、队列和社群氛围。
 
 ## 可整理的信息
-- 博物馆官网首页提供数据库检索入口，并说明馆内约 300,000 项资料可检索。
-- Collection 页面介绍馆藏包含 Edo giga、明治时期漫画杂志，以及被称为 Genga'(Dash) 的复制原画资料。
-- 官网还介绍 Manga Wall、Research Reference Room、Manga Studio 等面向参观和研究的空间。
+- Comic Market 也常被称作 Comiket，官方英文站和海外参与者说明页提供活动入口。
+- 站内使用的 Comiket 69 群像照片来自 Flickr，经 Wikimedia Commons 确认授权为 CC BY-SA 2.0。
+- 站内使用的 Comiket 84 Cosplay 区域照片来自 Wikimedia Commons，授权为 CC BY 2.0。
 
-站内没有搬运漫画正文或馆内展品细节图，而是使用 Commons 上的室内空间与阅读场景照片。这类素材更适合博客：它呈现“漫画被阅读和保存的场域”，不会误用商业作品封面。
+## 图廊呈现方式
+图廊按“COS”“Comiket”“同人现场”标签聚合，读者进入图库时会先看到角色扮演和活动现场，而不是抽象素材库。涉及真人照片时，站内保留作者、授权和来源提醒；后续若上传个人拍摄作品，后台文章也应记录拍摄许可和被摄者授权。
 
 ## 资料来源
-- 京都国际漫画博物馆官网：${sourceLinks.kyotoMangaMuseum}
-- 馆藏介绍：${sourceLinks.kyotoCollection}
-- 图片来源：Wikimedia Commons / Kento Ikeda、Maplestrip、Tatyana Temirbulatova / CC BY 系列授权`,
-    coverUrl: mangaMuseumMain,
+- Comic Market 官方英文站：${sourceLinks.comiket}
+- Comic Market 海外参与者说明：${sourceLinks.comiketOverseas}
+- 图片来源：Wikimedia Commons / stormstill / CC BY-SA 2.0；Guilhem Vellut / CC BY 2.0`,
+    coverUrl: comiketCosplayers,
     imagePosition: 'center',
     isPinned: true,
-    type: 'article',
-    tags: ['京都国际漫画博物馆', '漫画馆藏', '资料整理'],
-    series: 'ACGN 公开资料笔记',
+    type: 'gallery',
+    tags: ['COS', 'Comiket', '同人现场'],
+    series: 'COS 影廊',
     gallery: [
-      imageAsset(mangaMuseumMain, '京都国际漫画博物馆主展区，Kento Ikeda 摄，CC BY 2.0'),
-      imageAsset(mangaArtistTools, '京都国际漫画博物馆内的漫画工具展示，Maplestrip 摄，CC BY 3.0'),
-      imageAsset(mangaMuseumReading, '京都国际漫画博物馆户外阅读场景，Tatyana Temirbulatova 摄，CC BY 2.0'),
+      imageAsset(comiketCosplayers, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
+      imageAsset(comiketCosplay, 'Comiket 84 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
+      imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
     ],
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: '2026-06-23T10:20:00+08:00',
+    createdAt: '2026-06-23T10:00:00+08:00',
     reactions: { ...emptyReactions },
   },
   {
-    id: 'p_animejapan_2026',
-    authorId: 'u_events',
-    title: 'AnimeJapan 2026：动画产业展会的公共日与商务日',
-    excerpt: '根据 AnimeJapan 官方 About 页面整理 2026 年会期、场馆和公共日、商务日的内容结构。',
-    content: `AnimeJapan 的价值不只在“看展”，也在于它把动画产业的展示、舞台、商品、商务交流放在同一套活动结构里。
+    id: 'p_tokyo_game_show_2026',
+    authorId: 'u_game',
+    title: 'Tokyo Game Show 2026：游戏板块的展会日程与试玩动线',
+    excerpt: '根据 U.S. Commercial Service Japan 活动列表与 TGS 官方入口整理 2026 年 9 月 17 日至 21 日会期、场馆和玩家体验方向。',
+    content: `游戏板块需要有“玩家现场”的感觉：展会、硬件、试玩、周边、独立游戏和电竞都可以成为文章入口。Tokyo Game Show 2026 是一个合适的主线。
 
 ## 可整理的信息
-- AnimeJapan 2026 官方 About 页面显示，公共日场馆为 Tokyo Big Sight，日期为 2026 年 3 月 28 日至 3 月 29 日。
-- 商务日同样在 Tokyo Big Sight，日期为 2026 年 3 月 30 日至 3 月 31 日。
-- 页面列出的内容包括 Exhibit booths、AJ Stage、Organized events、Official merchandise，以及商务日的 seminar、business concierge 等。
+- U.S. Commercial Service Japan 的贸易活动列表列出 Tokyo Game Show 2026，日期为 2026 年 9 月 17 日至 9 月 21 日，地点为 Makuhari Messe, Chiba。
+- TGS 官方入口仍可作为活动官网入口；具体购票、展区与公众日安排应以官网后续更新为准。
+- 参照 TGS 官方站当前展区结构，游戏板块可以覆盖 General Exhibition、Smartphone Game、Gaming Hardware、VR/AR、eSports、Indie Game、Merchandise Sales 等方向。
 
-这篇文章使用东京 Big Sight 的开放授权夜景作为主图，而不使用活动主视觉或商业海报。这样更适合长期部署：图片可追溯，页面也不会因为活动素材版权而增加维护成本。
+## 站内呈现方式
+这篇文章作为“游戏档案部”的入口，封面使用可追溯的游戏手柄照片，不直接打包商业游戏截图。后续如果要加入具体游戏截图，可以在图注里标出发行商、官网来源、用途和权利归属。
 
 ## 资料来源
-- AnimeJapan 2026 About：${sourceLinks.animeJapan}
-- 图片来源：Wikimedia Commons / Masato Ohta / CC BY 2.0`,
-    coverUrl: tokyoBigSightNight,
+- Tokyo Game Show 2026 官方网站：${sourceLinks.tokyoGameShow2026}
+- U.S. Commercial Service Japan 活动列表：${sourceLinks.tokyoGameShowTrade}
+- 图片来源：Wikimedia Commons / Evan-Amos / CC BY-SA 3.0`,
+    coverUrl: gameController,
     imagePosition: 'center',
     isPinned: true,
     type: 'record',
-    tags: ['AnimeJapan', '动画产业', '东京展会'],
-    series: 'ACGN 活动资料',
-    gallery: [imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0')],
+    tags: ['游戏', 'Tokyo Game Show', '玩家文化'],
+    series: '游戏档案部',
+    gallery: [
+      imageAsset(gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
+      imageAsset(digitalTablet, '数位创作设备，Piknuz 摄，CC BY-SA 4.0'),
+    ],
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: '2026-06-23T11:05:00+08:00',
+    createdAt: '2026-06-23T10:50:00+08:00',
     reactions: { ...emptyReactions },
   },
   {
     id: 'p_manga_plus',
-    authorId: 'u_media',
-    title: 'MANGA Plus：同步连载服务如何改善海外正版阅读入口',
-    excerpt: 'MANGA Plus by SHUEISHA 是集英社官方漫画阅读服务，公开介绍强调与日本同步更新最新章节。',
-    content: `这篇资料不评价具体作品剧情，只整理“正版入口”本身。对博客来说，说明读者从哪里合法阅读，比使用未经授权的漫画截图更重要。
+    authorId: 'u_anime',
+    title: '漫画补番入口：MANGA Plus 与正版阅读平台怎么放进站内',
+    excerpt: 'MANGA Plus by SHUEISHA 是集英社官方漫画阅读服务，适合作为番剧与漫画板块的正版补全入口。',
+    content: `番剧站常常会延伸到漫画原作、外传和补充阅读。这里不搬运漫画页，而是把正版入口写清楚，让读者知道可以从哪里继续看。
 
 ## 可整理的信息
 - MANGA Plus by SHUEISHA 的应用商店页面称它是 Shueisha 的官方漫画阅读服务。
 - 公开页面介绍其最新章节可与日本同步阅读；免费章节范围会随服务规则调整，读者应以官方应用和网页为准。
-- 服务适合放在“正版阅读入口”板块，帮助读者找到官方平台，而不是在站内复制漫画内容。
+- 作为站内入口，它适合放在“番剧补完”“漫画原作”“正版阅读”标签下。
 
-我们只写原创说明，不上传漫画分镜、彩页或商业封面。页面配图使用开放授权的数位板照片，表达“数字阅读与数字创作”的主题。
+## 站内使用原则
+文章正文使用原创整理，不上传漫画分镜、彩页或商业封面。需要展示作品封面时，优先使用官方可嵌入资源或只提供来源链接，并明确版权归属。
 
 ## 资料来源
 - MANGA Plus 更新入口：${sourceLinks.mangaPlus}
@@ -300,30 +316,31 @@ Comiket 适合放在 ACGN 博客首页，因为它同时连接创作、交流、
     imagePosition: 'center',
     isPinned: false,
     type: 'article',
-    tags: ['MANGA Plus', '正版阅读', '漫画平台'],
-    series: '正版阅读入口',
+    tags: ['番剧补完', 'MANGA Plus', '正版阅读'],
+    series: '番剧放映室',
     gallery: [imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0')],
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: '2026-06-23T11:35:00+08:00',
+    createdAt: '2026-06-23T11:30:00+08:00',
     reactions: { ...emptyReactions },
   },
   {
-    id: 'p_open_licensed_images',
+    id: 'p_gallery_copyright_note',
     authorId: 'u_editorial',
-    title: '开放授权图片怎么进博客：从 Commons 图库到站内来源表',
-    excerpt: '把图片资源替换成可追溯资产后，站内需要记录作者、授权协议、来源链接和使用场景。',
-    content: `这一轮内容更新的重点，是让博客里的图片不再只是“好看”，而是可追溯、可替换、可维护。
+    title: '图廊运营规则：番剧海报、COS 照片、游戏截图怎么标注版权',
+    excerpt: '站点可以收录更有二次元味道的图片，但每张图都要区分 CC 授权、官方素材、用户投稿和仅可链接来源。',
+    content: `你说可以使用有版权的内容，只要标注好。实际落地时，我们把它做成一套图廊规则：可以更有二次元味道，但不能让后续维护失控。
 
-## 采集规则
-- 优先选择 Wikimedia Commons、Creative Commons 搜索入口和官方机构页面。
-- 图片进入站内前记录文件名、作者、授权协议和来源链接。
-- 文章正文使用原创整理，不复制新闻、官网长文或漫画正文。
-- 对可能包含非自由商业画面的活动照片保持谨慎；默认用场馆、工具、阅读空间和生活场景图替代。
+## 四类图片
+- CC / 公有领域：可以打包进仓库，但要标注作者、协议、来源链接。
+- 官方素材：可以在文章里标注版权归属和官方来源，是否下载入库要看官网条款。
+- 用户投稿：需要保留拍摄者、授权范围、被摄者许可，尤其是 COS 真人照片。
+- 商业海报 / 游戏截图：默认先用外链、来源说明或文章引用，不直接批量打包原图。
 
-后台轮播图现在可以选择“东京 Big Sight 夜景”“京都漫画博物馆主展区”“Comiket 现场”“漫画工具展示”等真实资产。运营时换图不再依赖占位插画，也能在文档里找到每张图的授权说明。
+## 后台字段建议
+后续可以在文章或图片资源里增加“版权类型”“来源 URL”“权利方”“是否允许商用”“是否允许二次编辑”字段。这样图廊既能放番剧、COS、游戏内容，也能在后台管理里一眼看出风险等级。
 
 ## 资料来源
 - Creative Commons Search：${sourceLinks.commonsSearch}
@@ -332,32 +349,33 @@ Comiket 适合放在 ACGN 博客首页，因为它同时连接创作、交流、
     imagePosition: 'center',
     isPinned: false,
     type: 'article',
-    tags: ['Wikimedia Commons', '开放授权', '内容治理'],
-    series: '站点内容治理',
+    tags: ['图廊', '版权标注', '后台管理'],
+    series: '图廊治理',
     gallery: [
       imageAsset(mangaArtistTools, '漫画工具展示，Maplestrip 摄，CC BY 3.0'),
-      imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
-      imageAsset(mangaMuseumReading, '漫画博物馆户外阅读场景，Tatyana Temirbulatova 摄，CC BY 2.0'),
+      imageAsset(gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
+      imageAsset(comiketCosplayers, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
     ],
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: '2026-06-23T12:00:00+08:00',
+    createdAt: '2026-06-23T12:05:00+08:00',
     reactions: { ...emptyReactions },
   },
   {
     id: 'p_kare_popculture',
-    authorId: 'u_media',
-    title: '咖喱饭为什么适合写进轻小说与动画场景资料库',
-    excerpt: '用一张 CC0 的日式咖喱饭照片，替代虚构厨房插画，整理日常饮食场景如何服务轻小说叙事。',
-    content: `日常食物是轻小说、动画和漫画里很常见的场景锚点。它不需要夸张设定，也能帮助读者快速理解角色的生活节奏。
+    authorId: 'u_editorial',
+    title: '日常番场景资料：咖喱饭、放学后与生活感镜头',
+    excerpt: '用一张 CC0 日式咖喱饭照片做日常番场景参考，让图库不只服务展会，也能服务轻小说和动画生活镜头。',
+    content: `番剧和轻小说里常见的生活感，不一定来自大事件。食物、桌面、社团活动和放学后的街景，都能成为图廊里的“日常番资料”。
 
 ## 可整理的信息
 - 站内使用的咖喱饭照片来自 Wikimedia Commons，文件说明为家庭制作的日式咖喱饭。
 - 该图片使用 CC0 公共领域贡献，适合作为“日常场景资料”配图。
 - 这类素材能替代虚构厨房图，让创作者在写饮食、便当、深夜餐桌时有真实参考。
 
+## 写作提示
 把“咖喱饭”写进场景时，可以关注气味、锅具、等待时间、共同分食和剩菜再加热，而不是只写菜名。真实照片提供的是质感，不是剧情本身。
 
 ## 资料来源
@@ -367,14 +385,14 @@ Comiket 适合放在 ACGN 博客首页，因为它同时连接创作、交流、
     imagePosition: 'center',
     isPinned: false,
     type: 'article',
-    tags: ['日本咖喱', '场景资料', '日常叙事'],
-    series: '日常场景资料',
+    tags: ['日常番', '场景资料', '轻小说'],
+    series: '番剧生活感资料',
     gallery: [imageAsset(kareRaisu, '家庭制作的日式咖喱饭，Ocdp 摄，CC0 1.0')],
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: '2026-06-23T12:25:00+08:00',
+    createdAt: '2026-06-23T12:35:00+08:00',
     reactions: { ...emptyReactions },
   },
 ]
@@ -383,10 +401,127 @@ const initialComments: Comment[] = []
 const initialAnimeRecords: AnimeRecord[] = []
 const initialReports: Report[] = []
 
+const initialTimelineDays: AnimeTimelineDay[] = [
+  {
+    date: '6-23',
+    dateTimestamp: 1782144000,
+    dayOfWeek: 2,
+    isToday: true,
+    episodes: [
+      {
+        id: 'guochuang_3065327',
+        kind: 'guochuang',
+        title: '盗妖行',
+        pubIndex: '第38话',
+        pubTime: '09:00',
+        pubTimestamp: 1782176400,
+        published: true,
+        isDelayed: false,
+        seasonId: 148433,
+        episodeId: 3065327,
+        coverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/526229b935e3ef9274136ba257f783d6a13ba7b4.jpg',
+        squareCoverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/44e0343ce31c26b4f05ccc94de9a6c1853f4c970.jpg',
+        sourceUrl: 'https://www.bilibili.com/bangumi/play/ss148433',
+      },
+      {
+        id: 'guochuang_3648904',
+        kind: 'guochuang',
+        title: '非人哉 第三季',
+        pubIndex: '第21话',
+        pubTime: '12:00',
+        pubTimestamp: 1782187200,
+        published: true,
+        isDelayed: false,
+        seasonId: 101854,
+        episodeId: 3648904,
+        coverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/e47db61c92e8e9cb8add1c99bc1bb676492570a6.png',
+        squareCoverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/e87f9ed620951578ad3b4df499d2cf942cb8756f.png',
+        sourceUrl: 'https://www.bilibili.com/bangumi/play/ss101854',
+      },
+    ],
+  },
+  {
+    date: '6-27',
+    dateTimestamp: 1782489600,
+    dayOfWeek: 6,
+    isToday: false,
+    episodes: [
+      {
+        id: 'guochuang_3854804',
+        kind: 'guochuang',
+        title: '凡人修仙传',
+        pubIndex: '第180话',
+        pubTime: '11:00',
+        pubTimestamp: 1782529200,
+        published: false,
+        isDelayed: false,
+        seasonId: 28747,
+        episodeId: 3854804,
+        coverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/19a2d01429bcba6b31791277c016e0d1aa465974.png',
+        squareCoverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/e498647cae38ac05efb4f1119b36e8e911b22b34.png',
+        sourceUrl: 'https://www.bilibili.com/bangumi/play/ss28747',
+      },
+      {
+        id: 'anime_4391800',
+        kind: 'anime',
+        title: '名侦探柯南',
+        pubIndex: '第1264话',
+        pubTime: '19:30',
+        pubTimestamp: 1781955000,
+        published: true,
+        isDelayed: false,
+        seasonId: 33378,
+        episodeId: 4391800,
+        coverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/38e2a273f528fd01c34f1fc4df0f69c64487efad.png',
+        squareCoverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/a8d4dad96d5eef87c1ef985c29f42d4189992f84.png',
+        sourceUrl: 'https://www.bilibili.com/bangumi/play/ss33378',
+      },
+    ],
+  },
+  {
+    date: '6-28',
+    dateTimestamp: 1782576000,
+    dayOfWeek: 7,
+    isToday: false,
+    episodes: [
+      {
+        id: 'anime_3781141',
+        kind: 'anime',
+        title: '假面骑士ZZZ',
+        pubIndex: '第41话',
+        pubTime: '10:00',
+        pubTimestamp: 1782612000,
+        published: false,
+        isDelayed: false,
+        seasonId: 109700,
+        episodeId: 3781141,
+        coverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/88406f07db1dad1f2663b93f6035eeb222bde0b5.jpg',
+        squareCoverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/b650f40fb0eeb3dc6e51f41798ac78ae2b05c3c1.png',
+        sourceUrl: 'https://www.bilibili.com/bangumi/play/ss109700',
+      },
+      {
+        id: 'guochuang_3537935',
+        kind: 'guochuang',
+        title: '牧神记',
+        pubIndex: '第89话',
+        pubTime: '11:00',
+        pubTimestamp: 1782615600,
+        published: false,
+        isDelayed: false,
+        seasonId: 45969,
+        episodeId: 3537935,
+        coverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/1a321192dd267265573b6f198d025d2da9e75ae1.png',
+        squareCoverUrl: 'https://i0.hdslb.com/bfs/bangumi/image/eb6054ae7d37283a484019152197c69b2950da2e.png',
+        sourceUrl: 'https://www.bilibili.com/bangumi/play/ss45969',
+      },
+    ],
+  },
+]
+
 const initialDraft: Draft = {
   title: '',
   content: '',
-  tags: ['公开资料整理'],
+  tags: ['番剧', 'COS', '游戏'],
   images: [],
 }
 
@@ -399,7 +534,7 @@ const buildDefaultHomeCarousel = (sourcePosts: Post[] = initialPosts): HomeCarou
     excerpt: post.excerpt,
     imageUrl: post.coverUrl,
     imagePosition: post.imagePosition ?? 'center',
-    tag: post.tags[0] ?? ['今日主推', '馆藏资料', '活动现场', '正版入口', '编辑精选'][index] ?? '精选',
+    tag: post.tags[0] ?? ['番剧前哨', 'COS图廊', '游戏现场', '正版入口', '图廊治理'][index] ?? '精选',
     link: `/post/${post.id}`,
     sourcePostId: post.id,
     enabled: true,
@@ -410,11 +545,11 @@ const buildDefaultHomeCarousel = (sourcePosts: Post[] = initialPosts): HomeCarou
 const sanitizeHomeCarousel = (slides: HomeCarouselSlide[]) =>
   slides.slice(0, 8).map((slide, index) => ({
     id: slide.id || `hero_custom_${Date.now()}_${index}`,
-    title: slide.title?.trim() || '公开资料主视觉',
-    excerpt: slide.excerpt?.trim() || '收录公开来源、开放授权图片和原创整理文本。',
+    title: slide.title?.trim() || '星梦图廊主视觉',
+    excerpt: slide.excerpt?.trim() || '收录番剧、COS、游戏和图廊资料，保留来源与版权说明。',
     imageUrl: slide.imageUrl || tokyoBigSightNight,
     imagePosition: slide.imagePosition || 'center',
-    tag: slide.tag?.trim() || '资料精选',
+    tag: slide.tag?.trim() || 'ACGN精选',
     link: slide.link?.trim() || '/',
     sourcePostId: slide.sourcePostId,
     enabled: Boolean(slide.enabled),
@@ -439,8 +574,8 @@ const persistDraft = () => writeStorage(storageKeys.draft, draft)
 const persistDraftSnapshots = () => writeStorage(storageKeys.draftSnapshots, draftSnapshots)
 
 const resetCoreSeedDataIfNeeded = () => {
-  const hasSourceUsers = users.some((user) => user.id === 'u_editorial')
-  const hasSourcePosts = posts.some((post) => post.id === 'p_comiket_guide')
+  const hasSourceUsers = users.some((user) => user.id === 'u_anime')
+  const hasSourcePosts = posts.some((post) => post.id === 'p_tokyo_game_show_2026')
   if (hasSourceUsers && hasSourcePosts && homeCarousel.length) return
 
   users = cloneData(initialUsers)
@@ -490,7 +625,7 @@ const normalizeBackupUsers = (value: unknown): User[] =>
     ...(user as User),
     favoriteCharacter: parseBackupJson((user as { favoriteCharacter?: unknown }).favoriteCharacter, {
       name: '未设置',
-      anime: '公开资料整理',
+      anime: '番剧 / COS / 游戏资料',
       quote: '',
     }),
     stats: parseBackupJson((user as { stats?: unknown }).stats, { posts: 0, followers: 0, following: 0, likes: 0 }),
@@ -515,7 +650,7 @@ const normalizeBackupDraft = (value: unknown): Draft => {
   return {
     title: draftLike.title ?? '',
     content: draftLike.content ?? '',
-    tags: parseBackupJson((item as { tags?: unknown }).tags, ['公开资料整理']),
+    tags: parseBackupJson((item as { tags?: unknown }).tags, ['番剧', 'COS', '游戏']),
     images: normalizeImageAssets(parseBackupJson((item as { images?: unknown }).images, []), draftLike.title || '资料图片'),
     savedAt: (item as { savedAt?: string }).savedAt,
   }
@@ -570,11 +705,18 @@ const createDraftSnapshot = (payload: Draft) => {
 
 const createExcerpt = (content: string) => {
   const clean = content.replace(/\s+/g, ' ').trim()
-  return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的公开资料笔记。'
+  return clean.length > 72 ? `${clean.slice(0, 72)}...` : clean || '一篇刚刚诞生的 ACGN 笔记。'
 }
 
 const isPublicPost = (post: Post) => (post.status ?? 'published') === 'published'
 const getPublicPosts = () => posts.filter(isPublicPost)
+const filterTimelineDays = (days: AnimeTimelineDay[], category: AnimeTimelineQuery['category'] = 'all') =>
+  days
+    .map((day) => ({
+      ...day,
+      episodes: day.episodes.filter((episode) => category === 'all' || !category || episode.kind === category),
+    }))
+    .filter((day) => day.episodes.length || day.isToday)
 
 export const mockApi = {
   async getPosts() {
@@ -634,6 +776,15 @@ export const mockApi = {
   async getAnimeRecords(userId: string) {
     await wait()
     return animeRecords.filter((record) => record.userId === userId)
+  },
+
+  async getAnimeTimeline(query: AnimeTimelineQuery = {}): Promise<AnimeTimelinePayload> {
+    await wait(120)
+    return {
+      source: 'mock',
+      fetchedAt: new Date().toISOString(),
+      days: filterTimelineDays(cloneData(initialTimelineDays), query.category),
+    }
   },
 
   async updateUserProfile(userId: string, payload: ProfileUpdatePayload) {
@@ -779,7 +930,7 @@ export const mockApi = {
   async publishPost(authorId: string, payload: NewPostPayload) {
     await wait(160)
     const images = normalizeImageAssets(payload.images, payload.title.trim() || '作品图片')
-    const fallbackImage = imageAsset(tokyoBigSightNight, payload.title.trim() || '公开资料笔记封面')
+    const fallbackImage = imageAsset(tokyoBigSightNight, payload.title.trim() || 'ACGN 笔记封面')
     const firstImage = images[0] ?? fallbackImage
     const post: Post = {
       id: `p_${Date.now()}`,
@@ -790,7 +941,7 @@ export const mockApi = {
       coverUrl: firstImage.url,
       imagePosition: 'center',
       type: payload.type,
-      tags: payload.tags.length ? payload.tags : ['公开资料整理'],
+      tags: payload.tags.length ? payload.tags : ['番剧', 'COS', '游戏'],
       series: payload.series?.trim() || undefined,
       gallery: images.length ? images : [fallbackImage],
       viewCount: 0,

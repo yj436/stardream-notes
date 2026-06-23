@@ -83,7 +83,7 @@ onMounted(async () => {
       </div>
       <form class="search-form" @submit.prevent="run">
         <Search :size="20" />
-        <input v-model="query" placeholder="输入 番剧、绘画教程、Coser..." />
+        <input v-model="query" placeholder="输入 番剧、COS、游戏、图廊..." />
         <button class="primary-button" type="submit" :disabled="searching">{{ searching ? '搜索中...' : '搜索' }}</button>
       </form>
       <div class="segmented">

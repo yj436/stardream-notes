@@ -28,7 +28,7 @@ const groups = computed(() => {
 
 const totalPosts = computed(() => sourcePosts.value.length)
 const latestPost = computed(() => groups.value[0]?.posts[0])
-const typeLabel = (type: Post['type']) => ({ article: '资料图文', gallery: '活动图集', record: '平台资料' })[type]
+const typeLabel = (type: Post['type']) => ({ article: '番剧图文', gallery: 'COS图集', record: '游戏资料' })[type]
 </script>
 
 <template>
@@ -37,9 +37,9 @@ const typeLabel = (type: Post['type']) => ({ article: '资料图文', gallery: '
       <div class="halo-sakura-layer" aria-hidden="true" />
       <div>
         <span class="section-kicker"><Archive :size="16" /> Source Archive</span>
-        <h1>按时间回看公开资料</h1>
+        <h1>按时间回看 ACGN 内容</h1>
         <p class="archive-summary">
-          {{ scope === 'all' ? '全站' : '我的' }}共 {{ totalPosts }} 篇资料
+          {{ scope === 'all' ? '全站' : '我的' }}共 {{ totalPosts }} 篇内容
           <template v-if="latestPost">，最新更新是《{{ latestPost.title }}》。</template>
         </p>
       </div>
@@ -60,7 +60,7 @@ const typeLabel = (type: Post['type']) => ({ article: '资料图文', gallery: '
           <div class="archive-month-head">
             <div>
               <span class="section-kicker"><CalendarDays :size="16" /> {{ group.label }}</span>
-              <h2>{{ group.posts.length }} 篇资料记录</h2>
+              <h2>{{ group.posts.length }} 篇内容记录</h2>
             </div>
           </div>
           <RouterLink v-for="post in group.posts" :key="post.id" :to="`/post/${post.id}`" class="archive-row timeline-row">
@@ -74,6 +74,6 @@ const typeLabel = (type: Post['type']) => ({ article: '资料图文', gallery: '
       </section>
     </div>
 
-    <p v-if="!groups.length" class="empty-state">这个范围暂时没有可归档资料。</p>
+    <p v-if="!groups.length" class="empty-state">这个范围暂时没有可归档内容。</p>
   </section>
 </template>

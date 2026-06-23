@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { Compass, Edit3, Home, Radio, Search, Sparkles, User, ArrowUp } from 'lucide-vue-next'
+import { CalendarDays, Compass, Edit3, Home, Radio, Search, Sparkles, User, ArrowUp } from 'lucide-vue-next'
 import AppNav from '@/components/AppNav.vue'
 import CursorSparkle from '@/components/CursorSparkle.vue'
 import Live2DCompanion from '@/components/Live2DCompanion.vue'
@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
       <span class="star-dust s2" />
       <span class="star-dust s3" />
     </div>
-    <div class="pull-indicator" :class="{ active: pullRefreshing }">释放刷新公开资料流</div>
+    <div class="pull-indicator" :class="{ active: pullRefreshing }">释放刷新 ACGN 内容流</div>
     <main class="app-shell" @touchstart.passive="onTouchStart" @touchmove.passive="onTouchMove" @touchend="onTouchEnd">
       <RouterView v-slot="{ Component }">
         <transition name="page-transition" mode="out-in">
@@ -79,17 +79,18 @@ onBeforeUnmount(() => {
         <span class="brand-mark"><Sparkles :size="18" /></span>
         <div>
           <strong>星梦笔记</strong>
-          <small>ACGN 公开资料、开放授权图片与轻博客归档</small>
+          <small>番剧、COS、游戏图廊与轻博客归档</small>
         </div>
       </div>
       <div class="footer-links">
         <RouterLink to="/discover">话题</RouterLink>
+        <RouterLink to="/schedule">时间表</RouterLink>
         <RouterLink to="/archive">归档</RouterLink>
-        <RouterLink to="/editor">写资料</RouterLink>
+        <RouterLink to="/editor">写文章</RouterLink>
       </div>
     </footer>
     <div class="floating-tools" aria-label="快捷工具">
-      <RouterLink to="/editor" aria-label="写资料"><Edit3 :size="18" /></RouterLink>
+      <RouterLink to="/editor" aria-label="写文章"><Edit3 :size="18" /></RouterLink>
       <RouterLink to="/search" aria-label="搜索"><Search :size="18" /></RouterLink>
       <button type="button" aria-label="回到顶部" @click="scrollToTop"><ArrowUp :size="18" /></button>
     </div>
@@ -97,6 +98,7 @@ onBeforeUnmount(() => {
     <Live2DCompanion />
     <nav class="bottom-nav" aria-label="移动端导航">
       <RouterLink to="/"><Home :size="20" /><span>首页</span></RouterLink>
+      <RouterLink to="/schedule"><CalendarDays :size="20" /><span>时间表</span></RouterLink>
       <RouterLink to="/feed"><Radio :size="20" /><span>动态</span></RouterLink>
       <RouterLink to="/discover"><Compass :size="20" /><span>发现</span></RouterLink>
       <RouterLink to="/search"><Search :size="20" /><span>搜索</span></RouterLink>

@@ -72,7 +72,7 @@ const openLive2DSource = () => {
     <div class="settings-grid">
       <section class="section-block">
         <span class="section-kicker"><User :size="16" /> 个人信息</span>
-        <h2>公开资料</h2>
+        <h2>ACGN 内容</h2>
         <label>昵称<input v-model="form.nickname" maxlength="24" /></label>
         <label>简介<textarea v-model="form.bio" rows="3" maxlength="180" /></label>
         <label>邮箱<input v-model="form.email" type="email" disabled /></label>

@@ -557,7 +557,8 @@ button:disabled {
 .feed-layout,
 .archive-layout,
 .settings-layout,
-.anime-browser-layout {
+.anime-browser-layout,
+.schedule-layout {
   display: grid;
   gap: 22px;
 }
@@ -2766,6 +2767,285 @@ label {
   right: 18px;
 }
 
+.schedule-hero {
+  min-height: 320px;
+}
+
+.schedule-console {
+  display: grid;
+  gap: 16px;
+}
+
+.schedule-source-row,
+.schedule-toolbar,
+.schedule-stats,
+.schedule-date-tabs,
+.schedule-episode-head,
+.schedule-note {
+  display: flex;
+  align-items: center;
+}
+
+.schedule-source-row {
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.schedule-source-row h2 {
+  margin: 5px 0 3px;
+  color: #1e2847;
+}
+
+.schedule-source-row small {
+  color: var(--muted);
+  font-weight: 760;
+}
+
+.schedule-toolbar {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.schedule-search {
+  min-width: min(360px, 100%);
+  flex: 1 1 280px;
+}
+
+.schedule-stats {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.schedule-stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #51607a;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.schedule-date-tabs {
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.schedule-date-tabs button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.schedule-date-tabs button.today {
+  color: #bd3c72;
+  border-color: rgba(255, 111, 168, 0.32);
+}
+
+.schedule-date-tabs button.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--pink), var(--blue));
+}
+
+.schedule-board {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: start;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.schedule-day-column {
+  min-width: 180px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 14px 34px rgba(72, 89, 130, 0.09);
+  backdrop-filter: blur(16px);
+}
+
+.schedule-day-column.today {
+  border-color: rgba(255, 111, 168, 0.42);
+  box-shadow: 0 18px 42px rgba(255, 111, 168, 0.12);
+}
+
+.schedule-day-column > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(255, 229, 240, 0.72), rgba(233, 238, 255, 0.78));
+}
+
+.schedule-day-column > header span {
+  color: #bd3c72;
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.schedule-day-column > header strong {
+  grid-column: 1;
+  color: #1e2847;
+  font-size: 1.05rem;
+}
+
+.schedule-day-column > header small {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #51607a;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.schedule-episode-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.schedule-episode-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 86px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.72);
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.schedule-episode-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(72, 89, 130, 0.11);
+}
+
+.schedule-episode-card img {
+  width: 58px;
+  height: 70px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--blue-soft);
+}
+
+.schedule-episode-card strong,
+.schedule-episode-card p,
+.schedule-episode-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-episode-card strong {
+  display: -webkit-box;
+  margin: 6px 0 3px;
+  color: #1e2847;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.schedule-episode-card p {
+  margin: 0 0 5px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 780;
+}
+
+.schedule-episode-card small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #51607a;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.schedule-episode-head {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.schedule-kind,
+.schedule-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.schedule-kind.anime {
+  color: #4163df;
+  background: var(--blue-soft);
+}
+
+.schedule-kind.guochuang {
+  color: #0b907f;
+  background: var(--mint-soft);
+}
+
+.schedule-state {
+  color: #bd3c72;
+  background: var(--pink-soft);
+}
+
+.schedule-state.upcoming {
+  color: #8c6720;
+  background: rgba(244, 184, 78, 0.18);
+}
+
+.schedule-state.delayed {
+  color: #9d3154;
+  background: rgba(255, 111, 168, 0.2);
+}
+
+.schedule-empty-day {
+  margin: 0;
+  padding: 24px 12px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.84rem;
+  font-weight: 820;
+}
+
+.schedule-note {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.schedule-note p {
+  flex: 1;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .archive-timeline {
   position: relative;
   display: grid;
@@ -4180,6 +4460,10 @@ label {
     grid-template-columns: 1fr;
   }
 
+  .schedule-board {
+    grid-template-columns: repeat(7, minmax(220px, 260px));
+  }
+
   .side-column,
   .detail-side,
   .rank-card,
@@ -4238,6 +4522,10 @@ label {
   }
 
   .gallery-toolbar .segmented {
+    margin-top: 0;
+  }
+
+  .schedule-toolbar .segmented {
     margin-top: 0;
   }
 
@@ -4307,6 +4595,25 @@ label {
   .profile-name,
   .desktop-write {
     display: none;
+  }
+
+  .schedule-source-row,
+  .schedule-note {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .schedule-toolbar .segmented {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .schedule-board {
+    grid-template-columns: repeat(7, minmax(232px, 82vw));
+  }
+
+  .schedule-day-column {
+    min-width: 232px;
   }
 
   .menu-button {

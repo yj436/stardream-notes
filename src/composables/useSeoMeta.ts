@@ -1,8 +1,8 @@
 import siteCoverUrl from '@/assets/images/content-tokyo-big-sight-night.jpg'
 
 const SITE_NAME = '星梦笔记'
-const DEFAULT_TITLE = '星梦笔记 | ACGN 公开资料博客'
-const DEFAULT_DESCRIPTION = '星梦笔记收录 ACGN 公开来源、开放授权图片和原创整理文本，覆盖展会、漫画馆藏、正版平台与场景资料。'
+const DEFAULT_TITLE = '星梦番剧馆 | 番剧 COS 游戏图廊'
+const DEFAULT_DESCRIPTION = '星梦笔记收录番剧、COS、游戏和图廊内容，保留来源链接、图片授权与版权标注。'
 const DEFAULT_TYPE = 'website'
 const MAX_DESCRIPTION_LENGTH = 160
 

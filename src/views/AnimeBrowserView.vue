@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue'
-import { Archive, Building2, ExternalLink, Film, Library, MonitorPlay } from 'lucide-vue-next'
+import { Archive, Camera, ExternalLink, Film, Gamepad2, Images, MonitorPlay } from 'lucide-vue-next'
 import { imageAssets } from '@/api/mock'
 
-type ResourceType = 'event' | 'archive' | 'platform'
+type ResourceType = 'anime' | 'cos' | 'game' | 'gallery'
 const tab = ref<'all' | ResourceType>('all')
 
 interface ResourceEntry {
@@ -20,55 +20,67 @@ interface ResourceEntry {
 
 const resourceEntries: ResourceEntry[] = [
   {
-    id: 'res_comiket',
-    title: 'Comic Market / Comiket',
-    coverUrl: imageAssets.moonlightCos,
-    type: 'event',
-    period: '官方信息以每届会期页面为准',
-    sourceLabel: 'Comic Market 官方',
-    sourceUrl: 'https://www.comiket.co.jp/index_e.html',
-    synopsis: '以同人志、自出版作品和创作者社群为核心的大型活动，适合放入同人文化、展会攻略和创作社群板块。',
-    tags: ['Comiket', '同人文化', '东京展会'],
-  },
-  {
     id: 'res_animejapan',
-    title: 'AnimeJapan 2026',
+    title: 'AnimeJapan 2026 番剧前哨',
     coverUrl: imageAssets.hero,
-    type: 'event',
+    type: 'anime',
     period: '2026-03-28 至 2026-03-31',
     sourceLabel: 'AnimeJapan 官方',
     sourceUrl: 'https://anime-japan.jp/en/about/',
-    synopsis: '官方 About 页面列出公共日、商务日、展位、AJ Stage、官方商品和商务交流内容，适合作为动画产业资料入口。',
-    tags: ['AnimeJapan', '动画产业', 'Tokyo Big Sight'],
+    synopsis: '公共日、商务日、展位、AJ Stage 和官方商品可以支撑番剧板块的新番情报入口。',
+    tags: ['番剧', 'AnimeJapan', '新番情报'],
   },
   {
-    id: 'res_kyoto_museum',
-    title: '京都国际漫画博物馆',
-    coverUrl: imageAssets.starryDesk,
-    type: 'archive',
-    period: '约 300,000 项资料可检索',
-    sourceLabel: '京都国际漫画博物馆',
-    sourceUrl: 'https://kyotomm.jp/en/',
-    synopsis: '官网提供馆藏、数据库、Manga Wall、Research Reference Room 等信息，适合做漫画史与馆藏资料板块。',
-    tags: ['漫画馆藏', '京都', '资料库'],
+    id: 'res_comiket_cos',
+    title: 'Comiket COS 图廊',
+    coverUrl: imageAssets.cosplayStage,
+    type: 'cos',
+    period: 'Comiket 69 / Comiket 84 开放授权照片',
+    sourceLabel: 'Comic Market 官方',
+    sourceUrl: 'https://www.comiket.co.jp/index_e.html',
+    synopsis: '角色扮演群像、现场空间和拍摄礼仪可以组成更像二次元社区的 COS 影廊。',
+    tags: ['COS', 'Comiket', '同人现场'],
+  },
+  {
+    id: 'res_tgs_2026',
+    title: 'Tokyo Game Show 2026',
+    coverUrl: imageAssets.gameController,
+    type: 'game',
+    period: '2026-09-17 至 2026-09-21',
+    sourceLabel: 'TGS 官方',
+    sourceUrl: 'https://tgs.cesa.or.jp/en/',
+    synopsis: '贸易活动列表确认 2026 会期与 Makuhari Messe 场馆，TGS 官方入口可继续追踪展区、购票和玩家活动更新。',
+    tags: ['游戏', 'Tokyo Game Show', '玩家文化'],
   },
   {
     id: 'res_manga_plus',
-    title: 'MANGA Plus by SHUEISHA',
+    title: 'MANGA Plus 正版补番入口',
     coverUrl: imageAssets.creators,
-    type: 'platform',
+    type: 'anime',
     period: '官方数字阅读服务',
     sourceLabel: 'MANGA Plus',
     sourceUrl: 'https://mangaplus.shueisha.co.jp/updates',
-    synopsis: '集英社官方漫画阅读入口，公开说明强调最新章节与日本同步更新，适合放入正版阅读与平台资料板块。',
-    tags: ['正版阅读', '漫画平台', 'SHUEISHA'],
+    synopsis: '番剧站可以延伸到漫画原作和补充阅读，但不在站内搬运漫画正文或商业封面。',
+    tags: ['番剧补完', '正版阅读', 'SHUEISHA'],
+  },
+  {
+    id: 'res_gallery_rules',
+    title: '图廊版权标注规则',
+    coverUrl: imageAssets.sakuraWatercolor,
+    type: 'gallery',
+    period: '站内素材治理',
+    sourceLabel: '内容来源文档',
+    sourceUrl: 'https://github.com/yj436/stardream-notes/blob/main/docs/content-sources.md',
+    synopsis: '把 CC 授权、官方素材、用户投稿、商业海报和游戏截图分开标注，后台管理会更稳定。',
+    tags: ['图廊', '版权标注', '后台管理'],
   },
 ]
 
 const typeMeta: Record<ResourceType, { label: string; icon: Component }> = {
-  event: { label: '活动', icon: Building2 },
-  archive: { label: '馆藏', icon: Library },
-  platform: { label: '平台', icon: MonitorPlay },
+  anime: { label: '番剧', icon: MonitorPlay },
+  cos: { label: 'COS', icon: Camera },
+  game: { label: '游戏', icon: Gamepad2 },
+  gallery: { label: '图廊', icon: Images },
 }
 
 const filtered = computed(() => {
@@ -82,15 +94,16 @@ const filtered = computed(() => {
     <div class="section-block">
       <div class="section-title">
         <div>
-          <span class="section-kicker"><Film :size="16" /> ACGN 公开资料库</span>
-          <h1>发现真实资料入口</h1>
-          <p class="archive-summary">整理活动、馆藏和正版平台的公开来源，替代虚构番剧评分与不可验证热度。</p>
+          <span class="section-kicker"><Film :size="16" /> 番剧 · COS · 游戏资料馆</span>
+          <h1>按二次元板块发现内容</h1>
+          <p class="archive-summary">把新番情报、COS 现场、游戏展会和图廊版权规则拆成清晰入口，方便后续继续扩展。</p>
         </div>
         <div class="segmented compact">
           <button type="button" :class="{ active: tab === 'all' }" @click="tab = 'all'">全部</button>
-          <button type="button" :class="{ active: tab === 'event' }" @click="tab = 'event'">活动</button>
-          <button type="button" :class="{ active: tab === 'archive' }" @click="tab = 'archive'">馆藏</button>
-          <button type="button" :class="{ active: tab === 'platform' }" @click="tab = 'platform'">平台</button>
+          <button type="button" :class="{ active: tab === 'anime' }" @click="tab = 'anime'">番剧</button>
+          <button type="button" :class="{ active: tab === 'cos' }" @click="tab = 'cos'">COS</button>
+          <button type="button" :class="{ active: tab === 'game' }" @click="tab = 'game'">游戏</button>
+          <button type="button" :class="{ active: tab === 'gallery' }" @click="tab = 'gallery'">图廊</button>
         </div>
       </div>
     </div>

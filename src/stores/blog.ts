@@ -62,7 +62,7 @@ export const useBlogStore = defineStore('blog', {
     commentsByPost: {},
     animeRecords: [],
     homeCarouselSlides: [],
-    draft: { title: '', content: '', tags: ['公开资料整理'], images: [] },
+    draft: { title: '', content: '', tags: ['番剧', 'COS', '游戏'], images: [] },
     draftSnapshots: [],
     search: { posts: [], users: [], tags: [] },
     adminStats: null,
@@ -168,7 +168,7 @@ export const useBlogStore = defineStore('blog', {
       this.authToken = null
       this.currentUserId = ''
       this.draftSnapshots = []
-      this.draft = { title: '', content: '', tags: ['公开资料整理'], images: [] }
+      this.draft = { title: '', content: '', tags: ['番剧', 'COS', '游戏'], images: [] }
       this.notify('已退出登录', 'info')
     },
 

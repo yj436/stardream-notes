@@ -73,7 +73,7 @@ const saveProfile = async () => {
     theme: profileForm.theme,
     favoriteCharacter: {
       name: profileForm.characterName.trim() || '未设置',
-      anime: profileForm.characterAnime.trim() || '公开资料整理',
+      anime: profileForm.characterAnime.trim() || '番剧 / COS / 游戏',
       quote: profileForm.characterQuote.trim() || '今天也要继续发光。',
     },
   })
@@ -209,7 +209,7 @@ watch(user, syncProfileForm)
         <div class="section-title">
           <div>
             <span class="section-kicker">个人时间线</span>
-            <h2>公开资料</h2>
+            <h2>ACGN 内容</h2>
           </div>
         </div>
         <div class="post-list">

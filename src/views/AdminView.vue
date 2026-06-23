@@ -82,14 +82,14 @@ const tabConfig = [
 ]
 
 const builtinCarouselImages: CarouselImageChoice[] = [
-  { label: '东京 Big Sight 夜景', desc: '展会与动画产业主视觉', url: imageAssets.hero, position: 'center' },
-  { label: '京都漫画博物馆展区', desc: '漫画馆藏资料', url: imageAssets.starryDesk, position: 'center' },
-  { label: '漫画工具展示', desc: '创作工具与内容治理', url: imageAssets.sakuraWatercolor, position: 'center' },
-  { label: 'Comiket 现场', desc: '同人文化与活动摄影', url: imageAssets.moonlightCos, position: 'center' },
-  { label: '动画产业展会场馆', desc: 'AnimeJapan 资料入口', url: imageAssets.healingAnime, position: 'center' },
-  { label: '日式咖喱饭', desc: '日常场景资料', url: imageAssets.novelKitchen, position: 'center' },
-  { label: '漫画博物馆户外阅读', desc: '阅读空间与资料场景', url: imageAssets.galaxySchool, position: 'center' },
-  { label: '数位板绘制', desc: '数字创作与正版阅读入口', url: imageAssets.creators, position: 'center' },
+  { label: '番剧前哨场馆', desc: 'AnimeJapan 与新番情报入口', url: imageAssets.healingAnime, position: 'center' },
+  { label: 'Comiket COS 群像', desc: 'COS 影廊与同人现场', url: imageAssets.cosplayStage, position: 'center' },
+  { label: 'Comiket COS 区域', desc: '角色扮演活动摄影', url: imageAssets.moonlightCos, position: 'center' },
+  { label: '游戏手柄资料', desc: '游戏档案与玩家文化', url: imageAssets.gameController, position: 'center' },
+  { label: '数位板创作', desc: '番剧补完与数字创作', url: imageAssets.creators, position: 'center' },
+  { label: '日常番咖喱饭', desc: '生活感场景参考', url: imageAssets.novelKitchen, position: 'center' },
+  { label: '图廊治理素材', desc: '版权标注与素材管理', url: imageAssets.sakuraWatercolor, position: 'center' },
+  { label: '漫画阅读空间', desc: '日常番和漫画文化参考', url: imageAssets.galaxySchool, position: 'center' },
 ]
 
 const reportStatusOptions: Array<{ key: ReportStatusFilter; label: string }> = [

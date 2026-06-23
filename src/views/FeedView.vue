@@ -23,11 +23,11 @@ onMounted(async () => {
       <div class="section-title">
         <div>
           <span class="section-kicker"><Radio :size="16" /> 关注动态</span>
-          <h1>资料组时间线</h1>
+          <h1>板块组时间线</h1>
         </div>
-        <RouterLink class="ghost-button" to="/discover">发现更多资料组</RouterLink>
+        <RouterLink class="ghost-button" to="/discover">发现更多板块组</RouterLink>
       </div>
-      <p class="empty-note">这里聚合你关注的资料组新文章、图集和平台资料。</p>
+      <p class="empty-note">这里聚合你关注的板块组新文章、COS 图集和游戏资料。</p>
     </div>
 
     <div v-if="feedPosts.length" class="post-list">
@@ -38,7 +38,7 @@ onMounted(async () => {
       <div class="section-title">
         <div>
           <span class="section-kicker"><UserPlus :size="16" /> 还没有动态</span>
-          <h2>先关注几个资料组</h2>
+          <h2>先关注几个板块组</h2>
         </div>
       </div>
       <div class="creator-grid">

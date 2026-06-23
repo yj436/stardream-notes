@@ -10,6 +10,8 @@ const asset = {
   starryDesk: 'asset:starryDesk',
   sakuraWatercolor: 'asset:sakuraWatercolor',
   moonlightCos: 'asset:moonlightCos',
+  cosplayStage: 'asset:cosplayStage',
+  gameController: 'asset:gameController',
   healingAnime: 'asset:healingAnime',
   novelKitchen: 'asset:novelKitchen',
   galaxySchool: 'asset:galaxySchool',
@@ -23,6 +25,8 @@ const sourceLinks = {
   animeJapan: 'https://anime-japan.jp/en/about/',
   mangaPlus: 'https://mangaplus.shueisha.co.jp/updates',
   mangaPlusApp: 'https://apps.apple.com/us/app/manga-plus-by-shueisha/id1442476536',
+  tokyoGameShow2026: 'https://tgs.cesa.or.jp/en/',
+  tokyoGameShowTrade: 'https://www.trade.gov/japan-trade-events',
   commonsSearch: 'https://search.creativecommons.org/',
 }
 
@@ -45,43 +49,43 @@ const emptyReactions = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const users = [
   {
     id: 'u_editorial',
-    username: 'open-culture-desk',
+    username: 'stardream-desk',
     email: 'admin@stardream.local',
     passwordHash: hashPassword('admin123'),
-    nickname: '公开资料编辑部',
+    nickname: '星梦编辑台',
     avatarUrl: asset.creators,
     avatarPosition: 'center',
     coverUrl: asset.hero,
-    bio: '站内资料整理账号：只收录公开来源、开放授权图片和原创整理文本。',
+    bio: '维护番剧、COS、游戏和图廊四个主板块，负责来源、版权标注和首页轮播。',
     level: 18,
-    creatorBadge: '站点编辑',
+    creatorBadge: '站点主理',
     favoriteCharacter: json({
-      name: '资料来源',
-      anime: '站点内容治理',
-      quote: '每一张图、每一段说明都要能回到公开来源。',
+      name: '星梦笔记',
+      anime: 'ACGN 图廊运营',
+      quote: '可以有番剧味、同人味和玩家味，也要把来源与权利归属写清楚。',
     }),
-    stats: json({ posts: 1, followers: 0, following: 0, likes: 0 }),
+    stats: json({ posts: 2, followers: 0, following: 0, likes: 0 }),
     role: 'admin',
     status: 'active',
     isFollowing: false,
     theme: 'sakura',
   },
   {
-    id: 'u_events',
-    username: 'event-archive',
-    email: 'events@stardream.local',
-    passwordHash: hashPassword('events123'),
-    nickname: 'ACGN 活动档案组',
-    avatarUrl: asset.moonlightCos,
+    id: 'u_anime',
+    username: 'anime-room',
+    email: 'anime@stardream.local',
+    passwordHash: hashPassword('anime123'),
+    nickname: '番剧放映室',
+    avatarUrl: asset.healingAnime,
     avatarPosition: 'center',
-    coverUrl: asset.hero,
-    bio: '整理 Comic Market、AnimeJapan 等公开活动资料，偏重时间、地点、参与方式和现场图像来源。',
-    level: 13,
-    creatorBadge: '活动资料',
+    coverUrl: asset.galaxySchool,
+    bio: '整理 AnimeJapan、新番入口、正版阅读平台和动画制作相关资料。',
+    level: 15,
+    creatorBadge: '番剧板块',
     favoriteCharacter: json({
-      name: '东京 Big Sight',
-      anime: '展会与同人文化',
-      quote: '活动信息先看官方页面，再写成读者能快速理解的资料卡。',
+      name: 'AnimeJapan',
+      anime: '番剧前哨站',
+      quote: '新番情报先看官方入口，再写成读者能快速浏览的番剧卡。',
     }),
     stats: json({ posts: 2, followers: 0, following: 0, likes: 0 }),
     role: 'creator',
@@ -90,21 +94,21 @@ const users = [
     theme: 'starlight',
   },
   {
-    id: 'u_manga',
-    username: 'manga-archive',
-    email: 'manga@stardream.local',
-    passwordHash: hashPassword('manga123'),
-    nickname: '漫画馆藏资料组',
-    avatarUrl: asset.starryDesk,
+    id: 'u_cos',
+    username: 'cos-gallery',
+    email: 'cos@stardream.local',
+    passwordHash: hashPassword('cos123'),
+    nickname: 'COS 影廊记录',
+    avatarUrl: asset.cosplayStage,
     avatarPosition: 'center',
-    coverUrl: asset.galaxySchool,
-    bio: '关注漫画馆藏、阅读空间、创作工具和漫画史材料，把博物馆公开信息转成站内资料。',
-    level: 15,
-    creatorBadge: '馆藏资料',
+    coverUrl: asset.moonlightCos,
+    bio: '收集 Comiket、Cosplay 活动照片与拍摄礼仪资料，让图廊有现场感。',
+    level: 14,
+    creatorBadge: 'COS 图廊',
     favoriteCharacter: json({
-      name: '京都国际漫画博物馆',
-      anime: '漫画文化资料',
-      quote: '漫画不只是一页读物，也是一套可以被保存、检索和研究的文化材料。',
+      name: 'Comiket',
+      anime: '同人现场',
+      quote: '一张好图不只是角色服装，也包括场地、队列、授权和拍摄边界。',
     }),
     stats: json({ posts: 1, followers: 0, following: 0, likes: 0 }),
     role: 'creator',
@@ -113,118 +117,39 @@ const users = [
     theme: 'mint',
   },
   {
-    id: 'u_media',
-    username: 'legal-reading',
-    email: 'media@stardream.local',
-    passwordHash: hashPassword('media123'),
-    nickname: '正版阅读与资料组',
-    avatarUrl: asset.novelKitchen,
+    id: 'u_game',
+    username: 'game-archive',
+    email: 'game@stardream.local',
+    passwordHash: hashPassword('game123'),
+    nickname: '游戏档案部',
+    avatarUrl: asset.gameController,
     avatarPosition: 'center',
-    coverUrl: asset.creators,
-    bio: '整理正版阅读入口、日常场景参考和创作素材规范，避免使用未经授权的截图、海报和正文摘录。',
-    level: 12,
-    creatorBadge: '资料整理',
+    coverUrl: asset.gameController,
+    bio: '整理 Tokyo Game Show、主机硬件、试玩动线和玩家文化资料。',
+    level: 13,
+    creatorBadge: '游戏板块',
     favoriteCharacter: json({
-      name: 'MANGA Plus',
-      anime: '正版阅读入口',
-      quote: '把入口讲清楚，比堆砌作品海报更适合长期维护。',
+      name: 'Tokyo Game Show',
+      anime: '玩家现场',
+      quote: '游戏板块要能看到展会、硬件、试玩和玩家动线。',
     }),
-    stats: json({ posts: 2, followers: 0, following: 0, likes: 0 }),
+    stats: json({ posts: 1, followers: 0, following: 0, likes: 0 }),
     role: 'creator',
     status: 'active',
     isFollowing: false,
-    theme: 'sakura',
+    theme: 'starlight',
   },
 ]
 
 const posts = [
   {
-    id: 'p_comiket_guide',
-    authorId: 'u_events',
-    title: 'Comiket：从同人志即卖会看创作社群如何运转',
-    excerpt: '基于 Comic Market 官方信息和开放授权现场照片，整理同人创作、摊位日程和东京 Big Sight 场景。',
-    content: `这是一张给博客读者看的资料卡，正文由站点原创整理，不复制活动页面长文。
-
-## 核心事实
-
-- Comic Market 也常被称作 Comiket，核心场景是同人志、自出版作品和创作者社群。
-- 官方英文站提供面向海外参加者的说明入口；不同日期的社团、类型和入场规则需要以官方页面为准。
-- 站内使用的现场照片来自 Wikimedia Commons，照片记录的是 2013 年夏季 Comiket 84 的 Cosplay 区域。
-
-## 放进博客的意义
-
-Comiket 很适合放在 ACGN 博客首页，因为它同时连接创作、交流、展示和购买。相比虚构的“同人创作教程”，真实资料可以让读者知道活动如何组织，创作者为什么需要提前准备摊位、作品目录、交通与排队策略。
-
-## 资料来源
-
-- [Comic Market 官方英文站](${sourceLinks.comiket})
-- [面向海外参加者的信息页](${sourceLinks.comiketOverseas})
-- 图片来源：Wikimedia Commons / Guilhem Vellut / CC BY 2.0`,
-    coverUrl: asset.moonlightCos,
-    imagePosition: 'center',
-    type: 'gallery',
-    tags: json(['Comiket', '同人文化', '东京展会']),
-    series: 'ACGN 公开资料笔记',
-    gallery: json([
-      image(asset.moonlightCos, 'Comiket 84 的 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
-      image(asset.hero, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
-    ]),
-    viewCount: 0,
-    likeCount: 0,
-    favoriteCount: 0,
-    commentCount: 0,
-    createdAt: new Date('2026-06-23T09:20:00+08:00'),
-    isPinned: true,
-    reactions: json(emptyReactions),
-  },
-  {
-    id: 'p_kyoto_manga_museum',
-    authorId: 'u_manga',
-    title: '京都国际漫画博物馆：把漫画从消费品变成可检索的文化资料',
-    excerpt: '京都国际漫画博物馆公开页面显示馆内约 300,000 项资料可检索，馆藏覆盖江户戏画、明治期杂志和复制原画。',
-    content: `京都国际漫画博物馆适合做成站内“漫画馆藏”板块，因为它不是单纯展示热门作品，而是在说明漫画如何被保存、检索和研究。
-
-## 核心事实
-
-- 博物馆官网首页提供数据库检索入口，并说明馆内约 300,000 项资料可检索。
-- Collection 页面介绍馆藏包含 Edo giga、明治时期漫画杂志，以及被称为 Genga'(Dash) 的复制原画资料。
-- 官网还介绍了 Manga Wall、Research Reference Room、Manga Studio 等面向参观和研究的空间。
-
-## 编辑整理
-
-站内没有搬运漫画正文或馆内展品细节图，而是使用 Commons 上的室内空间与阅读场景照片。这样的素材更适合博客：它呈现“漫画被阅读和保存的场域”，不会误用商业作品封面。
-
-## 资料来源
-
-- [京都国际漫画博物馆英文官网](${sourceLinks.kyotoMangaMuseum})
-- [馆藏介绍页面](${sourceLinks.kyotoCollection})
-- 图片来源：Wikimedia Commons / Kento Ikeda、Maplestrip、Tatyana Temirbulatova / CC BY 系列授权`,
-    coverUrl: asset.starryDesk,
-    imagePosition: 'center',
-    type: 'article',
-    tags: json(['京都国际漫画博物馆', '漫画馆藏', '资料整理']),
-    series: 'ACGN 公开资料笔记',
-    gallery: json([
-      image(asset.starryDesk, '京都国际漫画博物馆主展区，Kento Ikeda 摄，CC BY 2.0'),
-      image(asset.galaxySchool, '京都国际漫画博物馆户外阅读场景，Tatyana Temirbulatova 摄，CC BY 2.0'),
-      image(asset.sakuraWatercolor, '京都国际漫画博物馆内的漫画工具展示，Maplestrip 摄，CC BY 3.0'),
-    ]),
-    viewCount: 0,
-    likeCount: 0,
-    favoriteCount: 0,
-    commentCount: 0,
-    createdAt: new Date('2026-06-23T10:05:00+08:00'),
-    isPinned: true,
-    reactions: json(emptyReactions),
-  },
-  {
     id: 'p_animejapan_2026',
-    authorId: 'u_events',
-    title: 'AnimeJapan 2026：动画产业展会的公共日与商务日',
-    excerpt: '根据 AnimeJapan 官方 About 页面整理 2026 年会期、场馆和公共日、商务日的内容结构。',
-    content: `AnimeJapan 的价值不只在“看展”，也在于它把动画产业的展示、舞台、商品、商务交流放在同一套活动结构里。
+    authorId: 'u_anime',
+    title: '2026 春季番剧前哨：AnimeJapan 公共日与 AJ Stage 看点整理',
+    excerpt: '把 AnimeJapan 2026 官方 About 信息整理成番剧板块入口：公共日、商务日、舞台、展位和官方周边都能在这里串起来。',
+    content: `番剧板块不应该只是一串虚构评分，它需要能回到官方活动和正版入口。AnimeJapan 适合作为“新番情报前哨”，因为它把动画产业展示、舞台活动、商品和商务交流放在同一个场景里。
 
-## 核心事实
+## 可整理的信息
 
 - AnimeJapan 2026 官方 About 页面显示，公共日场馆为 Tokyo Big Sight，日期为 2026 年 3 月 28 日至 3 月 29 日。
 - 商务日同样在 Tokyo Big Sight，日期为 2026 年 3 月 30 日至 3 月 31 日。
@@ -232,140 +157,227 @@ Comiket 很适合放在 ACGN 博客首页，因为它同时连接创作、交流
 
 ## 站内呈现方式
 
-这篇文章使用东京 Big Sight 的开放授权夜景作为主图，而不使用活动主视觉或商业海报。这样更适合长期部署：图片可追溯，页面也不会因为活动素材版权而增加维护成本。
+首页把这篇作为“番剧前哨”主推，不搬运商业海报和截图；图廊使用场馆、创作工具和正版入口相关图片，并在正文标出来源。后续如果加入某部番剧海报，应把图片来源、权利归属、是否官方允许传播写在图注或来源文档里。
 
 ## 资料来源
 
-- [AnimeJapan 2026 About 页面](${sourceLinks.animeJapan})
+- [AnimeJapan 2026 About](${sourceLinks.animeJapan})
 - 图片来源：Wikimedia Commons / Masato Ohta / CC BY 2.0`,
-    coverUrl: asset.hero,
+    coverUrl: asset.healingAnime,
     imagePosition: 'center',
-    type: 'article',
-    tags: json(['AnimeJapan', '动画产业', '东京展会']),
-    series: '2026 动画产业观察',
+    type: 'record',
+    tags: json(['番剧', 'AnimeJapan', '新番情报']),
+    series: '番剧放映室',
     gallery: json([
-      image(asset.hero, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
-      image(asset.creators, '数字绘画板上的创作手部特写，Piknuz 摄，CC BY-SA 4.0'),
+      image(asset.healingAnime, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
+      image(asset.creators, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
     ]),
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: new Date('2026-06-23T10:40:00+08:00'),
+    createdAt: new Date('2026-06-23T09:10:00+08:00'),
+    isPinned: true,
+    reactions: json(emptyReactions),
+  },
+  {
+    id: 'p_comiket_cos_gallery',
+    authorId: 'u_cos',
+    title: 'Comiket COS 图廊：从角色扮演区看同人现场氛围',
+    excerpt: '使用 Comiket 69 与 Comiket 84 的可追溯照片，把 COS 板块做成角色、场地、队列和拍摄礼仪并重的图廊。',
+    content: `COS 图廊要有“现场感”，但不能只堆角色照片。Comiket 的照片很适合作为基础素材：它既能看到角色扮演，也能看到同人活动的空间、队列和社群氛围。
+
+## 可整理的信息
+
+- Comic Market 也常被称作 Comiket，官方英文站和海外参与者说明页提供活动入口。
+- 站内使用的 Comiket 69 群像照片来自 Flickr，经 Wikimedia Commons 确认授权为 CC BY-SA 2.0。
+- 站内使用的 Comiket 84 Cosplay 区域照片来自 Wikimedia Commons，授权为 CC BY 2.0。
+
+## 图廊呈现方式
+
+图廊按“COS”“Comiket”“同人现场”标签聚合，读者进入图库时会先看到角色扮演和活动现场，而不是抽象素材库。涉及真人照片时，站内保留作者、授权和来源提醒；后续若上传个人拍摄作品，后台文章也应记录拍摄许可和被摄者授权。
+
+## 资料来源
+
+- [Comic Market 官方英文站](${sourceLinks.comiket})
+- [Comic Market 海外参与者说明](${sourceLinks.comiketOverseas})
+- 图片来源：Wikimedia Commons / stormstill / CC BY-SA 2.0；Guilhem Vellut / CC BY 2.0`,
+    coverUrl: asset.cosplayStage,
+    imagePosition: 'center',
+    type: 'gallery',
+    tags: json(['COS', 'Comiket', '同人现场']),
+    series: 'COS 影廊',
+    gallery: json([
+      image(asset.cosplayStage, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
+      image(asset.moonlightCos, 'Comiket 84 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
+      image(asset.healingAnime, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
+    ]),
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: new Date('2026-06-23T10:00:00+08:00'),
+    isPinned: true,
+    reactions: json(emptyReactions),
+  },
+  {
+    id: 'p_tokyo_game_show_2026',
+    authorId: 'u_game',
+    title: 'Tokyo Game Show 2026：游戏板块的展会日程与试玩动线',
+    excerpt: '根据 U.S. Commercial Service Japan 活动列表与 TGS 官方入口整理 2026 年 9 月 17 日至 21 日会期、场馆和玩家体验方向。',
+    content: `游戏板块需要有“玩家现场”的感觉：展会、硬件、试玩、周边、独立游戏和电竞都可以成为文章入口。Tokyo Game Show 2026 是一个合适的主线。
+
+## 可整理的信息
+
+- U.S. Commercial Service Japan 的贸易活动列表列出 Tokyo Game Show 2026，日期为 2026 年 9 月 17 日至 9 月 21 日，地点为 Makuhari Messe, Chiba。
+- TGS 官方入口仍可作为活动官网入口；具体购票、展区与公众日安排应以官网后续更新为准。
+- 参照 TGS 官方站当前展区结构，游戏板块可以覆盖 General Exhibition、Smartphone Game、Gaming Hardware、VR/AR、eSports、Indie Game、Merchandise Sales 等方向。
+
+## 站内呈现方式
+
+这篇文章作为“游戏档案部”的入口，封面使用可追溯的游戏手柄照片，不直接打包商业游戏截图。后续如果要加入具体游戏截图，可以在图注里标出发行商、官网来源、用途和权利归属。
+
+## 资料来源
+
+- [Tokyo Game Show 2026 官方网站](${sourceLinks.tokyoGameShow2026})
+- [U.S. Commercial Service Japan 活动列表](${sourceLinks.tokyoGameShowTrade})
+- 图片来源：Wikimedia Commons / Evan-Amos / CC BY-SA 3.0`,
+    coverUrl: asset.gameController,
+    imagePosition: 'center',
+    type: 'record',
+    tags: json(['游戏', 'Tokyo Game Show', '玩家文化']),
+    series: '游戏档案部',
+    gallery: json([
+      image(asset.gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
+      image(asset.creators, '数位创作设备，Piknuz 摄，CC BY-SA 4.0'),
+    ]),
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: new Date('2026-06-23T10:50:00+08:00'),
+    isPinned: true,
     reactions: json(emptyReactions),
   },
   {
     id: 'p_manga_plus',
-    authorId: 'u_media',
-    title: 'MANGA Plus：同步连载服务如何改善海外正版阅读入口',
-    excerpt: 'MANGA Plus by SHUEISHA 是集英社官方漫画阅读服务，公开介绍强调与日本同步更新最新章节。',
-    content: `这篇资料不评价具体作品剧情，只整理“正版入口”本身。对博客来说，说明读者从哪里合法阅读，比使用未经授权的漫画截图更重要。
+    authorId: 'u_anime',
+    title: '漫画补番入口：MANGA Plus 与正版阅读平台怎么放进站内',
+    excerpt: 'MANGA Plus by SHUEISHA 是集英社官方漫画阅读服务，适合作为番剧与漫画板块的正版补全入口。',
+    content: `番剧站常常会延伸到漫画原作、外传和补充阅读。这里不搬运漫画页，而是把正版入口写清楚，让读者知道可以从哪里继续看。
 
-## 核心事实
+## 可整理的信息
 
 - MANGA Plus by SHUEISHA 的应用商店页面称它是 Shueisha 的官方漫画阅读服务。
 - 公开页面介绍其最新章节可与日本同步阅读；免费章节范围会随服务规则调整，读者应以官方应用和网页为准。
-- 服务适合放在“正版阅读入口”板块，帮助读者找到官方平台，而不是在站内复制漫画内容。
+- 作为站内入口，它适合放在“番剧补完”“漫画原作”“正版阅读”标签下。
 
 ## 站内使用原则
 
-我们只写原创说明，不上传漫画分镜、彩页或商业封面。页面配图使用开放授权的数位板照片，表达“数字阅读与数字创作”的主题。
+文章正文使用原创整理，不上传漫画分镜、彩页或商业封面。需要展示作品封面时，优先使用官方可嵌入资源或只提供来源链接，并明确版权归属。
 
 ## 资料来源
 
-- [MANGA Plus by SHUEISHA 更新页](${sourceLinks.mangaPlus})
-- [MANGA Plus App Store 页面](${sourceLinks.mangaPlusApp})
+- [MANGA Plus 更新入口](${sourceLinks.mangaPlus})
+- [App Store 介绍页](${sourceLinks.mangaPlusApp})
 - 图片来源：Wikimedia Commons / Piknuz / CC BY-SA 4.0`,
     coverUrl: asset.creators,
     imagePosition: 'center',
-    type: 'record',
-    tags: json(['MANGA Plus', '正版阅读', '漫画平台']),
-    series: '正版阅读入口',
-    gallery: json([image(asset.creators, '数字绘画板上的创作手部特写，Piknuz 摄，CC BY-SA 4.0')]),
+    type: 'article',
+    tags: json(['番剧补完', 'MANGA Plus', '正版阅读']),
+    series: '番剧放映室',
+    gallery: json([image(asset.creators, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0')]),
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: new Date('2026-06-23T11:15:00+08:00'),
+    createdAt: new Date('2026-06-23T11:30:00+08:00'),
     reactions: json(emptyReactions),
   },
   {
-    id: 'p_open_licensed_images',
+    id: 'p_gallery_copyright_note',
     authorId: 'u_editorial',
-    title: '开放授权图片怎么进博客：从 Commons 图库到站内来源表',
-    excerpt: '把图片资源替换成可追溯资产后，站内需要记录作者、授权协议、来源链接和使用场景。',
-    content: `这一轮内容更新的重点，是让博客里的图片不再只是“好看”，而是可追溯、可替换、可维护。
+    title: '图廊运营规则：番剧海报、COS 照片、游戏截图怎么标注版权',
+    excerpt: '站点可以收录更有二次元味道的图片，但每张图都要区分 CC 授权、官方素材、用户投稿和仅可链接来源。',
+    content: `可以更有二次元味道，但不能让后续维护失控。图廊需要把图片来源和权利归属写清楚，尤其是番剧海报、COS 真人照片和游戏截图。
 
-## 采集规则
+## 四类图片
 
-- 优先选择 Wikimedia Commons、Creative Commons 搜索入口和官方机构页面。
-- 图片进入站内前记录文件名、作者、授权协议和来源链接。
-- 文章正文使用原创整理，不复制新闻、官网长文或漫画正文。
-- 对可能包含非自由商业画面的活动照片保持谨慎；默认用场馆、工具、阅读空间和生活场景图替代。
+- CC / 公有领域：可以打包进仓库，但要标注作者、协议、来源链接。
+- 官方素材：可以在文章里标注版权归属和官方来源，是否下载入库要看官网条款。
+- 用户投稿：需要保留拍摄者、授权范围、被摄者许可，尤其是 COS 真人照片。
+- 商业海报 / 游戏截图：默认先用外链、来源说明或文章引用，不直接批量打包原图。
 
-## 对后台的影响
+## 后台字段建议
 
-后台轮播图现在可以选择“东京 Big Sight 夜景”“京都漫画博物馆主展区”“Comiket 现场”“漫画工具展示”等真实资产。运营时换图不再依赖占位插画，也能在文档里找到每张图的授权说明。
+后续可以在文章或图片资源里增加“版权类型”“来源 URL”“权利方”“是否允许商用”“是否允许二次编辑”字段。这样图廊既能放番剧、COS、游戏内容，也能在后台管理里一眼看出风险等级。
 
 ## 资料来源
 
-- [Creative Commons Search Portal](${sourceLinks.commonsSearch})
-- [Wikimedia Commons](https://commons.wikimedia.org/)
-- 站内文档：docs/content-sources.md`,
+- [Creative Commons Search](${sourceLinks.commonsSearch})
+- Wikimedia Commons 文件页见 docs/content-sources.md`,
     coverUrl: asset.sakuraWatercolor,
     imagePosition: 'center',
     type: 'article',
-    tags: json(['Wikimedia Commons', '开放授权', '内容治理']),
-    series: '站点内容治理',
+    tags: json(['图廊', '版权标注', '后台管理']),
+    series: '图廊治理',
     gallery: json([
       image(asset.sakuraWatercolor, '漫画工具展示，Maplestrip 摄，CC BY 3.0'),
-      image(asset.creators, '数字绘画板上的创作手部特写，Piknuz 摄，CC BY-SA 4.0'),
-      image(asset.galaxySchool, '京都国际漫画博物馆户外阅读场景，Tatyana Temirbulatova 摄，CC BY 2.0'),
+      image(asset.gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
+      image(asset.cosplayStage, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
     ]),
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: new Date('2026-06-23T11:50:00+08:00'),
+    createdAt: new Date('2026-06-23T12:05:00+08:00'),
     reactions: json(emptyReactions),
   },
   {
     id: 'p_kare_popculture',
-    authorId: 'u_media',
-    title: '咖喱饭为什么适合写进轻小说与动画场景资料库',
-    excerpt: '用一张 CC0 的日式咖喱饭照片，替代虚构厨房插画，整理日常饮食场景如何服务轻小说叙事。',
-    content: `日常食物是轻小说、动画和漫画里很常见的场景锚点。它不需要夸张设定，也能帮助读者快速理解角色的生活节奏。
+    authorId: 'u_editorial',
+    title: '日常番场景资料：咖喱饭、放学后与生活感镜头',
+    excerpt: '用一张 CC0 日式咖喱饭照片做日常番场景参考，让图库不只服务展会，也能服务轻小说和动画生活镜头。',
+    content: `番剧和轻小说里常见的生活感，不一定来自大事件。食物、桌面、社团活动和放学后的街景，都能成为图廊里的“日常番资料”。
 
-## 核心事实
+## 可整理的信息
 
-- 站内使用的咖喱饭照片来自 Wikimedia Commons，文件说明为家庭制作的日式咖喱饭，包含牛肉、洋葱、胡萝卜和土豆。
+- 站内使用的咖喱饭照片来自 Wikimedia Commons，文件说明为家庭制作的日式咖喱饭。
 - 该图片使用 CC0 公共领域贡献，适合作为“日常场景资料”配图。
 - 这类素材能替代虚构厨房图，让创作者在写饮食、便当、深夜餐桌时有真实参考。
 
-## 写作提示
-
-把“咖喱饭”写进场景时，可以关注气味、锅具、等待时间、共同分食和剩菜再加热，而不是只写菜名。真实照片提供的是质感，不是剧情本身。
-
 ## 资料来源
 
-- 图片来源：Wikimedia Commons / Ocdp / CC0 1.0`,
+- Wikimedia Commons：Kare-Raisu.jpg
+- 图片作者 Ocdp，CC0 1.0`,
     coverUrl: asset.novelKitchen,
     imagePosition: 'center',
     type: 'article',
-    tags: json(['日本咖喱', '场景资料', '日常叙事']),
-    series: '日常场景资料',
+    tags: json(['日常番', '场景资料', '轻小说']),
+    series: '番剧生活感资料',
     gallery: json([image(asset.novelKitchen, '家庭制作的日式咖喱饭，Ocdp 摄，CC0 1.0')]),
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
     commentCount: 0,
-    createdAt: new Date('2026-06-23T12:25:00+08:00'),
+    createdAt: new Date('2026-06-23T12:35:00+08:00'),
     reactions: json(emptyReactions),
   },
 ]
 
-const legacyUserIds = ['u_mika', 'u_rin', 'u_nano', 'u_sakura']
-const legacyPostIds = ['p_aurora', 'p_cos', 'p_watch', 'p_sakura_1', 'p_yuki_1', 'p_rei_1', 'p_novel']
+const legacyUserIds = ['u_mika', 'u_rin', 'u_nano', 'u_sakura', 'u_events', 'u_manga', 'u_media']
+const legacyPostIds = [
+  'p_aurora',
+  'p_cos',
+  'p_watch',
+  'p_sakura_1',
+  'p_yuki_1',
+  'p_rei_1',
+  'p_novel',
+  'p_comiket_guide',
+  'p_kyoto_manga_museum',
+  'p_open_licensed_images',
+]
 const managedUserIds = [...legacyUserIds, ...users.map((user) => user.id)]
 const managedPostIds = [...legacyPostIds, ...posts.map((post) => post.id)]
 
@@ -407,7 +419,7 @@ const carouselSlides = [...posts.filter((post) => post.isPinned), ...posts.filte
       excerpt: post.excerpt,
       imageUrl: post.coverUrl,
       imagePosition: post.imagePosition || 'center',
-      tag: tags[0] || ['今日主推', '馆藏资料', '活动现场', '正版入口', '编辑精选'][index] || '精选',
+      tag: tags[0] || ['番剧前哨', 'COS图廊', '游戏现场', '正版入口', '图廊治理'][index] || '精选',
       link: `/post/${post.id}`,
       sourcePostId: post.id,
       enabled: true,
@@ -426,7 +438,7 @@ await prisma.draft.upsert({
   update: {
     title: '',
     content: '',
-    tags: json(['公开资料整理']),
+    tags: json(['番剧', 'COS', '游戏']),
     images: json([]),
   },
   create: {
@@ -434,11 +446,11 @@ await prisma.draft.upsert({
     userId: 'u_editorial',
     title: '',
     content: '',
-    tags: json(['公开资料整理']),
+    tags: json(['番剧', 'COS', '游戏']),
     images: json([]),
   },
 })
 
-console.log(`Seeded ${users.length} sourced users, ${posts.length} sourced posts, 0 comments, 0 anime records.`)
+console.log(`Seeded ${users.length} ACGN users, ${posts.length} fandom posts, 0 comments, 0 anime records.`)
 
 await prisma.$disconnect()

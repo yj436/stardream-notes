@@ -8,6 +8,8 @@ import type {
   AnimeRecord,
   AnimeRecordPayload,
   AnimeStatus,
+  AnimeTimelinePayload,
+  AnimeTimelineQuery,
   ApiHealth,
   ApiRuntimeInfo,
   AuthResult,
@@ -59,6 +61,8 @@ const resolveAsset = (url: string) => {
   if (url === 'asset:starryDesk') return imageAssets.starryDesk
   if (url === 'asset:sakuraWatercolor') return imageAssets.sakuraWatercolor
   if (url === 'asset:moonlightCos') return imageAssets.moonlightCos
+  if (url === 'asset:cosplayStage') return imageAssets.cosplayStage
+  if (url === 'asset:gameController') return imageAssets.gameController
   if (url === 'asset:healingAnime') return imageAssets.healingAnime
   if (url === 'asset:novelKitchen') return imageAssets.novelKitchen
   if (url === 'asset:galaxySchool') return imageAssets.galaxySchool
@@ -83,6 +87,18 @@ const normalizeComment = (comment: Comment): Comment => comment
 const normalizeAnimeRecord = (record: AnimeRecord): AnimeRecord => ({
   ...record,
   coverUrl: resolveAsset(record.coverUrl),
+})
+
+const normalizeTimelinePayload = (payload: AnimeTimelinePayload): AnimeTimelinePayload => ({
+  ...payload,
+  days: payload.days.map((day) => ({
+    ...day,
+    episodes: day.episodes.map((episode) => ({
+      ...episode,
+      coverUrl: resolveAsset(episode.coverUrl),
+      squareCoverUrl: episode.squareCoverUrl ? resolveAsset(episode.squareCoverUrl) : undefined,
+    })),
+  })),
 })
 
 const normalizeDraft = (draft: Draft): Draft => ({
@@ -337,6 +353,13 @@ export const appApi = {
     return withFallback(
       async () => (await client.get<AnimeRecord[]>(`/users/${userId}/anime-records`)).data.map(normalizeAnimeRecord),
       () => mockApi.getAnimeRecords(userId),
+    )
+  },
+
+  async getAnimeTimeline(query: AnimeTimelineQuery = {}) {
+    return withFallback(
+      async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query })).data),
+      async () => normalizeTimelinePayload(await mockApi.getAnimeTimeline(query)),
     )
   },
 

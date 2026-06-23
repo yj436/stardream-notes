@@ -33,6 +33,7 @@ const currentUser = computed(() => blog.currentUser)
 
 const links = [
   { label: '首页', to: '/' },
+  { label: '时间表', to: '/schedule' },
   { label: '动态', to: '/feed' },
   { label: '发现', to: '/discover' },
   { label: '画廊', to: '/gallery' },
