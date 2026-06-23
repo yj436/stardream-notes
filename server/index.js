@@ -137,9 +137,15 @@ const readStats = (user) => parse(user?.stats, defaultStats)
 const readReactions = (post) => ({ ...defaultReactions, ...parse(post?.reactions, {}) })
 const homeCarouselKey = 'home.carousel'
 const defaultCarouselTags = ['番剧前哨', 'COS图廊', '游戏现场', '图廊治理', '编辑精选']
-const timelineKinds = {
+const bilibiliTimelineKinds = {
   anime: 1,
   guochuang: 4,
+}
+const timelineSourceInfo = {
+  myanimelist: { label: 'MyAnimeList', url: 'https://myanimelist.net/anime/season/schedule' },
+  bangumi: { label: 'Bangumi 番组计划', url: 'https://bangumi.tv/calendar' },
+  anikore: { label: 'Anikore', url: 'https://www.anikore.jp/' },
+  bilibili: { label: 'Bilibili PGC', url: 'https://www.bilibili.com/anime/timeline/' },
 }
 
 const cleanCarouselText = (value, fallback) => {
@@ -361,32 +367,105 @@ const toHttpsUrl = (value = '') => {
   return text.startsWith('http://') ? `https://${text.slice(7)}` : text
 }
 
+const chinaOffsetMs = 8 * 60 * 60 * 1000
+const dayMs = 24 * 60 * 60 * 1000
+const timelineKindValues = ['anime', 'guochuang']
+
 const clampTimelineRange = (value, fallback) => {
   const number = Number(value)
   if (!Number.isFinite(number)) return fallback
   return Math.min(7, Math.max(0, Math.floor(number)))
 }
 
-const normalizeTimelineEpisode = (episode, kind) => ({
-  id: `${kind}_${episode.episode_id || episode.season_id || episode.title}`,
-  kind,
-  title: String(episode.title ?? '').trim() || '未命名番剧',
-  pubIndex: String(episode.pub_index ?? '').trim() || '待更新',
-  pubTime: String(episode.pub_time ?? '').trim() || '--:--',
-  pubTimestamp: Number(episode.pub_ts ?? 0),
-  published: Number(episode.published ?? 0) === 1,
-  isDelayed: Number(episode.delay ?? 0) === 1,
-  delayReason: String(episode.delay_reason ?? '').trim() || undefined,
-  seasonId: Number(episode.season_id ?? 0),
-  episodeId: Number(episode.episode_id ?? 0),
-  coverUrl: toHttpsUrl(episode.cover || episode.square_cover || episode.ep_cover),
-  squareCoverUrl: toHttpsUrl(episode.square_cover || episode.cover),
-  sourceUrl: episode.season_id ? `https://www.bilibili.com/bangumi/play/ss${episode.season_id}` : 'https://www.bilibili.com/anime/timeline/',
+const chinaDayStartMs = (date = new Date()) => {
+  const chinaDate = new Date(date.getTime() + chinaOffsetMs)
+  return Date.UTC(chinaDate.getUTCFullYear(), chinaDate.getUTCMonth(), chinaDate.getUTCDate()) - chinaOffsetMs
+}
+
+const dayMetaFromStartMs = (dayStartMs) => {
+  const chinaDate = new Date(dayStartMs + chinaOffsetMs)
+  const year = chinaDate.getUTCFullYear()
+  const month = chinaDate.getUTCMonth() + 1
+  const day = chinaDate.getUTCDate()
+  return {
+    date: `${month}-${day}`,
+    dateIso: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+    dateTimestamp: Math.floor(dayStartMs / 1000),
+    dayOfWeek: chinaDate.getUTCDay() || 7,
+    isToday: dayStartMs === chinaDayStartMs(),
+  }
+}
+
+const buildTimelineWindow = (before, after) => {
+  const todayStart = chinaDayStartMs()
+  return Array.from({ length: before + after + 1 }, (_, index) => dayMetaFromStartMs(todayStart + (index - before) * dayMs))
+}
+
+const cleanTimelineText = (value, fallback = '') => {
+  const text = String(value ?? '').replace(/\s+/g, ' ').trim()
+  return text || fallback
+}
+
+const normalizeTimelineKey = (value) =>
+  cleanTimelineText(value)
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}]+/gu, '')
+
+const uniqueValues = (values) => [...new Set(values.filter(Boolean))]
+
+const sourceLink = (source, url) => ({ label: timelineSourceInfo[source]?.label ?? source, url: toHttpsUrl(url || timelineSourceInfo[source]?.url || '') })
+
+const wantsTimelineKind = (category, kind) => category === 'all' || category === kind
+
+const inferBangumiKind = (item) => {
+  const name = cleanTimelineText(item.name)
+  if (/[\u3040-\u30ff]/.test(name)) return 'anime'
+  if (/[\u4e00-\u9fff]/.test(name) && cleanTimelineText(item.name_cn) === name) return 'guochuang'
+  return 'anime'
+}
+
+const timelineSourceStatus = (id, status, count = 0, message = '') => ({
+  id,
+  label: timelineSourceInfo[id]?.label ?? id,
+  status,
+  count,
+  url: timelineSourceInfo[id]?.url ?? '',
+  ...(message ? { message } : {}),
 })
 
-const fetchTimelineKind = async (kind, before, after) => {
+const normalizeBilibiliEpisode = (episode, kind) => {
+  const seasonId = Number(episode.season_id ?? 0) || undefined
+  const episodeId = Number(episode.episode_id ?? 0) || undefined
+  const title = cleanTimelineText(episode.title, '未命名番剧')
+  const sourceUrl = seasonId ? `https://www.bilibili.com/bangumi/play/ss${seasonId}` : timelineSourceInfo.bilibili.url
+  return {
+    id: `bilibili_${kind}_${episodeId || seasonId || title}`,
+    kind,
+    title,
+    aliases: [title],
+    pubIndex: cleanTimelineText(episode.pub_index, '待更新'),
+    pubTime: cleanTimelineText(episode.pub_time, '--:--'),
+    pubTimestamp: Number(episode.pub_ts ?? 0),
+    published: Number(episode.published ?? 0) === 1,
+    isDelayed: Number(episode.delay ?? 0) === 1,
+    delayReason: cleanTimelineText(episode.delay_reason) || undefined,
+    seasonId,
+    episodeId,
+    coverUrl: toHttpsUrl(episode.cover || episode.square_cover || episode.ep_cover),
+    squareCoverUrl: toHttpsUrl(episode.square_cover || episode.cover),
+    source: 'bilibili',
+    sourceName: timelineSourceInfo.bilibili.label,
+    sourceNames: [timelineSourceInfo.bilibili.label],
+    sourceLinks: [sourceLink('bilibili', sourceUrl)],
+    sourceUrl,
+    confidence: 'platform',
+    region: kind === 'guochuang' ? 'CN' : 'JP/CN',
+  }
+}
+
+const fetchBilibiliTimelineKind = async (kind, before, after) => {
   const url = new URL('https://api.bilibili.com/pgc/web/timeline')
-  url.searchParams.set('types', String(timelineKinds[kind]))
+  url.searchParams.set('types', String(bilibiliTimelineKinds[kind]))
   url.searchParams.set('before', String(before))
   url.searchParams.set('after', String(after))
   const response = await fetch(url, {
@@ -405,9 +484,225 @@ const fetchTimelineKind = async (kind, before, after) => {
     dateTimestamp: Number(day.date_ts ?? 0),
     dayOfWeek: Number(day.day_of_week ?? 0),
     isToday: Number(day.is_today ?? 0) === 1,
-    episodes: (Array.isArray(day.episodes) ? day.episodes : []).map((episode) => normalizeTimelineEpisode(episode, kind)),
+    episodes: (Array.isArray(day.episodes) ? day.episodes : []).map((episode) => normalizeBilibiliEpisode(episode, kind)),
   }))
 }
+
+const fetchBilibiliTimeline = async (category, before, after) => {
+  const kinds = category === 'all' ? timelineKindValues : [category]
+  const dayGroups = await Promise.all(kinds.map((kind) => fetchBilibiliTimelineKind(kind, before, after)))
+  return mergeTimelineDays(dayGroups)
+}
+
+const normalizeBangumiItem = (item, day) => {
+  const kind = inferBangumiKind(item)
+  const title = cleanTimelineText(item.name_cn || item.name, '未命名番剧')
+  const originalTitle = cleanTimelineText(item.name)
+  const subjectUrl = toHttpsUrl(item.url || `https://bgm.tv/subject/${item.id}`)
+  return {
+    id: `bangumi_${item.id}_${day.dateTimestamp}`,
+    kind,
+    title,
+    aliases: uniqueValues([title, originalTitle]),
+    pubIndex: '每周放送',
+    pubTime: '时间待定',
+    pubTimestamp: day.dateTimestamp + 20 * 60 * 60,
+    published: day.dateTimestamp <= Math.floor(chinaDayStartMs() / 1000),
+    isDelayed: false,
+    subjectId: Number(item.id ?? 0) || undefined,
+    coverUrl: toHttpsUrl(item.images?.common || item.images?.medium || item.images?.large || ''),
+    squareCoverUrl: toHttpsUrl(item.images?.grid || item.images?.small || item.images?.common || ''),
+    source: 'bangumi',
+    sourceName: timelineSourceInfo.bangumi.label,
+    sourceNames: [timelineSourceInfo.bangumi.label],
+    sourceLinks: [sourceLink('bangumi', subjectUrl)],
+    sourceUrl: subjectUrl,
+    confidence: 'weekday',
+    region: kind === 'guochuang' ? 'CN' : 'JP',
+    score: Number(item.rating?.score ?? 0) || undefined,
+    rank: Number(item.rank ?? 0) || undefined,
+    popularity: Number(item.collection?.doing ?? 0) || undefined,
+  }
+}
+
+const fetchBangumiTimeline = async (category, before, after) => {
+  const response = await fetch('https://api.bgm.tv/calendar', {
+    headers: {
+      'User-Agent': 'StardreamNotes/1.0 (https://github.com/yj436/stardream-notes)',
+      Accept: 'application/json',
+    },
+  })
+  if (!response.ok) throw new Error(`Bangumi calendar HTTP ${response.status}`)
+  const payload = await response.json()
+  if (!Array.isArray(payload)) throw new Error('Bangumi calendar returned invalid payload')
+
+  const days = buildTimelineWindow(before, after).map((day) => ({ ...day, episodes: [] }))
+  const weekdayItems = new Map(payload.map((group) => [Number(group?.weekday?.id ?? 0), Array.isArray(group?.items) ? group.items : []]))
+  days.forEach((day) => {
+    const items = weekdayItems.get(day.dayOfWeek) ?? []
+    day.episodes = items
+      .filter((item) => Number(item.type) === 2)
+      .map((item) => normalizeBangumiItem(item, day))
+      .filter((episode) => wantsTimelineKind(category, episode.kind))
+  })
+  return mergeTimelineDays([days])
+}
+
+const jikanWeekdayFilters = {
+  1: 'monday',
+  2: 'tuesday',
+  3: 'wednesday',
+  4: 'thursday',
+  5: 'friday',
+  6: 'saturday',
+  7: 'sunday',
+}
+
+const malTimeToChina = (time) => {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(time ?? ''))
+  if (!match) return { display: '时间待定', seconds: 20 * 60 * 60 }
+  const jstHour = Number(match[1])
+  const minute = Number(match[2])
+  const chinaHour = (jstHour + 23) % 24
+  return {
+    display: `${String(chinaHour).padStart(2, '0')}:${String(minute).padStart(2, '0')} CST`,
+    seconds: chinaHour * 60 * 60 + minute * 60,
+  }
+}
+
+const normalizeMyAnimeListItem = (item, day) => {
+  const title = cleanTimelineText(item.title_japanese || item.title_english || item.title, '未命名番剧')
+  const aliases = uniqueValues([
+    item.title,
+    item.title_english,
+    item.title_japanese,
+    ...(Array.isArray(item.title_synonyms) ? item.title_synonyms : []),
+    ...(Array.isArray(item.titles) ? item.titles.map((entry) => entry.title) : []),
+  ].map((value) => cleanTimelineText(value)))
+  const time = malTimeToChina(item.broadcast?.time)
+  const sourceUrl = item.url || timelineSourceInfo.myanimelist.url
+  return {
+    id: `myanimelist_${item.mal_id}_${day.dateTimestamp}`,
+    kind: 'anime',
+    title,
+    aliases,
+    pubIndex: item.status === 'Currently Airing' ? '每周放送' : cleanTimelineText(item.status, '排期'),
+    pubTime: time.display,
+    pubTimestamp: day.dateTimestamp + time.seconds,
+    published: day.dateTimestamp <= Math.floor(chinaDayStartMs() / 1000),
+    isDelayed: false,
+    mediaId: Number(item.mal_id ?? 0) || undefined,
+    coverUrl: '',
+    squareCoverUrl: '',
+    source: 'myanimelist',
+    sourceName: timelineSourceInfo.myanimelist.label,
+    sourceNames: [timelineSourceInfo.myanimelist.label],
+    sourceLinks: [sourceLink('myanimelist', sourceUrl)],
+    sourceUrl,
+    confidence: item.broadcast?.time ? 'platform' : 'weekday',
+    region: 'JP/MAL',
+    score: Number(item.score ?? 0) || undefined,
+    rank: Number(item.rank ?? 0) || undefined,
+    popularity: Number(item.members ?? 0) || undefined,
+  }
+}
+
+const fetchMyAnimeListTimeline = async (category, before, after) => {
+  if (category === 'guochuang') return []
+  const days = buildTimelineWindow(before, after).map((day) => ({ ...day, episodes: [] }))
+  const weekdays = uniqueValues(days.map((day) => day.dayOfWeek))
+  const itemsByWeekday = new Map()
+
+  for (const weekday of weekdays) {
+    const filter = jikanWeekdayFilters[weekday]
+    if (!filter) continue
+    const items = []
+    for (let page = 1; page <= 2; page += 1) {
+      const url = new URL('https://api.jikan.moe/v4/schedules')
+      url.searchParams.set('filter', filter)
+      url.searchParams.set('sfw', 'true')
+      url.searchParams.set('limit', '25')
+      url.searchParams.set('page', String(page))
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'StardreamNotes/1.0',
+          Accept: 'application/json',
+        },
+      })
+      if (!response.ok) throw new Error(`MyAnimeList schedule HTTP ${response.status}`)
+      const payload = await response.json()
+      items.push(...(Array.isArray(payload.data) ? payload.data : []))
+      if (!payload.pagination?.has_next_page) break
+      await new Promise((resolve) => setTimeout(resolve, 360))
+    }
+    itemsByWeekday.set(weekday, items)
+    await new Promise((resolve) => setTimeout(resolve, 360))
+  }
+
+  days.forEach((day) => {
+    day.episodes = (itemsByWeekday.get(day.dayOfWeek) ?? [])
+      .filter((item) => ['TV', 'ONA', 'Special'].includes(item.type) && item.airing !== false)
+      .map((item) => normalizeMyAnimeListItem(item, day))
+  })
+  return mergeTimelineDays([days])
+}
+
+const confidenceWeight = { exact: 3, platform: 2, weekday: 1 }
+const sourceWeight = { bilibili: 4, myanimelist: 3, bangumi: 2, mock: 1 }
+
+const episodeAliasKeys = (episode) =>
+  uniqueValues([episode.title, ...(episode.aliases ?? [])].map(normalizeTimelineKey)).filter((value) => value.length >= 2)
+
+const episodesLookSimilar = (left, right) => {
+  if (left.kind !== right.kind) return false
+  const leftKeys = episodeAliasKeys(left)
+  const rightKeys = episodeAliasKeys(right)
+  return leftKeys.some((key) => rightKeys.includes(key))
+}
+
+const betterEpisode = (left, right) => {
+  const leftScore = (confidenceWeight[left.confidence] ?? 0) * 10 + (sourceWeight[left.source] ?? 0)
+  const rightScore = (confidenceWeight[right.confidence] ?? 0) * 10 + (sourceWeight[right.source] ?? 0)
+  return rightScore > leftScore ? right : left
+}
+
+const mergeSourceLinks = (...groups) => {
+  const links = groups.flat().filter((link) => link?.url)
+  const seen = new Set()
+  return links.filter((link) => {
+    if (seen.has(link.url)) return false
+    seen.add(link.url)
+    return true
+  })
+}
+
+const mergeTimelineEpisode = (left, right) => {
+  const primary = betterEpisode(left, right)
+  const secondary = primary === left ? right : left
+  const sourceNames = uniqueValues([...(left.sourceNames ?? [left.sourceName]), ...(right.sourceNames ?? [right.sourceName])])
+  const sourceLinks = mergeSourceLinks(left.sourceLinks ?? [sourceLink(left.source, left.sourceUrl)], right.sourceLinks ?? [sourceLink(right.source, right.sourceUrl)])
+  return {
+    ...primary,
+    aliases: uniqueValues([...(left.aliases ?? []), ...(right.aliases ?? []), left.title, right.title]),
+    sourceName: sourceNames.join(' / '),
+    sourceNames,
+    sourceLinks,
+    score: primary.score ?? secondary.score,
+    rank: primary.rank ?? secondary.rank,
+    popularity: primary.popularity ?? secondary.popularity,
+    coverUrl: primary.coverUrl || secondary.coverUrl,
+    squareCoverUrl: primary.squareCoverUrl || secondary.squareCoverUrl,
+  }
+}
+
+const dedupeTimelineEpisodes = (episodes) =>
+  episodes.reduce((list, episode) => {
+    const index = list.findIndex((item) => episodesLookSimilar(item, episode))
+    if (index === -1) return [...list, episode]
+    const next = [...list]
+    next[index] = mergeTimelineEpisode(next[index], episode)
+    return next
+  }, [])
 
 const mergeTimelineDays = (dayGroups) => {
   const map = new Map()
@@ -422,7 +717,7 @@ const mergeTimelineDays = (dayGroups) => {
     }
     existing.isToday = existing.isToday || day.isToday
     existing.episodes.push(...day.episodes)
-    existing.episodes.sort((a, b) => a.pubTimestamp - b.pubTimestamp || a.pubTime.localeCompare(b.pubTime))
+    existing.episodes = dedupeTimelineEpisodes(existing.episodes).sort((a, b) => a.pubTimestamp - b.pubTimestamp || a.pubTime.localeCompare(b.pubTime))
     map.set(key, existing)
   })
   return [...map.values()].sort((a, b) => a.dateTimestamp - b.dateTimestamp)
@@ -504,18 +799,45 @@ app.get('/api/anime-timeline', async (req, res) => {
   const category = ['anime', 'guochuang'].includes(String(req.query.category)) ? String(req.query.category) : 'all'
   const before = clampTimelineRange(req.query.before, 3)
   const after = clampTimelineRange(req.query.after, 7)
-  const kinds = category === 'all' ? Object.keys(timelineKinds) : [category]
+  const requests = [
+    ['myanimelist', () => fetchMyAnimeListTimeline(category, before, after)],
+    ['bangumi', () => fetchBangumiTimeline(category, before, after)],
+    ['bilibili', () => fetchBilibiliTimeline(category, before, after)],
+  ]
 
-  try {
-    const dayGroups = await Promise.all(kinds.map((kind) => fetchTimelineKind(kind, before, after)))
-    res.json({
-      source: 'bilibili',
-      fetchedAt: new Date().toISOString(),
-      days: mergeTimelineDays(dayGroups),
-    })
-  } catch (error) {
-    res.status(502).json({ message: error instanceof Error ? error.message : 'Anime timeline fetch failed' })
+  const results = await Promise.all(
+    requests.map(async ([id, load]) => {
+      try {
+        const days = await load()
+        const count = days.reduce((sum, day) => sum + day.episodes.length, 0)
+        return { id, days, source: timelineSourceStatus(id, 'ok', count) }
+      } catch (error) {
+        return {
+          id,
+          days: [],
+          source: timelineSourceStatus(id, 'failed', 0, error instanceof Error ? error.message : 'source unavailable'),
+        }
+      }
+    }),
+  )
+
+  const available = results.filter((item) => item.source.status === 'ok')
+  const sources = [
+    ...results.map((item) => item.source),
+    timelineSourceStatus('anikore', 'reference', 0, 'Anikore 暂无稳定公开 API，作为日本口碑与榜单参考入口。'),
+  ]
+
+  if (!available.length) {
+    res.status(502).json({ message: 'Anime timeline sources are unavailable', sources })
+    return
   }
+
+  res.json({
+    source: available.length > 1 ? 'multi' : available[0].id,
+    fetchedAt: new Date().toISOString(),
+    sources,
+    days: mergeTimelineDays(available.map((item) => item.days)),
+  })
 })
 
 app.post('/api/auth/register', async (req, res) => {

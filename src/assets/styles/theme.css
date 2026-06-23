@@ -62,6 +62,7 @@
 :root.dark .gallery-feature-card a,
 :root.dark .gallery-lightbox h2,
 :root.dark .schedule-source-row h2,
+:root.dark .schedule-source-chip strong,
 :root.dark .schedule-day-column > header strong,
 :root.dark .schedule-episode-card strong {
   color: #e7ecfa;
@@ -84,6 +85,7 @@
 :root.dark .gallery-lightbox figure,
 :root.dark .schedule-stats span,
 :root.dark .schedule-date-tabs button,
+:root.dark .schedule-source-chip,
 :root.dark .schedule-day-column,
 :root.dark .schedule-episode-card,
 :root.dark .topic-grid button,

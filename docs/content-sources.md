@@ -19,7 +19,7 @@ This project uses original Chinese summaries based on public pages. Local image 
 
 | Tool | Main sources | Notes |
 | --- | --- | --- |
-| 日番 / 国创更新时间表 | [Bilibili 新番时间表](https://www.bilibili.com/anime/timeline/), [Bilibili 国创频道](https://www.bilibili.com/guochuang/), [bilibili-API-collect timeline notes](https://github.com/pskdje/bilibili-API-collect/blob/main/docs/bangumi/timeline.md) | The Express API requests the public PGC timeline endpoint for `types=1` anime and `types=4` guochuang, then normalizes weekday, title, cover, episode, time, and status fields. Mock fallback data is used when the remote source is unavailable. |
+| 日番 / 国创更新时间表 | [MyAnimeList schedule](https://myanimelist.net/anime/season/schedule), [Jikan schedule API](https://docs.jikan.moe/usage/schedule/), [Bangumi calendar](https://bangumi.tv/calendar), [Bangumi API](https://bangumi.github.io/api/), [Anikore](https://www.anikore.jp/), [Bilibili 新番时间表](https://www.bilibili.com/anime/timeline/), [Bilibili 国创频道](https://www.bilibili.com/guochuang/) | The Express API uses Jikan as the public MyAnimeList schedule adapter, Bangumi's calendar for Chinese ACG community coverage, and Bilibili PGC for domestic platform and guochuang updates. Anikore is exposed as a reference link because it does not provide a stable public API in this project. Mock fallback data is used when remote sources are unavailable. |
 
 ## Image Assets
 

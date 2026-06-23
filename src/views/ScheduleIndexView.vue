@@ -71,7 +71,11 @@ const matchesFilters = (day: AnimeTimelineDay, episode: AnimeTimelineEpisode) =>
     (status.value === 'published' && episode.published) ||
     (status.value === 'upcoming' && !episode.published) ||
     (status.value === 'delayed' && episode.isDelayed)
-  const textMatched = !text || [episode.title, episode.pubIndex, weekdayLabels[day.dayOfWeek] ?? '', day.date].some((item) => item.toLowerCase().includes(text))
+  const textMatched =
+    !text ||
+    [episode.title, episode.pubIndex, episode.sourceName ?? '', ...(episode.aliases ?? []), weekdayLabels[day.dayOfWeek] ?? '', day.date].some((item) =>
+      item.toLowerCase().includes(text),
+    )
   return dateMatched && categoryMatched && statusMatched && textMatched
 }
 
@@ -86,7 +90,14 @@ const visibleDays = computed(() =>
   selectedDate.value === 'all' ? filteredDays.value : filteredDays.value.filter((day) => String(day.dateTimestamp || day.date) === selectedDate.value),
 )
 const filteredCount = computed(() => filteredDays.value.reduce((sum, day) => sum + day.episodes.length, 0))
-const sourceLabel = computed(() => (timeline.value?.source === 'bilibili' ? 'Bilibili PGC 时间线' : '本地兜底样例'))
+const sourceStats = computed(() => timeline.value?.sources ?? [])
+const sourceLabel = computed(() => {
+  if (timeline.value?.source === 'multi') return 'MyAnimeList / Bangumi / Bilibili 多源聚合'
+  if (timeline.value?.source === 'myanimelist') return 'MyAnimeList 时间表'
+  if (timeline.value?.source === 'bangumi') return 'Bangumi 每日放送'
+  if (timeline.value?.source === 'bilibili') return 'Bilibili PGC 时间线'
+  return '本地兜底样例'
+})
 
 const formatDateTime = (value?: string) =>
   value ? new Date(value).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '未同步'
@@ -94,7 +105,20 @@ const formatDateTime = (value?: string) =>
 const episodeKindLabel = (kind: AnimeTimelineKind) => (kind === 'anime' ? '日番' : '国创')
 const episodeStateLabel = (episode: AnimeTimelineEpisode) => {
   if (episode.isDelayed) return episode.delayReason || '延期'
+  if (episode.confidence === 'weekday') return '排期'
   return episode.published ? '已更新' : '待更新'
+}
+const sourceStatusLabel = (status: string, count: number) => {
+  if (status === 'failed') return '抓取失败'
+  if (status === 'fallback') return `${count} 条样例`
+  if (status === 'reference') return '参考入口'
+  return `${count} 条`
+}
+const episodeSourceNames = (episode: AnimeTimelineEpisode) => episode.sourceNames?.length ? episode.sourceNames : [episode.sourceName ?? '来源']
+const scoreLabel = (episode: AnimeTimelineEpisode) => {
+  if (episode.score) return `评分 ${episode.score}`
+  if (episode.popularity) return `热度 ${episode.popularity.toLocaleString('zh-CN')}`
+  return ''
 }
 const handleEpisodeCoverError = (event: Event) => {
   const image = event.currentTarget as HTMLImageElement | null
@@ -125,7 +149,7 @@ onMounted(loadTimeline)
       <div>
         <span class="section-kicker"><CalendarDays :size="16" /> 新番时间索引</span>
         <h1>日番 / 国创更新时间表</h1>
-        <p>抓取最近一周 B 站番剧与国创时间线，按周几、更新时间和更新状态整理成 ACG 视频站风格的追番索引表。</p>
+        <p>聚合 MyAnimeList、Bangumi、Bilibili 的番剧与国创时间线，并把 Anikore 作为日本口碑站参考入口，按周几整理成 ACG 视频站风格的追番索引表。</p>
       </div>
       <button class="primary-button" type="button" :disabled="loading" @click="loadTimeline">
         <RefreshCw :size="16" :class="{ 'spin-icon': loading }" />
@@ -140,9 +164,34 @@ onMounted(loadTimeline)
           <h2>最近 3 天到未来 7 天</h2>
           <small>同步时间：{{ formatDateTime(timeline?.fetchedAt) }}</small>
         </div>
-        <a class="text-button compact" href="https://www.bilibili.com/anime/timeline/" target="_blank" rel="noreferrer">
-          B站时间表
-          <ExternalLink :size="13" />
+        <div class="schedule-source-links">
+          <a class="text-button compact" href="https://myanimelist.net/anime/season/schedule" target="_blank" rel="noreferrer">
+            MAL
+            <ExternalLink :size="13" />
+          </a>
+          <a class="text-button compact" href="https://bangumi.tv/calendar" target="_blank" rel="noreferrer">
+            Bangumi
+            <ExternalLink :size="13" />
+          </a>
+          <a class="text-button compact" href="https://www.anikore.jp/" target="_blank" rel="noreferrer">
+            Anikore
+            <ExternalLink :size="13" />
+          </a>
+        </div>
+      </div>
+
+      <div v-if="sourceStats.length" class="schedule-source-grid" aria-label="数据来源状态">
+        <a
+          v-for="source in sourceStats"
+          :key="source.id"
+          :href="source.url || undefined"
+          target="_blank"
+          rel="noreferrer"
+          :class="['schedule-source-chip', source.status]"
+        >
+          <strong>{{ source.label }}</strong>
+          <em>{{ sourceStatusLabel(source.status, source.count) }}</em>
+          <small v-if="source.message">{{ source.message }}</small>
         </a>
       </div>
 
@@ -205,11 +254,14 @@ onMounted(loadTimeline)
             <div>
               <div class="schedule-episode-head">
                 <span :class="['schedule-kind', episode.kind]">{{ episodeKindLabel(episode.kind) }}</span>
-                <span :class="['schedule-state', { upcoming: !episode.published, delayed: episode.isDelayed }]">{{ episodeStateLabel(episode) }}</span>
+                <span :class="['schedule-state', { upcoming: !episode.published, delayed: episode.isDelayed, catalog: episode.confidence === 'weekday' }]">{{ episodeStateLabel(episode) }}</span>
+              </div>
+              <div class="schedule-source-badges">
+                <span v-for="sourceName in episodeSourceNames(episode)" :key="sourceName">{{ sourceName }}</span>
               </div>
               <strong>{{ episode.title }}</strong>
               <p>{{ episode.pubIndex }}</p>
-              <small><Clock3 :size="13" />{{ episode.pubTime }}</small>
+              <small><Clock3 :size="13" />{{ episode.pubTime }}<em v-if="scoreLabel(episode)">{{ scoreLabel(episode) }}</em></small>
             </div>
           </a>
         </div>

@@ -2791,6 +2791,13 @@ label {
   gap: 18px;
 }
 
+.schedule-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .schedule-source-row h2 {
   margin: 5px 0 3px;
   color: #1e2847;
@@ -2804,6 +2811,68 @@ label {
 .schedule-toolbar {
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.schedule-source-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.schedule-source-chip {
+  display: grid;
+  gap: 5px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: #51607a;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.schedule-source-chip strong,
+.schedule-source-chip em,
+.schedule-source-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-source-chip strong {
+  color: #1e2847;
+  white-space: nowrap;
+  font-size: 0.88rem;
+}
+
+.schedule-source-chip em {
+  width: max-content;
+  max-width: 100%;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: #0b907f;
+  background: var(--mint-soft);
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.schedule-source-chip.failed em {
+  color: #9d3154;
+  background: rgba(255, 111, 168, 0.2);
+}
+
+.schedule-source-chip.reference em {
+  color: #4163df;
+  background: var(--blue-soft);
+}
+
+.schedule-source-chip small {
+  display: -webkit-box;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .schedule-search {
@@ -3023,6 +3092,40 @@ label {
 .schedule-state.delayed {
   color: #9d3154;
   background: rgba(255, 111, 168, 0.2);
+}
+
+.schedule-state.catalog {
+  color: #4163df;
+  background: var(--blue-soft);
+}
+
+.schedule-source-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.schedule-source-badges span {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 999px;
+  color: #51607a;
+  background: rgba(233, 238, 255, 0.74);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.schedule-episode-card small em {
+  min-width: 0;
+  overflow: hidden;
+  color: #bd3c72;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: normal;
 }
 
 .schedule-empty-day {
@@ -4478,6 +4581,10 @@ label {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .schedule-source-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .admin-menu {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -4601,6 +4708,14 @@ label {
   .schedule-note {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .schedule-source-links {
+    justify-content: flex-start;
+  }
+
+  .schedule-source-grid {
+    grid-template-columns: 1fr;
   }
 
   .schedule-toolbar .segmented {

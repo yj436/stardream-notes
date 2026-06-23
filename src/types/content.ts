@@ -117,22 +117,51 @@ export interface AnimeRecordPayload {
 }
 
 export type AnimeTimelineKind = 'anime' | 'guochuang'
+export type AnimeTimelineSource = 'multi' | 'myanimelist' | 'bangumi' | 'anikore' | 'bilibili' | 'mock'
+export type AnimeTimelineSourceState = 'ok' | 'failed' | 'fallback' | 'reference'
+export type AnimeTimelineConfidence = 'exact' | 'platform' | 'weekday'
+
+export interface AnimeTimelineSourceLink {
+  label: string
+  url: string
+}
+
+export interface AnimeTimelineSourceStatus {
+  id: AnimeTimelineSource
+  label: string
+  status: AnimeTimelineSourceState
+  count: number
+  url: string
+  message?: string
+}
 
 export interface AnimeTimelineEpisode {
   id: string
   kind: AnimeTimelineKind
   title: string
+  aliases?: string[]
   pubIndex: string
   pubTime: string
   pubTimestamp: number
   published: boolean
   isDelayed: boolean
   delayReason?: string
-  seasonId: number
-  episodeId: number
+  seasonId?: number
+  episodeId?: number
+  subjectId?: number
+  mediaId?: number
   coverUrl: string
   squareCoverUrl?: string
+  source?: AnimeTimelineSource
+  sourceName?: string
+  sourceNames?: string[]
+  sourceLinks?: AnimeTimelineSourceLink[]
   sourceUrl: string
+  confidence?: AnimeTimelineConfidence
+  region?: string
+  score?: number
+  rank?: number
+  popularity?: number
 }
 
 export interface AnimeTimelineDay {
@@ -144,8 +173,9 @@ export interface AnimeTimelineDay {
 }
 
 export interface AnimeTimelinePayload {
-  source: 'bilibili' | 'mock'
+  source: AnimeTimelineSource
   fetchedAt: string
+  sources?: AnimeTimelineSourceStatus[]
   days: AnimeTimelineDay[]
 }
 

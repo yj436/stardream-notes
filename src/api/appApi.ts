@@ -91,10 +91,24 @@ const normalizeAnimeRecord = (record: AnimeRecord): AnimeRecord => ({
 
 const normalizeTimelinePayload = (payload: AnimeTimelinePayload): AnimeTimelinePayload => ({
   ...payload,
+  sources: payload.sources ?? [
+    {
+      id: payload.source,
+      label: payload.source === 'mock' ? '本地兜底样例' : payload.source,
+      status: payload.source === 'mock' ? 'fallback' : 'ok',
+      count: payload.days.reduce((sum, day) => sum + day.episodes.length, 0),
+      url: '',
+    },
+  ],
   days: payload.days.map((day) => ({
     ...day,
     episodes: day.episodes.map((episode) => ({
       ...episode,
+      source: episode.source ?? payload.source,
+      sourceName: episode.sourceName ?? (payload.source === 'mock' ? '本地样例' : payload.source),
+      sourceNames: episode.sourceNames?.length ? episode.sourceNames : [episode.sourceName ?? (payload.source === 'mock' ? '本地样例' : payload.source)],
+      sourceLinks: episode.sourceLinks?.length ? episode.sourceLinks : [{ label: episode.sourceName ?? '来源', url: episode.sourceUrl }],
+      confidence: episode.confidence ?? (episode.source === 'bangumi' ? 'weekday' : 'platform'),
       coverUrl: resolveAsset(episode.coverUrl),
       squareCoverUrl: episode.squareCoverUrl ? resolveAsset(episode.squareCoverUrl) : undefined,
     })),
@@ -358,7 +372,7 @@ export const appApi = {
 
   async getAnimeTimeline(query: AnimeTimelineQuery = {}) {
     return withFallback(
-      async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query })).data),
+      async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query, timeout: 18000 })).data),
       async () => normalizeTimelinePayload(await mockApi.getAnimeTimeline(query)),
     )
   },

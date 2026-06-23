@@ -783,6 +783,16 @@ export const mockApi = {
     return {
       source: 'mock',
       fetchedAt: new Date().toISOString(),
+      sources: [
+        {
+          id: 'mock',
+          label: '本地兜底样例',
+          status: 'fallback',
+          count: filterTimelineDays(cloneData(initialTimelineDays), query.category).reduce((sum, day) => sum + day.episodes.length, 0),
+          url: '',
+          message: '静态站或远端接口不可用时展示。',
+        },
+      ],
       days: filterTimelineDays(cloneData(initialTimelineDays), query.category),
     }
   },
