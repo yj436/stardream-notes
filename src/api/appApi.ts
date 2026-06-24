@@ -392,18 +392,29 @@ export const appApi = {
   },
 
   async getAnimeTimeline(query: AnimeTimelineQuery = {}) {
-    if (isGitHubPagesHost && !configuredApiBaseUrl) {
+    if (import.meta.env.VITE_USE_MOCK_API === 'true') {
+      return normalizeTimelinePayload(await mockApi.getAnimeTimeline(query))
+    }
+
+    if (!configuredApiBaseUrl) {
+      try {
+        return await getStaticAnimeTimeline(query)
+      } catch (error) {
+        if (!isGitHubPagesHost) console.warn('Static timeline fallback to local mock:', error)
+        return normalizeTimelinePayload(await mockApi.getAnimeTimeline(query))
+      }
+    }
+
+    try {
+      return normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query, timeout: 35000 })).data)
+    } catch (error) {
+      if (!isGitHubPagesHost) console.warn('API timeline fallback to static data:', error)
       try {
         return await getStaticAnimeTimeline(query)
       } catch {
         return normalizeTimelinePayload(await mockApi.getAnimeTimeline(query))
       }
     }
-
-    return withFallback(
-      async () => normalizeTimelinePayload((await client.get<AnimeTimelinePayload>('/anime-timeline', { params: query, timeout: 35000 })).data),
-      async () => normalizeTimelinePayload(await mockApi.getAnimeTimeline(query)),
-    )
   },
 
   async updateUserProfile(userId: string, payload: ProfileUpdatePayload) {

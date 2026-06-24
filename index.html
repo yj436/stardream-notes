@@ -28,8 +28,32 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
     <script>
+      ;(function () {
+        const reloadKey = 'stardream:preload-reload-attempt'
+        window.addEventListener('vite:preloadError', function (event) {
+          event.preventDefault()
+          const now = Date.now()
+          const lastAttempt = Number(window.sessionStorage.getItem(reloadKey) || 0)
+          if (now - lastAttempt < 15000) {
+            window.location.reload()
+            return
+          }
+          window.sessionStorage.setItem(reloadKey, String(now))
+          const url = new URL(window.location.href)
+          url.searchParams.set('reload', String(now))
+          if (!url.hash) {
+            url.hash = '#/'
+          }
+          window.location.replace(url.toString())
+        })
+        window.addEventListener('load', function () {
+          window.setTimeout(function () {
+            window.sessionStorage.removeItem(reloadKey)
+          }, 10000)
+        })
+      })()
+
       const isLocalDev = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
       if ('serviceWorker' in navigator) {
         if (isLocalDev || window.location.hostname.endsWith('github.io')) {
@@ -52,5 +76,6 @@
         }
       }
     </script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
