@@ -39,6 +39,8 @@ jobs:
         env:
           TIMELINE_BEFORE: 3
           TIMELINE_AFTER: 7
+          TIMELINE_MIN_EPISODES: 180
+          TIMELINE_REQUIRED_SOURCES: myanimelist,bangumi,bilibili
           JIKAN_DELAY_MS: 1600
 
       - name: Build static site
