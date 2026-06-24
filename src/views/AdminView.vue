@@ -73,6 +73,34 @@ const runtimeInfo = appApi.getRuntimeInfo()
 const systemHealth = ref<ApiHealth | null>(null)
 const systemLoading = ref(false)
 
+const carouselAssetEntries = [
+  { key: 'asset:healingAnime', previewUrl: imageAssets.healingAnime, filename: 'content-tokyo-big-sight-night' },
+  { key: 'asset:hero', previewUrl: imageAssets.hero, filename: 'content-tokyo-big-sight-night' },
+  { key: 'asset:creators', previewUrl: imageAssets.creators, filename: 'content-digital-tablet' },
+  { key: 'asset:starryDesk', previewUrl: imageAssets.starryDesk, filename: 'content-manga-museum-main' },
+  { key: 'asset:sakuraWatercolor', previewUrl: imageAssets.sakuraWatercolor, filename: 'content-manga-artist-tools' },
+  { key: 'asset:moonlightCos', previewUrl: imageAssets.moonlightCos, filename: 'content-comiket-cosplay' },
+  { key: 'asset:cosplayStage', previewUrl: imageAssets.cosplayStage, filename: 'content-comiket-cosplayers' },
+  { key: 'asset:gameController', previewUrl: imageAssets.gameController, filename: 'content-game-controller' },
+  { key: 'asset:novelKitchen', previewUrl: imageAssets.novelKitchen, filename: 'content-kare-raisu' },
+  { key: 'asset:galaxySchool', previewUrl: imageAssets.galaxySchool, filename: 'content-manga-museum-reading' },
+]
+
+const carouselAssetPreviewByKey = Object.fromEntries(carouselAssetEntries.map((item) => [item.key, item.previewUrl]))
+
+const normalizeCarouselImageUrl = (url = '') => {
+  const text = url.trim()
+  if (!text) return 'asset:hero'
+  if (text.startsWith('asset:')) return text
+  const matched = carouselAssetEntries.find((item) => item.previewUrl === text || text.includes(item.filename))
+  return matched?.key ?? text
+}
+
+const carouselPreviewUrl = (url = '') => {
+  const normalized = normalizeCarouselImageUrl(url)
+  return carouselAssetPreviewByKey[normalized] ?? normalized
+}
+
 const tabConfig = [
   { key: 'users' as const, label: '用户', title: '用户管理', desc: '角色、封禁与创作者权限', icon: Users },
   { key: 'posts' as const, label: '内容', title: '文章管理', desc: '置顶、隐藏与内容状态', icon: FileText },
@@ -82,14 +110,14 @@ const tabConfig = [
 ]
 
 const builtinCarouselImages: CarouselImageChoice[] = [
-  { label: '番剧前哨场馆', desc: 'AnimeJapan 与新番情报入口', url: imageAssets.healingAnime, position: 'center' },
-  { label: 'Comiket COS 群像', desc: 'COS 影廊与同人现场', url: imageAssets.cosplayStage, position: 'center' },
-  { label: 'Comiket COS 区域', desc: '角色扮演活动摄影', url: imageAssets.moonlightCos, position: 'center' },
-  { label: '游戏手柄资料', desc: '游戏档案与玩家文化', url: imageAssets.gameController, position: 'center' },
-  { label: '数位板创作', desc: '番剧补完与数字创作', url: imageAssets.creators, position: 'center' },
-  { label: '日常番咖喱饭', desc: '生活感场景参考', url: imageAssets.novelKitchen, position: 'center' },
-  { label: '图廊治理素材', desc: '版权标注与素材管理', url: imageAssets.sakuraWatercolor, position: 'center' },
-  { label: '漫画阅读空间', desc: '日常番和漫画文化参考', url: imageAssets.galaxySchool, position: 'center' },
+  { label: '番剧前哨场馆', desc: 'AnimeJapan 与新番情报入口', url: 'asset:healingAnime', position: 'center' },
+  { label: 'Comiket COS 群像', desc: 'COS 影廊与同人现场', url: 'asset:cosplayStage', position: 'center' },
+  { label: 'Comiket COS 区域', desc: '角色扮演活动摄影', url: 'asset:moonlightCos', position: 'center' },
+  { label: '游戏手柄资料', desc: '游戏档案与玩家文化', url: 'asset:gameController', position: 'center' },
+  { label: '数位板创作', desc: '番剧补完与数字创作', url: 'asset:creators', position: 'center' },
+  { label: '日常番咖喱饭', desc: '生活感场景参考', url: 'asset:novelKitchen', position: 'center' },
+  { label: '图廊治理素材', desc: '版权标注与素材管理', url: 'asset:sakuraWatercolor', position: 'center' },
+  { label: '漫画阅读空间', desc: '日常番和漫画文化参考', url: 'asset:galaxySchool', position: 'center' },
 ]
 
 const reportStatusOptions: Array<{ key: ReportStatusFilter; label: string }> = [
@@ -342,7 +370,10 @@ const postTitle = (id: string) => blog.posts.find((post) => post.id === id)?.tit
 const postAuthor = (post: Post) => blog.users.find((user) => user.id === post.authorId)?.nickname ?? post.authorId
 const reportPostTitle = (report: Report) => postTitle(report.postId)
 const syncCarouselDrafts = () => {
-  carouselDrafts.value = blog.adminCarouselSlides.map((slide) => ({ ...slide }))
+  carouselDrafts.value = blog.adminCarouselSlides.map((slide) => ({
+    ...slide,
+    imageUrl: normalizeCarouselImageUrl(slide.imageUrl),
+  }))
   if (!carouselDrafts.value.length) {
     selectedCarouselId.value = ''
     return
@@ -372,12 +403,13 @@ const carouselImageChoices = computed(() => {
   const choices = [...builtinCarouselImages]
   const seen = new Set(choices.map((choice) => choice.url))
   blog.adminPosts.forEach((post) => {
-    if (seen.has(post.coverUrl)) return
-    seen.add(post.coverUrl)
+    const imageUrl = normalizeCarouselImageUrl(post.coverUrl)
+    if (seen.has(imageUrl)) return
+    seen.add(imageUrl)
     choices.push({
       label: post.title,
       desc: `文章封面 · ${post.tags[0] ?? post.type}`,
-      url: post.coverUrl,
+      url: imageUrl,
       position: post.imagePosition ?? 'center',
       post,
     })
@@ -422,7 +454,7 @@ const selectCarouselImage = (choice: CarouselImageChoice) => {
   const current = selectedCarouselSlide.value
   if (!current) return
   updateCarouselDraft(current.id, {
-    imageUrl: choice.url,
+    imageUrl: normalizeCarouselImageUrl(choice.url),
     imagePosition: choice.position,
     ...(choice.post
       ? {
@@ -442,7 +474,7 @@ const addCarouselDraft = () => {
     id: `hero_custom_${Date.now()}`,
     title: '新的首页轮播',
     excerpt: '用一句话介绍这张主图希望带读者前往哪里。',
-    imageUrl: choice?.url ?? imageAssets.hero,
+    imageUrl: normalizeCarouselImageUrl(choice?.url ?? 'asset:hero'),
     imagePosition: choice?.position ?? 'center',
     tag: '精选',
     link: '/discover',
@@ -643,7 +675,7 @@ onMounted(async () => {
               <div class="admin-carousel-list" aria-label="轮播列表">
                 <article v-for="(slide, index) in carouselDrafts" :key="slide.id" :class="['admin-carousel-item', { active: slide.id === selectedCarouselId }]">
                   <button type="button" class="admin-carousel-select" @click="selectedCarouselId = slide.id">
-                    <img :src="slide.imageUrl" :alt="slide.title" :style="{ objectPosition: slide.imagePosition ?? 'center' }" />
+                    <img :src="carouselPreviewUrl(slide.imageUrl)" :alt="slide.title" :style="{ objectPosition: slide.imagePosition ?? 'center' }" />
                     <span>
                       <strong>{{ index + 1 }}. {{ slide.title }}</strong>
                       <small>{{ slide.enabled ? '展示中' : '已停用' }} · #{{ slide.tag }}</small>
@@ -659,7 +691,7 @@ onMounted(async () => {
 
               <div v-if="selectedCarouselSlide" class="admin-carousel-editor">
                 <div class="admin-carousel-preview">
-                  <img :src="selectedCarouselSlide.imageUrl" :alt="selectedCarouselSlide.title" :style="{ objectPosition: selectedCarouselSlide.imagePosition ?? 'center' }" />
+                  <img :src="carouselPreviewUrl(selectedCarouselSlide.imageUrl)" :alt="selectedCarouselSlide.title" :style="{ objectPosition: selectedCarouselSlide.imagePosition ?? 'center' }" />
                   <div>
                     <span class="section-kicker"><ImageIcon :size="15" /> #{{ selectedCarouselSlide.tag }}</span>
                     <strong>{{ selectedCarouselSlide.title }}</strong>
@@ -740,10 +772,10 @@ onMounted(async () => {
                     v-for="choice in carouselImageChoices"
                     :key="choice.url"
                     type="button"
-                    :class="{ active: selectedCarouselSlide.imageUrl === choice.url }"
+                    :class="{ active: normalizeCarouselImageUrl(selectedCarouselSlide.imageUrl) === normalizeCarouselImageUrl(choice.url) }"
                     @click="selectCarouselImage(choice)"
                   >
-                    <img :src="choice.url" :alt="choice.label" :style="{ objectPosition: choice.position }" />
+                    <img :src="carouselPreviewUrl(choice.url)" :alt="choice.label" :style="{ objectPosition: choice.position }" />
                     <span>
                       <strong>{{ choice.label }}</strong>
                       <small>{{ choice.desc }}</small>

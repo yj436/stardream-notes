@@ -429,14 +429,14 @@ export const useBlogStore = defineStore('blog', {
     async updateAdminHomeCarousel(slides: HomeCarouselSlide[]) {
       const updated = await appApi.updateAdminHomeCarousel(slides)
       this.adminCarouselSlides = updated
-      this.homeCarouselSlides = updated.filter((slide) => slide.enabled)
+      this.homeCarouselSlides = await appApi.getHomeCarousel()
       this.notify('首页轮播图已更新', 'success')
     },
 
     async resetAdminHomeCarousel() {
       const updated = await appApi.resetAdminHomeCarousel()
       this.adminCarouselSlides = updated
-      this.homeCarouselSlides = updated.filter((slide) => slide.enabled)
+      this.homeCarouselSlides = await appApi.getHomeCarousel()
       this.notify('首页轮播已恢复为文章主推', 'success')
       return updated
     },

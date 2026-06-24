@@ -32,7 +32,7 @@
     <script>
       const isLocalDev = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
       if ('serviceWorker' in navigator) {
-        if (isLocalDev) {
+        if (isLocalDev || window.location.hostname.endsWith('github.io')) {
           navigator.serviceWorker.getRegistrations().then(function (registrations) {
             registrations.forEach(function (registration) {
               registration.unregister()

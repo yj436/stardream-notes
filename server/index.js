@@ -153,13 +153,33 @@ const cleanCarouselText = (value, fallback) => {
   return text || fallback
 }
 
+const carouselAssetAliases = [
+  ['content-tokyo-big-sight-night', 'asset:healingAnime'],
+  ['content-digital-tablet', 'asset:creators'],
+  ['content-manga-museum-main', 'asset:starryDesk'],
+  ['content-manga-artist-tools', 'asset:sakuraWatercolor'],
+  ['content-comiket-cosplay', 'asset:moonlightCos'],
+  ['content-comiket-cosplayers', 'asset:cosplayStage'],
+  ['content-game-controller', 'asset:gameController'],
+  ['content-kare-raisu', 'asset:novelKitchen'],
+  ['content-manga-museum-reading', 'asset:galaxySchool'],
+]
+
+const normalizeCarouselImageUrl = (value, fallback = 'asset:hero') => {
+  const text = cleanCarouselText(value, fallback)
+  if (text.startsWith('asset:')) return text
+  const normalized = text.toLowerCase()
+  const matched = carouselAssetAliases.find(([filename]) => normalized.includes(filename))
+  return matched?.[1] ?? text
+}
+
 const sanitizeCarouselSlides = (slides) =>
   Array.isArray(slides)
     ? slides.slice(0, 8).map((slide, index) => ({
         id: cleanCarouselText(slide?.id, `hero_custom_${Date.now()}_${index}`),
         title: cleanCarouselText(slide?.title, '星梦番剧馆'),
         excerpt: cleanCarouselText(slide?.excerpt, '番剧、COS、游戏与图廊内容精选。'),
-        imageUrl: cleanCarouselText(slide?.imageUrl, 'asset:hero'),
+        imageUrl: normalizeCarouselImageUrl(slide?.imageUrl),
         imagePosition: cleanCarouselText(slide?.imagePosition, 'center'),
         tag: cleanCarouselText(slide?.tag, defaultCarouselTags[index] ?? 'Featured'),
         link: cleanCarouselText(slide?.link, '/'),
@@ -223,29 +243,50 @@ const findAccessiblePost = async (req, res, id) => {
   return post
 }
 
+const databaseProvider = (() => {
+  const databaseUrl = process.env.DATABASE_URL || ''
+  if (databaseUrl.startsWith('mysql://') || databaseUrl.startsWith('mysql2://')) return 'mysql'
+  if (databaseUrl.startsWith('file:')) return 'sqlite'
+  return 'unknown'
+})()
+
 const getDatabaseHealth = async () => {
   const startedAt = Date.now()
   try {
     await prisma.$queryRawUnsafe('SELECT 1')
-    const [users, posts, comments, reports] = await Promise.all([
+    const [users, posts, comments, reports, draftSnapshots, siteSettings] = await Promise.all([
       prisma.user.count(),
       prisma.post.count(),
       prisma.comment.count(),
       prisma.report.count(),
+      prisma.draftSnapshot.count(),
+      prisma.siteSetting.count(),
     ])
+    await prisma.post.findFirst({ select: { id: true, series: true, imagePosition: true, reactions: true } })
     return {
       ok: true,
-      provider: 'mysql',
+      provider: databaseProvider,
       latencyMs: Date.now() - startedAt,
-      counts: { users, posts, comments, reports },
+      counts: { users, posts, comments, reports, draftSnapshots, siteSettings },
+      schema: {
+        postSeries: true,
+        postImagePosition: true,
+        postReactions: true,
+        draftSnapshots: true,
+        siteSettings: true,
+      },
     }
   } catch (error) {
     return {
       ok: false,
-      provider: 'mysql',
+      provider: databaseProvider,
       latencyMs: Date.now() - startedAt,
       code: error?.code,
       message: error?.message,
+      schema: {
+        ok: false,
+        message: 'Database schema is missing required tables or columns. Run migrations before starting the API.',
+      },
     }
   }
 }

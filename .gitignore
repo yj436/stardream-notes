@@ -11,8 +11,10 @@ public/data/anime-timeline.json
 !.env.example
 
 # Local databases and uploads
-prisma/dev.db
-prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+prisma/**/*.db
+prisma/**/*.db-journal
 uploads/
 
 # Logs and runtime noise

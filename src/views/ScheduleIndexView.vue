@@ -92,6 +92,7 @@ const visibleDays = computed(() =>
 const filteredCount = computed(() => filteredDays.value.reduce((sum, day) => sum + day.episodes.length, 0))
 const sourceStats = computed(() => timeline.value?.sources ?? [])
 const sourceLabel = computed(() => {
+  if (!timeline.value) return loading.value ? '多源时间表同步中' : '等待同步时间表'
   if (timeline.value?.source === 'multi') return 'MyAnimeList / Bangumi / Bilibili 多源聚合'
   if (timeline.value?.source === 'myanimelist') return 'MyAnimeList 时间表'
   if (timeline.value?.source === 'bangumi') return 'Bangumi 每日放送'

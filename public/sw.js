@@ -1,16 +1,11 @@
-const CACHE_NAME = 'stardream-v2'
+const CACHE_NAME = 'stardream-v4'
 const scopeUrl = self.registration.scope
 
-const PRECACHE_URLS = [
-  new URL('./', scopeUrl).toString(),
-  new URL('index.html', scopeUrl).toString(),
-]
+const isCacheableImage = (request, response) =>
+  request.destination === 'image' && response.ok && response.type === 'basic'
 
 self.addEventListener('install', (event) => {
-  const promise = caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  // Don't block activation on precache failures
-  event.waitUntil(promise.catch(() => Promise.resolve()))
-  // Activate immediately
+  event.waitUntil(caches.open(CACHE_NAME).catch(() => Promise.resolve()))
   self.skipWaiting()
 })
 
@@ -21,7 +16,6 @@ self.addEventListener('activate', (event) => {
     ),
   )
   event.waitUntil(promise)
-  // Claim all clients
   event.waitUntil(self.clients.claim())
 })
 
@@ -33,21 +27,29 @@ self.addEventListener('fetch', (event) => {
   if (!request.url.startsWith('http')) return
   const url = new URL(request.url)
   const scopePath = new URL(scopeUrl).pathname
+
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/uploads/') ||
+    url.pathname.startsWith(`${scopePath}data/`) ||
     url.pathname.startsWith(`${scopePath}api/`) ||
     url.pathname.startsWith(`${scopePath}uploads/`)
   ) {
     return
   }
 
+  if (request.mode === 'navigate' || ['script', 'style', 'document'].includes(request.destination)) {
+    event.respondWith(fetch(request).catch(() => caches.match(request)))
+    return
+  }
+
+  if (request.destination !== 'image') return
+
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetched = fetch(request)
         .then((response) => {
-          // Cache successful responses
-          if (response.ok && response.type === 'basic') {
+          if (isCacheableImage(request, response)) {
             const clone = response.clone()
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, clone)

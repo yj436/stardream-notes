@@ -130,7 +130,7 @@ const filterTimelinePayload = (payload: AnimeTimelinePayload, query: AnimeTimeli
 }
 
 const getStaticAnimeTimeline = async (query: AnimeTimelineQuery): Promise<AnimeTimelinePayload> => {
-  const payload = (await axios.get<AnimeTimelinePayload>(staticAnimeTimelineUrl, { timeout: 18000 })).data
+  const payload = (await axios.get<AnimeTimelinePayload>(`${staticAnimeTimelineUrl}?t=${Date.now()}`, { timeout: 18000 })).data
   return normalizeTimelinePayload(filterTimelinePayload(payload, query))
 }
 
@@ -148,6 +148,8 @@ const normalizeCarouselSlide = (slide: HomeCarouselSlide): HomeCarouselSlide => 
   ...slide,
   imageUrl: resolveAsset(slide.imageUrl),
 })
+
+const normalizeAdminCarouselSlide = (slide: HomeCarouselSlide): HomeCarouselSlide => ({ ...slide })
 
 const withFallback = async <T>(request: () => Promise<T>, fallback: () => Promise<T>): Promise<T> => {
   if (shouldUseMockApi) return fallback()
@@ -612,22 +614,22 @@ export const appApi = {
 
   async getAdminHomeCarousel() {
     return withFallback(
-      async () => (await client.get<HomeCarouselSlide[]>('/admin/carousel')).data.map(normalizeCarouselSlide),
-      async () => (await mockApi.getAdminHomeCarousel()).map(normalizeCarouselSlide),
+      async () => (await client.get<HomeCarouselSlide[]>('/admin/carousel')).data.map(normalizeAdminCarouselSlide),
+      async () => (await mockApi.getAdminHomeCarousel()).map(normalizeAdminCarouselSlide),
     )
   },
 
   async updateAdminHomeCarousel(slides: HomeCarouselSlide[]) {
     return withFallback(
-      async () => (await client.put<HomeCarouselSlide[]>('/admin/carousel', { slides })).data.map(normalizeCarouselSlide),
-      async () => (await mockApi.updateAdminHomeCarousel(slides)).map(normalizeCarouselSlide),
+      async () => (await client.put<HomeCarouselSlide[]>('/admin/carousel', { slides })).data.map(normalizeAdminCarouselSlide),
+      async () => (await mockApi.updateAdminHomeCarousel(slides)).map(normalizeAdminCarouselSlide),
     )
   },
 
   async resetAdminHomeCarousel() {
     return withFallback(
-      async () => (await client.post<HomeCarouselSlide[]>('/admin/carousel/reset')).data.map(normalizeCarouselSlide),
-      async () => (await mockApi.resetAdminHomeCarousel()).map(normalizeCarouselSlide),
+      async () => (await client.post<HomeCarouselSlide[]>('/admin/carousel/reset')).data.map(normalizeAdminCarouselSlide),
+      async () => (await mockApi.resetAdminHomeCarousel()).map(normalizeAdminCarouselSlide),
     )
   },
 
