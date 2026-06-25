@@ -39,8 +39,8 @@ const controlTitle = computed(() => {
 const createOptions = (): WidgetOptions => ({
   position: 'bottom-left',
   size: {
-    width: 280,
-    height: 320,
+    width: 220,
+    height: 260,
   },
   primaryColor: 'rgba(255, 111, 168, 0.92)',
   transitionDuration,
@@ -117,6 +117,20 @@ const cleanupCompanionNodes = () => {
   })
 }
 
+const styleCompanionNodes = () => {
+  Array.from(document.body.children).forEach((node) => {
+    if (!(node instanceof HTMLElement)) return
+    const canvas = node.querySelector('canvas')
+    const isWidgetShell = node.style.position === 'fixed' && node.style.zIndex === '9999' && !!canvas
+    if (!isWidgetShell) return
+    node.style.left = 'calc((100vw - 1220px) / 2 - 220px)'
+    node.style.width = '220px'
+    node.style.height = '260px'
+    node.style.pointerEvents = 'none'
+    if (canvas instanceof HTMLElement) canvas.style.pointerEvents = 'none'
+  })
+}
+
 const scheduleStatusBarCleanup = (token: number) => {
   clearStatusBarCleanup()
   statusBarCleanupId = window.setTimeout(() => {
@@ -154,6 +168,7 @@ const createWidgetInstance = async () => {
     if (token !== creationToken || !isActive.value) return
     cleanupCompanionNodes()
     widget = createWidget(createOptions())
+    window.requestAnimationFrame(styleCompanionNodes)
     scheduleStatusBarCleanup(token)
   } catch {
     failed.value = true
@@ -173,6 +188,7 @@ const syncWidget = async () => {
 
 const updateViewportState = () => {
   canRender.value = window.innerWidth >= minViewportWidth
+  styleCompanionNodes()
 }
 
 const setCompanionEnabled = async (value: boolean) => {

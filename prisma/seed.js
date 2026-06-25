@@ -108,9 +108,9 @@ const users = [
     email: 'cos@stardream.local',
     passwordHash: hashPassword('cos123'),
     nickname: 'COS 影廊记录',
-    avatarUrl: asset.cosplayStage,
+    avatarUrl: asset.sakuraWatercolor,
     avatarPosition: 'center',
-    coverUrl: asset.moonlightCos,
+    coverUrl: asset.starryDesk,
     bio: '收集 Comiket、Cosplay 活动照片与拍摄礼仪资料，让图廊有现场感。',
     level: 14,
     creatorBadge: 'COS 图廊',
@@ -131,9 +131,9 @@ const users = [
     email: 'game@stardream.local',
     passwordHash: hashPassword('game123'),
     nickname: '游戏档案部',
-    avatarUrl: asset.gameController,
+    avatarUrl: asset.hero,
     avatarPosition: 'center',
-    coverUrl: asset.gameController,
+    coverUrl: asset.hero,
     bio: '整理 Tokyo Game Show、主机硬件、试玩动线和玩家文化资料。',
     level: 13,
     creatorBadge: '游戏板块',
@@ -234,7 +234,7 @@ const posts = [
 - [Comic Market 官方英文站](${sourceLinks.comiket})
 - [Comic Market 海外参与者说明](${sourceLinks.comiketOverseas})
 - 图片来源：Wikimedia Commons / stormstill / CC BY-SA 2.0；Guilhem Vellut / CC BY 2.0`,
-    coverUrl: asset.cosplayStage,
+    coverUrl: asset.sakuraWatercolor,
     imagePosition: 'center',
     type: 'gallery',
     tags: json(['COS', 'Comiket', '同人现场']),
@@ -274,12 +274,13 @@ const posts = [
 - [Tokyo Game Show 2026 官方网站](${sourceLinks.tokyoGameShow2026})
 - [U.S. Commercial Service Japan 活动列表](${sourceLinks.tokyoGameShowTrade})
 - 图片来源：Wikimedia Commons / Evan-Amos / CC BY-SA 3.0`,
-    coverUrl: asset.gameController,
+    coverUrl: asset.hero,
     imagePosition: 'center',
     type: 'record',
     tags: json(['游戏', 'Tokyo Game Show', '玩家文化']),
     series: '游戏档案部',
     gallery: json([
+      image(asset.hero, '原创二次元夜樱城市壁纸，项目本地生成'),
       image(asset.gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
       image(asset.creators, '数位创作设备，Piknuz 摄，CC BY-SA 4.0'),
     ]),
@@ -313,12 +314,15 @@ const posts = [
 - [MANGA Plus 更新入口](${sourceLinks.mangaPlus})
 - [App Store 介绍页](${sourceLinks.mangaPlusApp})
 - 图片来源：Wikimedia Commons / Piknuz / CC BY-SA 4.0`,
-    coverUrl: asset.creators,
+    coverUrl: asset.sakuraWatercolor,
     imagePosition: 'center',
     type: 'article',
     tags: json(['番剧补完', 'MANGA Plus', '正版阅读']),
     series: '番剧放映室',
-    gallery: json([image(asset.creators, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0')]),
+    gallery: json([
+      image(asset.sakuraWatercolor, '原创二次元夏日庭院壁纸，项目本地生成'),
+      image(asset.creators, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
+    ]),
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,
@@ -354,7 +358,7 @@ const posts = [
     tags: json(['图廊', '版权标注', '后台管理']),
     series: '图廊治理',
     gallery: json([
-      image(asset.sakuraWatercolor, '漫画工具展示，Maplestrip 摄，CC BY 3.0'),
+      image(asset.sakuraWatercolor, '原创二次元夏日庭院壁纸，项目本地生成'),
       image(asset.gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
       image(asset.cosplayStage, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
     ]),
@@ -421,14 +425,14 @@ Vite 官方 releases 页面显示 8.x 已进入当前发布线，而本站 packa
 - [Vite releases](${sourceLinks.viteReleases})
 - [Vite 7 官方公告](${sourceLinks.vite7})
 - 本文项目事实来自 package.json 与 src/api/mock.ts。`,
-    coverUrl: asset.creators,
+    coverUrl: asset.starryDesk,
     imagePosition: 'center',
     type: 'article',
     tags: json(['IT技术', 'Vue', 'Vite']),
     series: '技术实验室',
     gallery: json([
-      image(asset.creators, '数位板与创作设备，适合作为前端工程笔记封面，Piknuz 摄，CC BY-SA 4.0'),
       image(asset.starryDesk, '原创二次元森林小路壁纸，项目本地生成'),
+      image(asset.creators, '数位板与创作设备，适合作为前端工程笔记封面，Piknuz 摄，CC BY-SA 4.0'),
     ]),
     viewCount: 0,
     likeCount: 0,

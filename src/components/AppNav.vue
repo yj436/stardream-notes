@@ -72,16 +72,9 @@ const logout = () => {
     </form>
 
     <div class="nav-actions">
-      <button class="icon-button" type="button" :aria-label="isDark ? '切换浅色模式' : '切换暗色模式'" @click="toggleTheme">
-        <Sun v-if="isDark" :size="18" />
-        <Moon v-else :size="18" />
-      </button>
-      <button v-if="currentUser" class="icon-button notif-bell" type="button" aria-label="通知" @click="notifStore.togglePanel()">
-        <Bell :size="18" />
-        <span v-if="notifStore.unread" class="notif-dot">{{ notifStore.unread > 9 ? '9+' : notifStore.unread }}</span>
-      </button>
-      <RouterLink v-if="blog.isAdmin" class="icon-button" to="/admin" aria-label="管理后台">
-        <ShieldCheck :size="18" />
+      <RouterLink class="write-button desktop-write" to="/editor">
+        <Sparkles :size="18" />
+        <span>写笔记</span>
       </RouterLink>
       <div v-if="currentUser" class="profile-menu-wrap">
         <button type="button" class="profile-trigger" aria-label="打开个人菜单" @click="profileOpen = !profileOpen">
@@ -90,6 +83,16 @@ const logout = () => {
           <ChevronDown :size="15" />
         </button>
         <div v-if="profileOpen" class="profile-dropdown">
+          <button type="button" @click="notifStore.togglePanel(); profileOpen = false">
+            <Bell :size="15" />通知
+            <span v-if="notifStore.unread" class="notif-dot menu-dot">{{ notifStore.unread > 9 ? '9+' : notifStore.unread }}</span>
+          </button>
+          <button type="button" @click="toggleTheme">
+            <Sun v-if="isDark" :size="15" />
+            <Moon v-else :size="15" />
+            {{ isDark ? '浅色模式' : '深色模式' }}
+          </button>
+          <RouterLink v-if="blog.isAdmin" to="/admin" @click="profileOpen = false"><ShieldCheck :size="15" />管理后台</RouterLink>
           <RouterLink :to="`/user/${currentUser.id}`" @click="profileOpen = false"><User :size="15" />我的主页</RouterLink>
           <RouterLink to="/favorites" @click="profileOpen = false"><Star :size="15" />收藏夹</RouterLink>
           <RouterLink to="/settings" @click="profileOpen = false"><Settings :size="15" />设置</RouterLink>
@@ -99,10 +102,6 @@ const logout = () => {
       <RouterLink v-else class="write-button" to="/login">
         <LogIn :size="18" />
         <span>登录</span>
-      </RouterLink>
-      <RouterLink class="write-button desktop-write" to="/editor">
-        <Sparkles :size="18" />
-        <span>写笔记</span>
       </RouterLink>
       <button class="menu-button" type="button" aria-label="展开导航" @click="open = !open">
         <X v-if="open" :size="20" />

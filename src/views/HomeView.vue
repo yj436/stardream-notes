@@ -6,14 +6,12 @@ import {
   BookOpen,
   CalendarDays,
   Camera,
-  Database,
   Flame,
   Hash,
   Heart,
   Library,
   MessageCircle,
   MonitorPlay,
-  Palette,
   Pause,
   Play,
   Sparkles,
@@ -98,14 +96,14 @@ const topicRoutes = computed(() => [
     desc: 'Comiket、角色扮演现场与拍摄边界',
     tag: 'COS',
     icon: Camera,
-    image: imageAssets.cosplayStage,
+    image: imageAssets.animeSummerGarden,
   },
   {
     title: '游戏档案',
     desc: 'Tokyo Game Show、手柄硬件与玩家文化',
     tag: '游戏',
     icon: MonitorPlay,
-    image: imageAssets.gameController,
+    image: imageAssets.animeNightCity,
   },
   {
     title: '图廊规则',
@@ -115,37 +113,6 @@ const topicRoutes = computed(() => [
     image: imageAssets.sakuraWatercolor,
   },
 ])
-const siteShowcase = [
-  {
-    title: '番剧馆',
-    desc: '浏览番剧前哨和正版入口',
-    to: '/anime',
-    icon: Tv,
-    image: imageAssets.healingAnime,
-  },
-  {
-    title: '图廊',
-    desc: 'COS、游戏、日常番图片流',
-    to: '/gallery',
-    icon: Camera,
-    image: imageAssets.cosplayStage,
-  },
-  {
-    title: '写作',
-    desc: '用富文本写 ACGN 文章',
-    to: '/editor',
-    icon: Palette,
-    image: imageAssets.creators,
-  },
-  {
-    title: '后台',
-    desc: '管理轮播、内容和素材来源',
-    to: '/admin',
-    icon: Database,
-    image: imageAssets.gameController,
-  },
-]
-
 const formatCount = (value: number) => (value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value))
 const setHeroSlide = (index: number) => {
   const count = heroSlides.value.length
@@ -191,17 +158,7 @@ onBeforeUnmount(stopHeroCarousel)
             :style="{ objectPosition: activeHeroSlide.imagePosition }"
           />
         </transition>
-        <div class="halo-sakura-layer" aria-hidden="true" />
-        <div class="hero-carousel-orbit" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
         <div class="halo-site-card hero-carousel-copy">
-          <span
-            class="halo-avatar"
-            :style="{ backgroundImage: activeHeroSlide.author?.avatarUrl ? `url(${activeHeroSlide.author.avatarUrl})` : undefined, backgroundPosition: activeHeroSlide.author?.avatarPosition }"
-          />
           <span class="section-kicker"><Sparkles :size="16" /> 番剧 · COS · 游戏 · 图廊</span>
           <h1>星梦番剧馆</h1>
           <p>把新番情报、COS 现场、游戏展会和日常番场景整理成一条有图、有来源、有版权说明的 ACGN 内容流。</p>
@@ -252,18 +209,6 @@ onBeforeUnmount(stopHeroCarousel)
               <span />
             </button>
           </div>
-          <div class="hero-thumb-strip" aria-label="轮播文章">
-            <button
-              v-for="(slide, index) in heroSlides.slice(0, 4)"
-              :key="slide.post?.id ?? `${slide.title}-${index}`"
-              type="button"
-              :class="{ active: index === activeHeroIndex }"
-              @click="setHeroSlide(index)"
-            >
-              <img :src="slide.imageUrl" :alt="slide.title" :style="{ objectPosition: slide.imagePosition }" />
-              <span>#{{ slide.tag }}</span>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -273,23 +218,6 @@ onBeforeUnmount(stopHeroCarousel)
           <h2>番剧前哨、COS 影廊、游戏现场和图廊规则在这里汇流。</h2>
         </div>
         <RouterLink class="feature-link" to="/discover">探索板块 <ArrowRight :size="16" /></RouterLink>
-      </section>
-
-      <section class="site-motion-showcase" aria-label="站点页面入口">
-        <RouterLink v-for="item in siteShowcase" :key="item.to" class="motion-page-card" :to="item.to">
-          <img :src="item.image" :alt="item.title" />
-          <div class="motion-page-shade" aria-hidden="true" />
-          <div class="motion-browser" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-          <span class="motion-page-icon"><component :is="item.icon" :size="18" /></span>
-          <div>
-            <strong>{{ item.title }}</strong>
-            <small>{{ item.desc }}</small>
-          </div>
-        </RouterLink>
       </section>
 
       <section class="topic-route-band">
@@ -351,8 +279,8 @@ onBeforeUnmount(stopHeroCarousel)
             <span class="section-kicker"><Sparkles :size="16" /> ACGN 图廊</span>
             <div class="cover-wall">
               <img :src="imageAssets.healingAnime" alt="AnimeJapan 番剧前哨场馆图" />
-              <img :src="imageAssets.cosplayStage" alt="Comiket COS 群像" />
-              <img :src="imageAssets.gameController" alt="游戏手柄资料图" />
+              <img :src="imageAssets.animeForestPath" alt="二次元森林图廊" />
+              <img :src="imageAssets.animeSummerGarden" alt="游戏与图廊二次元壁纸" />
               <img :src="imageAssets.novelKitchen" alt="日常番场景参考" />
             </div>
           </section>

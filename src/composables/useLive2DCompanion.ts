@@ -2,7 +2,7 @@ import { computed, ref } from 'vue'
 
 const storageKey = 'stardream:l2d-companion'
 const modelSourceUrl = 'https://www.live2d.com/en/learn/sample/'
-const minViewportWidth = 760
+const minViewportWidth = 1440
 const enabled = ref(true)
 
 const readPreference = () => {
