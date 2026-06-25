@@ -6,6 +6,7 @@ import { useLive2DCompanion } from '@/composables/useLive2DCompanion'
 import type { Widget, WidgetOptions } from 'l2d-widget'
 
 const transitionDuration = 700
+const initialCompanionDelay = 6000
 const defaultModelPath = `${import.meta.env.BASE_URL}live2d/mao/Mao.model3.json`
 
 const route = useRoute()
@@ -20,9 +21,14 @@ let statusBarCleanupId: number | null = null
 let initialSyncId: number | null = null
 
 const companionBlockedPrefixes = ['/admin', '/login', '/editor']
-const routeAllowsCompanion = computed(
-  () => !companionBlockedPrefixes.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`)),
-)
+const isCompanionBlockedPath = (path: string) =>
+  companionBlockedPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+const currentHashPath = () => {
+  if (typeof window === 'undefined') return ''
+  const hashPath = window.location.hash.replace(/^#/, '').split(/[?#]/)[0]
+  return hashPath.startsWith('/') ? hashPath : ''
+}
+const routeAllowsCompanion = computed(() => !isCompanionBlockedPath(route.path) && !isCompanionBlockedPath(currentHashPath()))
 const isActive = computed(() => enabled.value && canRender.value && routeAllowsCompanion.value && !failed.value)
 const controlTitle = computed(() => {
   if (failed.value) return 'Live2D 加载失败，点击重试'
@@ -187,7 +193,7 @@ onMounted(() => {
   initialSyncId = window.setTimeout(() => {
     initialSyncId = null
     void syncWidget()
-  }, 2200)
+  }, initialCompanionDelay)
 })
 
 onBeforeUnmount(() => {
