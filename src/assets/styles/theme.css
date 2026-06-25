@@ -61,9 +61,12 @@
 :root.dark .admin-comment-copy,
 :root.dark .gallery-feature-card a,
 :root.dark .gallery-lightbox h2,
-:root.dark .schedule-source-row h2,
+:root.dark .schedule-console-head h2,
+:root.dark .schedule-metrics strong,
+:root.dark .schedule-rail-head strong,
 :root.dark .schedule-source-chip strong,
-:root.dark .schedule-day-column > header strong,
+:root.dark .schedule-date-rail button strong,
+:root.dark .schedule-day-header strong,
 :root.dark .schedule-episode-card strong {
   color: #e7ecfa;
 }
@@ -83,11 +86,16 @@
 :root.dark .gallery-tag-list button,
 :root.dark .gallery-feature-card,
 :root.dark .gallery-lightbox figure,
-:root.dark .schedule-stats span,
-:root.dark .schedule-date-tabs button,
+:root.dark .schedule-metrics span,
+:root.dark .schedule-filter-group,
+:root.dark .schedule-status-tabs button,
+:root.dark .schedule-result-strip span,
 :root.dark .schedule-source-chip,
+:root.dark .schedule-date-rail,
+:root.dark .schedule-date-rail button,
 :root.dark .schedule-day-column,
 :root.dark .schedule-episode-card,
+:root.dark .schedule-empty-board,
 :root.dark .topic-grid button,
 :root.dark .character-card,
 :root.dark .record-card,
@@ -136,7 +144,11 @@
 :root.dark label,
 :root.dark .rank-row,
 :root.dark .admin-menu-item,
-:root.dark .gallery-tag-list button {
+:root.dark .gallery-tag-list button,
+:root.dark .schedule-filter-group > strong,
+:root.dark .schedule-status-tabs button span,
+:root.dark .schedule-date-rail button em,
+:root.dark .schedule-day-header em {
   color: #c3cadc;
 }
 
@@ -160,7 +172,7 @@
 :root.dark .series-link.active,
 :root.dark .editor-modebar button.active,
 :root.dark .gallery-tag-list button.active,
-:root.dark .schedule-day-column > header {
+:root.dark .schedule-day-header {
   background: linear-gradient(135deg, rgba(255, 141, 184, 0.1), rgba(145, 168, 255, 0.1), rgba(94, 234, 212, 0.08));
 }
 
