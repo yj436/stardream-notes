@@ -30,7 +30,8 @@ import type {
 
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const isGitHubPagesHost = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')
-const shouldUseMockApi = import.meta.env.VITE_USE_MOCK_API === 'true' || (!configuredApiBaseUrl && isGitHubPagesHost)
+const forcedMockApi = import.meta.env.VITE_USE_MOCK_API === 'true'
+const shouldUseMockApi = forcedMockApi || (!configuredApiBaseUrl && (import.meta.env.PROD || isGitHubPagesHost))
 const shouldFallbackToMockApi = shouldUseMockApi || !configuredApiBaseUrl
 const apiBaseUrl = configuredApiBaseUrl || '/api'
 const staticBaseUrl = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`
@@ -392,7 +393,7 @@ export const appApi = {
   },
 
   async getAnimeTimeline(query: AnimeTimelineQuery = {}) {
-    if (import.meta.env.VITE_USE_MOCK_API === 'true') {
+    if (forcedMockApi) {
       return normalizeTimelinePayload(await mockApi.getAnimeTimeline(query))
     }
 

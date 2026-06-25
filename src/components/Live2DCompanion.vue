@@ -16,8 +16,12 @@ const failed = ref(false)
 let widget: Widget | null = null
 let mediaQuery: MediaQueryList | null = null
 let creationToken = 0
+let statusBarCleanupId: number | null = null
 
-const routeAllowsCompanion = computed(() => !route.path.startsWith('/admin'))
+const companionBlockedPrefixes = ['/admin', '/login', '/editor']
+const routeAllowsCompanion = computed(
+  () => !companionBlockedPrefixes.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`)),
+)
 const isActive = computed(() => enabled.value && canRender.value && routeAllowsCompanion.value && !failed.value)
 const controlTitle = computed(() => {
   if (failed.value) return 'Live2D 加载失败，点击重试'
@@ -76,6 +80,20 @@ const createOptions = (): WidgetOptions => ({
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
 
+const clearStatusBarCleanup = () => {
+  if (statusBarCleanupId === null) return
+  window.clearTimeout(statusBarCleanupId)
+  statusBarCleanupId = null
+}
+
+const cleanupCompanionStatusBars = () => {
+  Array.from(document.body.children).forEach((node) => {
+    if (!(node instanceof HTMLElement)) return
+    const isWidgetStatusBar = node.style.position === 'fixed' && node.style.zIndex === '9998'
+    if (isWidgetStatusBar) node.remove()
+  })
+}
+
 const cleanupCompanionNodes = () => {
   const bodyChildren = Array.from(document.body.children)
   bodyChildren.forEach((node) => {
@@ -86,8 +104,17 @@ const cleanupCompanionNodes = () => {
   })
 }
 
+const scheduleStatusBarCleanup = (token: number) => {
+  clearStatusBarCleanup()
+  statusBarCleanupId = window.setTimeout(() => {
+    statusBarCleanupId = null
+    if (token === creationToken && widget) cleanupCompanionStatusBars()
+  }, 1400)
+}
+
 const destroyWidget = async () => {
   creationToken += 1
+  clearStatusBarCleanup()
   const current = widget
   widget = null
   if (!current) {
@@ -114,6 +141,7 @@ const createWidgetInstance = async () => {
     if (token !== creationToken || !isActive.value) return
     cleanupCompanionNodes()
     widget = createWidget(createOptions())
+    scheduleStatusBarCleanup(token)
   } catch {
     failed.value = true
     setEnabled(false)
