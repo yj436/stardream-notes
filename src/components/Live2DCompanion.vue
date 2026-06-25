@@ -17,6 +17,7 @@ let widget: Widget | null = null
 let mediaQuery: MediaQueryList | null = null
 let creationToken = 0
 let statusBarCleanupId: number | null = null
+let initialSyncId: number | null = null
 
 const companionBlockedPrefixes = ['/admin', '/login', '/editor']
 const routeAllowsCompanion = computed(
@@ -84,6 +85,12 @@ const clearStatusBarCleanup = () => {
   if (statusBarCleanupId === null) return
   window.clearTimeout(statusBarCleanupId)
   statusBarCleanupId = null
+}
+
+const clearInitialSync = () => {
+  if (initialSyncId === null) return
+  window.clearTimeout(initialSyncId)
+  initialSyncId = null
 }
 
 const cleanupCompanionStatusBars = () => {
@@ -177,10 +184,14 @@ onMounted(() => {
   window.addEventListener('resize', updateViewportState)
   mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   mediaQuery.addEventListener('change', syncWidget)
-  void syncWidget()
+  initialSyncId = window.setTimeout(() => {
+    initialSyncId = null
+    void syncWidget()
+  }, 2200)
 })
 
 onBeforeUnmount(() => {
+  clearInitialSync()
   window.removeEventListener('resize', updateViewportState)
   mediaQuery?.removeEventListener('change', syncWidget)
   void destroyWidget()
