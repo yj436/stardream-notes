@@ -71,7 +71,7 @@ const storageKeys = {
   draftSnapshots: 'stardream:draft-snapshots',
 }
 
-const dataVersion = 'anime-wallpaper-refresh-2026-06-25'
+const dataVersion = 'verified-article-content-2026-06-25'
 const emptyReactions: Record<PostReactionKey, number> = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const imageAsset = (url: string, alt: string): ImageAsset => ({ url, alt })
 const cloneData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -108,6 +108,15 @@ const sourceLinks = {
   tokyoGameShow2026: 'https://tgs.cesa.or.jp/en/',
   tokyoGameShowTrade: 'https://www.trade.gov/japan-trade-events',
   commonsSearch: 'https://search.creativecommons.org/',
+  vue35: 'https://blog.vuejs.org/posts/vue-3-5',
+  viteReleases: 'https://vite.dev/releases',
+  vite7: 'https://vite.dev/blog/announcing-vite7',
+  typescript7Rc: 'https://devblogs.microsoft.com/typescript/announcing-typescript-7-0-rc/',
+  typescriptConfig: 'https://www.typescriptlang.org/tsconfig/',
+  prismaMigrate: 'https://www.prisma.io/docs/orm/prisma-migrate/workflows/development-and-production',
+  mysql84: 'https://dev.mysql.com/doc/refman/8.4/en/',
+  githubPages: 'https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site',
+  webVitals: 'https://web.dev/articles/vitals',
 }
 
 const initialUsers: User[] = [
@@ -194,6 +203,27 @@ const initialUsers: User[] = [
     role: 'creator',
     status: 'active',
     theme: 'starlight',
+  },
+  {
+    id: 'u_tech',
+    username: 'tech-lab',
+    email: 'tech@stardream.local',
+    nickname: '技术实验室',
+    avatarUrl: digitalTablet,
+    avatarPosition: 'center',
+    coverUrl: animeForestPath,
+    bio: '把 Vue、Vite、TypeScript、数据库和部署这些站点工程经验，写成能直接落地的技术笔记。',
+    level: 12,
+    creatorBadge: 'IT 技术栏',
+    favoriteCharacter: {
+      name: 'Vue / Vite',
+      anime: '前端工程研究',
+      quote: '热门技术要回到本站真实构建、部署和数据库链路里验证。',
+    },
+    stats: { posts: 4, followers: 0, following: 0, likes: 0 },
+    role: 'creator',
+    status: 'active',
+    theme: 'mint',
   },
 ]
 
@@ -411,6 +441,178 @@ const initialPosts: Post[] = [
     favoriteCount: 0,
     commentCount: 0,
     createdAt: '2026-06-23T12:35:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_vue_vite_stack_2026',
+    authorId: 'u_tech',
+    title: 'Vue 3.5 到 Vite 8：本站前端工程栈的升级观察',
+    excerpt: '把当前博客的 Vue 3.5、Vite、Pinia、Markdown 编辑器链路对照官方更新整理成一篇可执行的前端升级笔记。',
+    content: `这篇不是泛泛而谈“前端很热”，而是把本站正在使用的技术栈放到 2026 年的官方更新里看：Vue 负责组件和状态交互，Vite 负责构建和开发体验，TypeScript 与 vue-tsc 负责上线前的类型约束。技术文章要有热度，也要能回到项目里执行。本站当前依赖里已经使用 Vue 3.5 系列，构建脚本是 vue-tsc 类型检查后再执行 Vite build。
+
+## Vue 3.5 值得关注的点
+- Vue 3.5 官方发布文章重点提到 Reactive Props Destructure、useTemplateRef、延迟 hydration、useId 和 Deferred Teleport 等能力。
+- 对博客项目来说，后台轮播管理、富文本编辑器、图片资源表单这类复杂组件，最先受益的是更清晰的 props、模板 ref 和跨层 UI 组织方式。
+- 不建议为了“追新”一次性重写组件；更适合从 AdminView、EditorView 这两个高交互页面开始，逐步拆出可测试的小组件。
+
+## Vite 升级策略
+Vite 官方 releases 页面显示 8.x 已进入当前发布线，而本站 package.json 仍处在较保守的 Vite 6 依赖。这里的建议不是立刻强升，而是先建立升级检查表：Node 版本、Vue 插件版本、GitHub Pages 的 BASE_PATH、hash 路由、图片资源导入、preview 构建验证都要逐项跑过。Vite 7 官方公告里对运行环境和默认构建目标有明确调整，跨大版本升级时尤其要看这些基础项。
+
+## 站内落地清单
+- 后台管理页和编辑器优先拆成可复用表单控件，避免一个 Vue 文件继续膨胀。
+- 构建前保持 vue-tsc --noEmit，防止文章、图库和轮播数据类型漂移。
+- 每次改 mock 数据版本时同步检查 GitHub Pages 预览，避免用户本地 localStorage 继续读旧内容。
+- 升级 Vite 前先在单独分支跑 build、preview、首页轮播、文章详情和后台轮播保存。
+
+## 资料来源
+- Vue 3.5 官方发布：${sourceLinks.vue35}
+- Vite releases：${sourceLinks.viteReleases}
+- Vite 7 官方公告：${sourceLinks.vite7}
+- 本文项目事实来自 package.json 与 src/api/mock.ts。`,
+    coverUrl: digitalTablet,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['IT技术', 'Vue', 'Vite'],
+    series: '技术实验室',
+    gallery: [
+      imageAsset(digitalTablet, '数位板与创作设备，适合作为前端工程笔记封面，Piknuz 摄，CC BY-SA 4.0'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-25T18:20:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_typescript_7_rc_blog_notes',
+    authorId: 'u_tech',
+    title: 'TypeScript 7.0 RC 观察：博客项目该先看什么',
+    excerpt: 'TypeScript 7.0 RC 已经进入官方博客视野，但本站更适合先做类型边界清理，而不是盲目替换生产工具链。',
+    content: `TypeScript 的热度不只来自版本号，也来自它会影响 Vue、Vite、Prisma、编辑器组件和后台数据表单的稳定性。TypeScript 7.0 RC 官方文章值得关注，但对一个正在上线中的博客来说，正确姿势是“先读懂影响面，再做小步验证”。
+
+## 为什么要关注 RC
+- RC 代表 release candidate，适合提前验证生态兼容性，不等于所有生产项目都应该立刻升级。
+- Vue 项目还依赖 vue-tsc、Vite 插件和 IDE 类型服务，任何一个环节不兼容都会影响开发体验。
+- 本站已经有文章、用户、评论、轮播、番剧时间表、草稿快照等结构化类型，类型系统越严，后台越不容易把脏数据写进去。
+
+## 先做三件事
+第一，清理 Post、User、HomeCarouselSlide 这些核心类型，把“可选字段”和“必须字段”区分得更清楚。第二，给 mock 数据、服务端 API 返回值、备份导入归一化函数补齐边界检查。第三，在升级 TypeScript 前先保存一份能稳定通过的 build 日志，避免升级后不知道是依赖问题还是业务改动问题。
+
+## 推荐配置方向
+技术文章里常见的严格配置包括 noUncheckedIndexedAccess、exactOptionalPropertyTypes、noImplicitOverride 等，但不应该一次全开。更好的路线是先从内容模型开始：文章必须有 title、excerpt、content、tags、coverUrl；图库图片必须有 url 和 alt；外部来源必须写进正文或 docs/content-sources.md。
+
+## 站内落地清单
+- 新增文章时优先使用 Post 类型约束，不在页面里临时拼匿名对象。
+- 后台导入备份时继续用 normalizeBackupPosts 做兼容，但对缺失字段给出默认值。
+- TypeScript 升级放到独立分支，至少验证首页、发现页、文章详情、编辑器、后台和构建产物。
+
+## 资料来源
+- TypeScript 7.0 RC 官方博客：${sourceLinks.typescript7Rc}
+- TypeScript TSConfig 官方参考：${sourceLinks.typescriptConfig}`,
+    coverUrl: animeForestPath,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['IT技术', 'TypeScript', '工程质量'],
+    series: '技术实验室',
+    gallery: [
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
+      imageAsset(mangaArtistTools, '漫画工具展示，Maplestrip 摄，CC BY 3.0'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-25T18:05:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_mysql_prisma_production_notes',
+    authorId: 'u_tech',
+    title: '从 SQLite 到 MySQL：博客上线数据库的稳定落点',
+    excerpt: '围绕 Prisma Migrate、MySQL 8.4 LTS、备份和连接配置，整理博客从本地数据走向线上数据库的最小稳定方案。',
+    content: `前面已经把博客从纯前端假数据推到了可接数据库的结构，这一步最重要的不是“换一个更响亮的数据库名”，而是让文章、图库、用户、评论和后台设置在生产环境里可迁移、可备份、可恢复。MySQL 是主流选择，Prisma Migrate 则适合把 schema 变更纳入版本控制。
+
+## 为什么用 MySQL
+MySQL 8.4 是官方文档中的 LTS 线，适合需要长期维护的内容站。对于本站来说，MySQL 的价值主要在四点：文章和图库数据不依赖浏览器 localStorage，后台管理修改能持久化，后续评论和收藏量可以增长，迁移脚本能和 Git 版本绑定。
+
+## Prisma Migrate 的正确用法
+Prisma 官方文档把开发与生产迁移流程区分得很清楚：开发环境生成并验证 migration，生产环境使用 migrate deploy 应用已经提交的迁移。本站 package.json 里已经有 db:migrate、db:seed、db:doctor 这类脚本，后续应把它们接入部署流程，而不是在线上手动改表。
+
+## 上线前检查清单
+- DATABASE_URL 不写进仓库，放在部署平台的环境变量里。
+- 每次 schema.prisma 变更都生成 migration，并在本地种子数据验证中文、JSON 字段和图片资源。
+- 文章内容、gallery、reactions、siteSetting 这类 JSON 字段要有解析失败兜底。
+- 生产库定期备份，至少覆盖 posts、users、comments、siteSetting 和 draftSnapshot。
+
+## 对本站的建议
+短期继续保留 mock 数据作为 GitHub Pages 静态降级；线上 API 版则使用 MySQL + Prisma。这样无数据库环境仍能展示 ACGN 内容，有服务器环境时后台管理和文章编辑可以写入真实数据库。
+
+## 资料来源
+- Prisma Migrate 生产流程：${sourceLinks.prismaMigrate}
+- MySQL 8.4 Reference Manual：${sourceLinks.mysql84}
+- 本文项目事实来自 package.json、prisma/schema.prisma 与 server/index.js。`,
+    coverUrl: animeSummerGarden,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['IT技术', 'MySQL', 'Prisma'],
+    series: '技术实验室',
+    gallery: [
+      imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
+      imageAsset(digitalTablet, '数位创作设备，Piknuz 摄，CC BY-SA 4.0'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-25T17:45:00+08:00',
+    reactions: { ...emptyReactions },
+  },
+  {
+    id: 'p_github_pages_web_vitals_spa',
+    authorId: 'u_tech',
+    title: 'GitHub Pages 上的 Vue SPA：静态部署与 Web Vitals 清单',
+    excerpt: '把本站 GitHub Pages 部署、hash 路由、BASE_PATH、图片资源和 LCP/CLS/INP 指标整理成上线检查表。',
+    content: `GitHub Pages 很适合承载当前这种 ACGN 内容站的静态版本：成本低、部署透明、代码和页面发布链路都在 GitHub 里。但 Vue SPA 部署到仓库路径时，路由、资源路径和浏览器缓存必须认真处理，否则线上就会出现刷新 404、图片丢失或用户继续读旧数据。
+
+## 静态部署的关键点
+- GitHub Pages 官方文档支持从分支或 GitHub Actions 发布站点。
+- 本站部署到 /stardream-notes/，因此构建时需要 BASE_PATH=/stardream-notes/。
+- 使用 hash 路由可以降低 Pages 子路径刷新 404 的风险，适合没有自定义服务器重写规则的静态站。
+- mock 数据版本号要跟内容更新一起提升，让旧 localStorage 在用户浏览器里自动失效。
+
+## Web Vitals 怎么看
+Web.dev 的 Core Web Vitals 关注 LCP、CLS、INP。对本站来说，最影响体验的是首页轮播首图、图廊大图、富文本编辑器加载和移动端布局稳定性。二次元图片可以好看，但不应该把首屏压到几 MB；图廊缩略图、详情图和背景壁纸要分清尺寸。
+
+## 上线前检查清单
+- npm run build 必须通过，并用 preview 检查首页、发现页、图库、文章详情、编辑器和后台。
+- 首页轮播至少保留一张本地可用图，避免外链失效导致首屏空白。
+- 新文章和图片来源写进 docs/content-sources.md，方便以后清理资源。
+- 部署后打开线上地址做一次硬刷新，确认 hash 路由、图片和数据版本都生效。
+
+## 资料来源
+- GitHub Pages 发布源文档：${sourceLinks.githubPages}
+- Web.dev Core Web Vitals：${sourceLinks.webVitals}
+- 本文项目事实来自 Vite 构建命令、路由配置和 src/api/mock.ts。`,
+    coverUrl: animeNightCity,
+    imagePosition: 'center',
+    isPinned: false,
+    type: 'article',
+    tags: ['IT技术', 'GitHub Pages', 'Web Vitals'],
+    series: '技术实验室',
+    gallery: [
+      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
+      imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
+    ],
+    viewCount: 0,
+    likeCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    createdAt: '2026-06-25T17:25:00+08:00',
     reactions: { ...emptyReactions },
   },
 ]
@@ -727,7 +929,8 @@ const createExcerpt = (content: string) => {
 }
 
 const isPublicPost = (post: Post) => (post.status ?? 'published') === 'published'
-const getPublicPosts = () => posts.filter(isPublicPost)
+const byCreatedAtDesc = (left: Post, right: Post) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+const getPublicPosts = () => posts.filter(isPublicPost).sort(byCreatedAtDesc)
 const filterTimelineDays = (days: AnimeTimelineDay[], category: AnimeTimelineQuery['category'] = 'all') =>
   days
     .map((day) => ({

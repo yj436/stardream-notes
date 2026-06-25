@@ -14,6 +14,10 @@ This project uses original Chinese summaries based on public pages. Local image 
 | 漫画补番入口：MANGA Plus 与正版阅读平台怎么放进站内 | [MANGA Plus updates](https://mangaplus.shueisha.co.jp/updates), [App Store page](https://apps.apple.com/us/app/manga-plus-by-shueisha/id1442476536) | Describes the official reading service without copying manga content. |
 | 图廊运营规则：番剧海报、COS 照片、游戏截图怎么标注版权 | [Creative Commons Search Portal](https://search.creativecommons.org/), [Wikimedia Commons](https://commons.wikimedia.org/) | Governance note for future asset collection and copyright labeling. |
 | 日常番场景资料：咖喱饭、放学后与生活感镜头 | [Kare-Raisu.jpg](https://commons.wikimedia.org/wiki/File:Kare-Raisu.jpg) | Uses food photography as a real-world anime/light-novel scene reference. |
+| Vue 3.5 到 Vite 8：本站前端工程栈的升级观察 | [Vue 3.5 release](https://blog.vuejs.org/posts/vue-3-5), [Vite releases](https://vite.dev/releases), [Vite 7 announcement](https://vite.dev/blog/announcing-vite7) | Connects current project dependencies and build flow to official Vue/Vite release notes. |
+| TypeScript 7.0 RC 观察：博客项目该先看什么 | [TypeScript 7.0 RC](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0-rc/), [TSConfig reference](https://www.typescriptlang.org/tsconfig/) | Treats the RC as an ecosystem verification topic rather than a direct production upgrade instruction. |
+| 从 SQLite 到 MySQL：博客上线数据库的稳定落点 | [Prisma Migrate production workflow](https://www.prisma.io/docs/orm/prisma-migrate/workflows/development-and-production), [MySQL 8.4 Reference Manual](https://dev.mysql.com/doc/refman/8.4/en/) | Source-backed database operations article for the MySQL/Prisma deployment path. |
+| GitHub Pages 上的 Vue SPA：静态部署与 Web Vitals 清单 | [GitHub Pages publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [Core Web Vitals](https://web.dev/articles/vitals) | Deployment and performance checklist for the static GitHub Pages version. |
 
 ## Schedule Index Sources
 
