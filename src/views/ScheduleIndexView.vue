@@ -333,7 +333,7 @@ onMounted(loadTimeline)
 
           <div v-if="day.episodes.length" class="schedule-episode-list">
             <a v-for="episode in day.episodes" :key="episode.id" class="schedule-episode-card" :href="episode.sourceUrl" target="_blank" rel="noreferrer">
-              <span class="schedule-cover">
+              <span class="schedule-cover" :style="{ backgroundImage: `url(${fallbackCoverForEpisode(episode)})` }">
                 <img
                   :src="episodeCoverUrl(episode)"
                   :alt="episode.title"

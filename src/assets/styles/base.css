@@ -3203,6 +3203,8 @@ label {
   overflow: hidden;
   border-radius: 8px;
   background: var(--blue-soft);
+  background-position: center;
+  background-size: cover;
 }
 
 .schedule-cover img {
