@@ -7,6 +7,10 @@ import comiketCosplayers from '@/assets/images/content-comiket-cosplayers.jpg'
 import gameController from '@/assets/images/content-game-controller.jpg'
 import kareRaisu from '@/assets/images/content-kare-raisu.jpg'
 import mangaMuseumReading from '@/assets/images/content-manga-museum-reading.jpg'
+import animeNightCity from '@/assets/images/wallpaper-anime-night-sakura-city.jpg'
+import animeForestPath from '@/assets/images/wallpaper-anime-forest-path.jpg'
+import animeSummerGarden from '@/assets/images/wallpaper-anime-summer-garden.jpg'
+import animeCountrysideField from '@/assets/images/wallpaper-anime-countryside-field.jpg'
 import { normalizeImageAssets } from '@/utils/image'
 import type {
   AdminBackupCounts,
@@ -34,16 +38,25 @@ import type {
 const wait = (ms = 120) => new Promise((resolve) => window.setTimeout(resolve, ms))
 
 export const imageAssets = {
-  hero: tokyoBigSightNight,
+  hero: animeNightCity,
   creators: digitalTablet,
-  starryDesk: mangaMuseumMain,
-  sakuraWatercolor: mangaArtistTools,
+  starryDesk: animeForestPath,
+  sakuraWatercolor: animeSummerGarden,
   moonlightCos: comiketCosplay,
   cosplayStage: comiketCosplayers,
   gameController,
-  healingAnime: tokyoBigSightNight,
-  novelKitchen: kareRaisu,
-  galaxySchool: mangaMuseumReading,
+  healingAnime: animeNightCity,
+  novelKitchen: animeCountrysideField,
+  galaxySchool: animeForestPath,
+  animeNightCity,
+  animeForestPath,
+  animeSummerGarden,
+  animeCountrysideField,
+  tokyoBigSightNight,
+  mangaMuseumMain,
+  mangaArtistTools,
+  mangaMuseumReading,
+  kareRaisu,
 }
 
 const storageKeys = {
@@ -58,7 +71,7 @@ const storageKeys = {
   draftSnapshots: 'stardream:draft-snapshots',
 }
 
-const dataVersion = 'acgn-fandom-gallery-2026-06-23'
+const dataVersion = 'anime-wallpaper-refresh-2026-06-25'
 const emptyReactions: Record<PostReactionKey, number> = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const imageAsset = (url: string, alt: string): ImageAsset => ({ url, alt })
 const cloneData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -105,7 +118,7 @@ const initialUsers: User[] = [
     nickname: '星梦编辑台',
     avatarUrl: digitalTablet,
     avatarPosition: 'center',
-    coverUrl: tokyoBigSightNight,
+    coverUrl: animeNightCity,
     bio: '维护番剧、COS、游戏和图廊四个主板块，负责来源、版权标注和首页轮播。',
     level: 18,
     creatorBadge: '站点主理',
@@ -124,9 +137,9 @@ const initialUsers: User[] = [
     username: 'anime-room',
     email: 'anime@stardream.local',
     nickname: '番剧放映室',
-    avatarUrl: tokyoBigSightNight,
+    avatarUrl: animeNightCity,
     avatarPosition: 'center',
-    coverUrl: mangaMuseumReading,
+    coverUrl: animeSummerGarden,
     bio: '整理 AnimeJapan、新番入口、正版阅读平台和动画制作相关资料。',
     level: 15,
     creatorBadge: '番剧板块',
@@ -198,18 +211,20 @@ const initialPosts: Post[] = [
 - 页面列出的内容包括 Exhibit booths、AJ Stage、Organized events、Official merchandise，以及商务日的 seminar、business concierge 等。
 
 ## 站内呈现方式
-首页把这篇作为“番剧前哨”主推，不搬运商业海报和截图；图廊使用场馆、创作工具和正版入口相关图片，并在正文标出来源。后续如果加入某部番剧海报，应把图片来源、权利归属、是否官方允许传播写在图注或来源文档里。
+首页把这篇作为“番剧前哨”主推，不搬运商业海报和截图；首屏使用原创二次元夜樱城市壁纸，资料图廊继续保留场馆、创作工具和正版入口相关图片，并在正文标出来源。后续如果加入某部番剧海报，应把图片来源、权利归属、是否官方允许传播写在图注或来源文档里。
 
 ## 资料来源
 - AnimeJapan 2026 About：${sourceLinks.animeJapan}
-- 场馆图片：Wikimedia Commons / Masato Ohta / CC BY 2.0`,
-    coverUrl: tokyoBigSightNight,
+- 场馆图片：Wikimedia Commons / Masato Ohta / CC BY 2.0
+- 首屏壁纸：项目本地生成原创壁纸，见 docs/content-sources.md`,
+    coverUrl: animeNightCity,
     imagePosition: 'center',
     isPinned: true,
     type: 'record',
     tags: ['番剧', 'AnimeJapan', '新番情报'],
     series: '番剧放映室',
     gallery: [
+      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
       imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
       imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
     ],
@@ -248,7 +263,7 @@ const initialPosts: Post[] = [
     gallery: [
       imageAsset(comiketCosplayers, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
       imageAsset(comiketCosplay, 'Comiket 84 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
-      imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
+      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
     ],
     viewCount: 0,
     likeCount: 0,
@@ -381,13 +396,16 @@ const initialPosts: Post[] = [
 ## 资料来源
 - Wikimedia Commons：Kare-Raisu.jpg
 - 图片作者 Ocdp，CC0 1.0`,
-    coverUrl: kareRaisu,
+    coverUrl: animeCountrysideField,
     imagePosition: 'center',
     isPinned: false,
     type: 'article',
     tags: ['日常番', '场景资料', '轻小说'],
     series: '番剧生活感资料',
-    gallery: [imageAsset(kareRaisu, '家庭制作的日式咖喱饭，Ocdp 摄，CC0 1.0')],
+    gallery: [
+      imageAsset(animeCountrysideField, '原创二次元田园晴空壁纸，项目本地生成'),
+      imageAsset(kareRaisu, '家庭制作的日式咖喱饭，Ocdp 摄，CC0 1.0'),
+    ],
     viewCount: 0,
     likeCount: 0,
     favoriteCount: 0,

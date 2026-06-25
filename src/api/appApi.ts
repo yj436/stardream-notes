@@ -69,8 +69,24 @@ const resolveAsset = (url: string) => {
   if (url === 'asset:healingAnime') return imageAssets.healingAnime
   if (url === 'asset:novelKitchen') return imageAssets.novelKitchen
   if (url === 'asset:galaxySchool') return imageAssets.galaxySchool
+  if (url === 'asset:animeNightCity') return imageAssets.animeNightCity
+  if (url === 'asset:animeForestPath') return imageAssets.animeForestPath
+  if (url === 'asset:animeSummerGarden') return imageAssets.animeSummerGarden
+  if (url === 'asset:animeCountrysideField') return imageAssets.animeCountrysideField
   return url
 }
+
+const timelineFallbackCovers = [
+  imageAssets.animeNightCity,
+  imageAssets.animeForestPath,
+  imageAssets.animeSummerGarden,
+  imageAssets.animeCountrysideField,
+]
+
+const stableImageIndex = (value: string) =>
+  Array.from(value).reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % timelineFallbackCovers.length, 0)
+
+const timelineFallbackCover = (value: string) => timelineFallbackCovers[stableImageIndex(value)] ?? imageAssets.healingAnime
 
 const normalizeUser = (user: User): User => ({
   ...user,
@@ -112,8 +128,8 @@ const normalizeTimelinePayload = (payload: AnimeTimelinePayload): AnimeTimelineP
       sourceNames: episode.sourceNames?.length ? episode.sourceNames : [episode.sourceName ?? (payload.source === 'mock' ? '本地样例' : payload.source)],
       sourceLinks: episode.sourceLinks?.length ? episode.sourceLinks : [{ label: episode.sourceName ?? '来源', url: episode.sourceUrl }],
       confidence: episode.confidence ?? (episode.source === 'bangumi' ? 'weekday' : 'platform'),
-      coverUrl: resolveAsset(episode.coverUrl),
-      squareCoverUrl: episode.squareCoverUrl ? resolveAsset(episode.squareCoverUrl) : undefined,
+      coverUrl: resolveAsset(episode.coverUrl || timelineFallbackCover(`${episode.id}-${episode.title}`)),
+      squareCoverUrl: episode.squareCoverUrl ? resolveAsset(episode.squareCoverUrl) : timelineFallbackCover(`${episode.title}-${episode.id}`),
     })),
   })),
 })

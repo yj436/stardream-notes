@@ -69,6 +69,12 @@ const updatedEpisodes = computed(() => flatEpisodes.value.filter(({ episode }) =
 const scheduledEpisodes = computed(() => flatEpisodes.value.filter(({ episode }) => episode.confidence === 'weekday' && !episode.isDelayed).length)
 const animeEpisodes = computed(() => flatEpisodes.value.filter(({ episode }) => episode.kind === 'anime').length)
 const guochuangEpisodes = computed(() => flatEpisodes.value.filter(({ episode }) => episode.kind === 'guochuang').length)
+const fallbackTimelineCovers = [
+  imageAssets.animeNightCity,
+  imageAssets.animeForestPath,
+  imageAssets.animeSummerGarden,
+  imageAssets.animeCountrysideField,
+]
 
 const dateTabs = computed<DateTab[]>(() => [
   { label: '全部', dateLabel: '全部', value: 'all', count: totalEpisodes.value },
@@ -171,9 +177,16 @@ const scoreLabel = (episode: AnimeTimelineEpisode) => {
   if (episode.popularity) return `热度 ${episode.popularity.toLocaleString('zh-CN')}`
   return ''
 }
-const handleEpisodeCoverError = (event: Event) => {
+const fallbackCoverForEpisode = (episode: AnimeTimelineEpisode) => {
+  const seed = `${episode.id}-${episode.title}`
+  const index = Array.from(seed).reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % fallbackTimelineCovers.length, 0)
+  return fallbackTimelineCovers[index] ?? imageAssets.healingAnime
+}
+const episodeCoverUrl = (episode: AnimeTimelineEpisode) => episode.squareCoverUrl || episode.coverUrl || fallbackCoverForEpisode(episode)
+const handleEpisodeCoverError = (event: Event, episode: AnimeTimelineEpisode) => {
   const image = event.currentTarget as HTMLImageElement | null
-  if (image && image.src !== imageAssets.hero) image.src = imageAssets.hero
+  const fallback = fallbackCoverForEpisode(episode)
+  if (image && image.src !== fallback) image.src = fallback
 }
 
 const loadTimeline = async () => {
@@ -322,10 +335,10 @@ onMounted(loadTimeline)
             <a v-for="episode in day.episodes" :key="episode.id" class="schedule-episode-card" :href="episode.sourceUrl" target="_blank" rel="noreferrer">
               <span class="schedule-cover">
                 <img
-                  :src="episode.squareCoverUrl || episode.coverUrl || imageAssets.hero"
+                  :src="episodeCoverUrl(episode)"
                   :alt="episode.title"
                   referrerpolicy="no-referrer"
-                  @error="handleEpisodeCoverError"
+                  @error="handleEpisodeCoverError($event, episode)"
                 />
                 <em>{{ episode.pubTime }}</em>
               </span>

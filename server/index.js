@@ -154,6 +154,10 @@ const cleanCarouselText = (value, fallback) => {
 }
 
 const carouselAssetAliases = [
+  ['wallpaper-anime-night-sakura-city', 'asset:animeNightCity'],
+  ['wallpaper-anime-forest-path', 'asset:animeForestPath'],
+  ['wallpaper-anime-summer-garden', 'asset:animeSummerGarden'],
+  ['wallpaper-anime-countryside-field', 'asset:animeCountrysideField'],
   ['content-tokyo-big-sight-night', 'asset:healingAnime'],
   ['content-digital-tablet', 'asset:creators'],
   ['content-manga-museum-main', 'asset:starryDesk'],
@@ -660,8 +664,19 @@ const normalizeMyAnimeListItem = (item, day) => {
     published: day.dateTimestamp <= Math.floor(chinaDayStartMs() / 1000),
     isDelayed: false,
     mediaId: Number(item.mal_id ?? 0) || undefined,
-    coverUrl: '',
-    squareCoverUrl: '',
+    coverUrl: toHttpsUrl(
+      item.images?.jpg?.large_image_url ||
+        item.images?.webp?.large_image_url ||
+        item.images?.jpg?.image_url ||
+        item.images?.webp?.image_url ||
+        '',
+    ),
+    squareCoverUrl: toHttpsUrl(
+      item.images?.jpg?.image_url ||
+        item.images?.webp?.image_url ||
+        item.images?.jpg?.small_image_url ||
+        '',
+    ),
     source: 'myanimelist',
     sourceName: timelineSourceInfo.myanimelist.label,
     sourceNames: [timelineSourceInfo.myanimelist.label],

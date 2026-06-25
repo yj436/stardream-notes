@@ -74,6 +74,10 @@ const systemHealth = ref<ApiHealth | null>(null)
 const systemLoading = ref(false)
 
 const carouselAssetEntries = [
+  { key: 'asset:animeNightCity', previewUrl: imageAssets.animeNightCity, filename: 'wallpaper-anime-night-sakura-city' },
+  { key: 'asset:animeForestPath', previewUrl: imageAssets.animeForestPath, filename: 'wallpaper-anime-forest-path' },
+  { key: 'asset:animeSummerGarden', previewUrl: imageAssets.animeSummerGarden, filename: 'wallpaper-anime-summer-garden' },
+  { key: 'asset:animeCountrysideField', previewUrl: imageAssets.animeCountrysideField, filename: 'wallpaper-anime-countryside-field' },
   { key: 'asset:healingAnime', previewUrl: imageAssets.healingAnime, filename: 'content-tokyo-big-sight-night' },
   { key: 'asset:hero', previewUrl: imageAssets.hero, filename: 'content-tokyo-big-sight-night' },
   { key: 'asset:creators', previewUrl: imageAssets.creators, filename: 'content-digital-tablet' },

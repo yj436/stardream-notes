@@ -1,8 +1,8 @@
 # Content Sources
 
-Last reviewed: 2026-06-23
+Last reviewed: 2026-06-25
 
-This project uses original Chinese summaries based on public pages. Local image assets are limited to Creative Commons, public-domain, or clearly reusable source files. Commercial anime posters, game screenshots, and official key visuals should be linked or attributed with explicit rights information before being stored locally.
+This project uses original Chinese summaries based on public pages. Local image assets are limited to Creative Commons, public-domain, generated project assets, or clearly reusable source files. Commercial anime posters, game screenshots, and official key visuals should be linked or attributed with explicit rights information before being stored locally.
 
 ## Article Sources
 
@@ -34,10 +34,21 @@ This project uses original Chinese summaries based on public pages. Local image 
 | `src/assets/images/content-manga-museum-reading.jpg` | [Sitting people reading outdoors at Kyoto International Manga Museum 20080608.jpg](https://commons.wikimedia.org/wiki/File:Sitting_people_reading_outdoors_at_Kyoto_International_Manga_Museum_20080608.jpg) | Tatyana Temirbulatova | CC BY 2.0 | Reading-space and anime daily-life visuals. |
 | `src/assets/images/content-digital-tablet.jpg` | [Hand drawing on a graphic tablet.jpg](https://commons.wikimedia.org/wiki/File:Hand_drawing_on_a_graphic_tablet.jpg) | Piknuz | CC BY-SA 4.0 | Digital creation and official-reading posts. |
 | `src/assets/images/content-kare-raisu.jpg` | [Kare-Raisu.jpg](https://commons.wikimedia.org/wiki/File:Kare-Raisu.jpg) | Ocdp | CC0 1.0 | Daily anime/light-novel scene reference. |
+| `src/assets/images/wallpaper-anime-night-sakura-city.jpg` | Generated locally for this project; [Anime Pictures](https://anime-pictures.net/) used as ACG wallpaper direction reference only. | Stardream Notes / OpenAI image generation | Project-local generated asset | Home hero, anime-section hero, schedule fallback covers. |
+| `src/assets/images/wallpaper-anime-forest-path.jpg` | Generated locally for this project; [Anime Pictures](https://anime-pictures.net/) used as ACG wallpaper direction reference only. | Stardream Notes / OpenAI image generation | Project-local generated asset | Schedule fallback covers and quiet anime-section cards. |
+| `src/assets/images/wallpaper-anime-summer-garden.jpg` | Generated locally for this project; [Anime Pictures](https://anime-pictures.net/) used as ACG wallpaper direction reference only. | Stardream Notes / OpenAI image generation | Project-local generated asset | Gallery governance cards, anime topic visuals, schedule fallback covers. |
+| `src/assets/images/wallpaper-anime-countryside-field.jpg` | Generated locally for this project; [Anime Pictures](https://anime-pictures.net/) used as ACG wallpaper direction reference only. | Stardream Notes / OpenAI image generation | Project-local generated asset | Daily-anime visuals and schedule fallback covers. |
+
+## Anime Pictures Notes
+
+- `anime-pictures.net` was reviewed as a visual direction source for anime wallpaper composition and tagging.
+- Direct script download and browser hotlink checks against `opreviews.anime-pictures.net` returned Cloudflare verification pages instead of image bytes, so the runtime does not hotlink those files.
+- If a future user manually contributes Anime Pictures files, record the exact post URL, uploader, author/artist tags, license or rights note shown on the page, and whether local storage is allowed.
 
 ## Usage Rules
 
 - Keep attribution in article text, image alt text, or this document when adding local assets.
 - CC-licensed photos can still include personality rights or trademark concerns; avoid cropping them into misleading endorsements.
 - For commercial anime posters, game screenshots, and official key visuals, record rights holder, source URL, intended use, and whether local storage is allowed.
+- For Anime Pictures assets, do not depend on runtime hotlinks; store only manually reviewed files with a source row above, or use locally generated alternatives.
 - Write original summaries and link to official pages rather than copying source text.
