@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,136 +13,39 @@ import {
   Sparkles,
   X,
 } from 'lucide-vue-next'
+import MetricPills from '@/components/MetricPills.vue'
 import TimestampPill from '@/components/TimestampPill.vue'
 import { imageAssets } from '@/api/mock'
-import { useBlogStore } from '@/stores/blog'
-import type { ImageAsset, Post, PostType } from '@/types/content'
-import { imageAlt, imageUrl, normalizeImageAsset } from '@/utils/image'
+import { useGalleryBoard } from '@/composables/useGalleryBoard'
+import { imageAlt, imageUrl } from '@/utils/image'
 
-type GallerySort = 'latest' | 'hot' | 'views'
-type GalleryItem = {
-  id: string
-  image: ImageAsset
-  post: Post
-  index: number
-  authorName: string
-  authorAvatar?: string
-  authorAvatarPosition?: string
-  shape: 'square' | 'tall' | 'wide'
-}
+const {
+  blog,
+  activeIndex,
+  activeItem,
+  closeLightbox,
+  featuredItem,
+  filteredItems,
+  galleryItems,
+  galleryQuery,
+  galleryStats,
+  galleryTags,
+  moveLightbox,
+  openLightbox,
+  selectTag,
+  selectedSort,
+  selectedTag,
+  selectedType,
+  sortOptions,
+  typeOptions,
+} = useGalleryBoard()
 
-const blog = useBlogStore()
-const selectedTag = ref('全部')
-const selectedType = ref<'all' | PostType>('all')
-const selectedSort = ref<GallerySort>('hot')
-const galleryQuery = ref('')
-const activeImageId = ref<string | null>(null)
-
-const typeOptions: Array<{ label: string; value: 'all' | PostType }> = [
-  { label: '全部图廊', value: 'all' },
-  { label: '番剧图文', value: 'article' },
-  { label: 'COS 图集', value: 'gallery' },
-  { label: '游戏资料', value: 'record' },
-]
-
-const sortOptions: Array<{ label: string; value: GallerySort }> = [
-  { label: '热度', value: 'hot' },
-  { label: '最新', value: 'latest' },
-  { label: '浏览', value: 'views' },
-]
-
-const galleryItems = computed<GalleryItem[]>(() =>
-  blog.posts.flatMap((post) => {
-    const author = blog.users.find((user) => user.id === post.authorId)
-    const fallback = normalizeImageAsset(post.coverUrl, post.title)
-    const images = post.gallery.length ? post.gallery : fallback ? [fallback] : []
-    return images.map((image, index) => ({
-      id: `${post.id}-${index}`,
-      image,
-      post,
-      index,
-      authorName: author?.nickname ?? '板块编辑',
-      authorAvatar: author?.avatarUrl,
-      authorAvatarPosition: author?.avatarPosition,
-      shape: index % 5 === 1 ? 'tall' : index % 5 === 3 ? 'wide' : 'square',
-    }))
-  }),
-)
-
-const galleryTags = computed(() => {
-  const tagCounts = new Map<string, number>()
-  galleryItems.value.forEach((item) => {
-    item.post.tags.forEach((tag) => tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1))
-  })
-  return [...tagCounts.entries()].sort((a, b) => b[1] - a[1])
-})
-
-const visualImageScore = (item: GalleryItem) => {
-  const url = item.image.url
-  const animeAssetKeys = ['asset:hero', 'asset:healingAnime', 'asset:sakuraWatercolor', 'asset:starryDesk', 'asset:novelKitchen', 'asset:galaxySchool']
-  const acgnTags = ['番剧', '番剧补完', 'AnimeJapan', '新番情报', 'COS', 'Comiket', '同人现场', '游戏', 'Tokyo Game Show', '玩家文化', '图廊', '版权标注', '日常番', '场景资料', '轻小说']
-  const techTags = ['IT技术', 'Vue', 'Vite', 'TypeScript', '工程质量', 'MySQL', 'Prisma', 'GitHub Pages', 'Web Vitals']
-  let score = 0
-  if (url.includes('wallpaper-anime') || animeAssetKeys.includes(url)) score += 4
-  if (item.post.tags.some((tag) => acgnTags.includes(tag))) score += 3
-  if (item.post.type === 'gallery') score += 2
-  if (item.index === 0 && ['gallery', 'article', 'record'].includes(item.post.type)) score += 1
-  if (item.post.tags.some((tag) => techTags.includes(tag))) score -= 4
-  if (url.includes('content-digital-tablet') || url.includes('content-game-controller')) score -= 2
-  if (url.includes('content-comiket-cosplayers') || url.includes('content-comiket-cosplay')) score -= 1
-  return score
-}
-
-const filteredItems = computed(() => {
-  const keyword = galleryQuery.value.trim().toLowerCase()
-  const items = galleryItems.value.filter((item) => {
-    const tagMatched = selectedTag.value === '全部' || item.post.tags.includes(selectedTag.value)
-    const typeMatched = selectedType.value === 'all' || item.post.type === selectedType.value
-    const textMatched =
-      !keyword ||
-      [item.post.title, item.post.excerpt, item.authorName, ...item.post.tags].some((text) => text.toLowerCase().includes(keyword))
-    return tagMatched && typeMatched && textMatched
-  })
-  return [...items].sort((a, b) => {
-    const visualDiff = visualImageScore(b) - visualImageScore(a)
-    if (selectedSort.value === 'latest') {
-      const latestDiff = new Date(b.post.createdAt).getTime() - new Date(a.post.createdAt).getTime()
-      return latestDiff || visualDiff
-    }
-    if (selectedSort.value === 'views') return b.post.viewCount - a.post.viewCount || visualDiff
-    const engagementDiff = b.post.likeCount + b.post.favoriteCount - (a.post.likeCount + a.post.favoriteCount)
-    return visualDiff || engagementDiff || new Date(b.post.createdAt).getTime() - new Date(a.post.createdAt).getTime()
-  })
-})
-
-const featuredItem = computed(() => filteredItems.value[0] ?? galleryItems.value[0])
-const activeItem = computed(() => filteredItems.value.find((item) => item.id === activeImageId.value) ?? null)
-const activeIndex = computed(() => filteredItems.value.findIndex((item) => item.id === activeImageId.value))
-const galleryStats = computed(() => ({
-  images: filteredItems.value.length,
-  posts: new Set(filteredItems.value.map((item) => item.post.id)).size,
-  creators: new Set(filteredItems.value.map((item) => item.post.authorId)).size,
-  likes: filteredItems.value.reduce((sum, item) => sum + item.post.likeCount, 0),
-}))
-
-const selectTag = (tag: string) => {
-  selectedTag.value = tag
-}
-
-const openLightbox = (item: GalleryItem) => {
-  activeImageId.value = item.id
-}
-
-const closeLightbox = () => {
-  activeImageId.value = null
-}
-
-const moveLightbox = (direction: 1 | -1) => {
-  if (!filteredItems.value.length) return
-  const current = activeIndex.value >= 0 ? activeIndex.value : 0
-  const next = (current + direction + filteredItems.value.length) % filteredItems.value.length
-  activeImageId.value = filteredItems.value[next].id
-}
+const galleryStatItems = computed(() => [
+  { label: '张图片', value: galleryStats.value.images, icon: Grid3X3 },
+  { label: '篇内容', value: galleryStats.value.posts, icon: Sparkles },
+  { label: '个板块组', value: galleryStats.value.creators, icon: Camera },
+  { label: '热度', value: galleryStats.value.likes.toLocaleString('zh-CN'), icon: Heart },
+])
 
 const handleKeydown = (event: KeyboardEvent) => {
   if (!activeItem.value) return
@@ -158,12 +61,6 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
-})
-
-watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
-  if (activeImageId.value && !filteredItems.value.some((item) => item.id === activeImageId.value)) {
-    activeImageId.value = null
-  }
 })
 </script>
 
@@ -205,12 +102,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
         </div>
       </div>
 
-      <div class="gallery-stats">
-        <span><Grid3X3 :size="15" />{{ galleryStats.images }} 张图片</span>
-        <span><Sparkles :size="15" />{{ galleryStats.posts }} 篇内容</span>
-        <span><Camera :size="15" />{{ galleryStats.creators }} 个板块组</span>
-        <span><Heart :size="15" />{{ galleryStats.likes.toLocaleString('zh-CN') }} 热度</span>
-      </div>
+      <MetricPills :items="galleryStatItems" />
     </section>
 
     <div class="gallery-grid-shell">

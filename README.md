@@ -72,6 +72,27 @@ npm run db:reset:dev # 开发环境强制重置当前数据库，请勿用于线
 
 线上版本请使用托管 MySQL，并通过 `VITE_API_BASE_URL` 让 GitHub Pages 前端连接已部署的 Express API。
 
+## 项目结构
+
+```text
+src/views/        路由页面，只保留页面编排和生命周期
+src/components/   可复用 UI 组件
+src/composables/  可复用状态逻辑、筛选排序、浏览器行为
+src/stores/       Pinia 领域状态和 API 行为
+src/api/          静态 mock 适配器与真实 API 适配器
+src/utils/        无副作用工具函数
+server/           Express API
+prisma/           MySQL schema、迁移、种子和健康检查
+docs/             开发、数据库、内容来源和路线图文档
+```
+
+## 开发文档
+
+- [Development Guide](docs/development.md)：目录职责、组件化规则、健康检查和重构路线。
+- [Database Deployment](docs/database.md)：MySQL / Prisma / API 部署方式。
+- [Content Sources](docs/content-sources.md)：文章来源、图片授权和素材使用规则。
+- [Feature Roadmap](docs/feature-roadmap.md)：轻量功能路线和暂缓功能说明。
+
 ## 已实现功能
 
 - 登录 / 注册 / 当前用户会话

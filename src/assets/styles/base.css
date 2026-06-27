@@ -2421,13 +2421,13 @@ label {
   box-shadow: none;
 }
 
-.gallery-stats {
+.metric-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.gallery-stats span {
+.metric-pills span {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -5105,7 +5105,7 @@ label {
   .feature-strip,
   .section-title,
   .discover-toolbar,
-  .gallery-stats,
+  .metric-pills,
   .profile-card,
   .editor-command,
   .rich-editor-head,
