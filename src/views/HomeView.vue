@@ -213,9 +213,15 @@ onBeforeUnmount(stopHeroCarousel)
       </section>
 
       <section class="feature-strip halo-notice">
-        <div>
+        <div class="feature-strip-copy">
           <span class="section-kicker"><Star :size="16" /> ACGN 主板块</span>
           <h2>番剧前哨、COS 影廊、游戏现场和图廊规则在这里汇流。</h2>
+        </div>
+        <div class="feature-strip-preview" aria-label="精选内容预览">
+          <RouterLink v-for="post in featuredPosts.slice(0, 3)" :key="post.id" :to="`/post/${post.id}`">
+            <img :src="post.coverUrl" :alt="post.title" :style="{ objectPosition: post.imagePosition ?? 'center' }" />
+            <span>#{{ post.tags[0] }}</span>
+          </RouterLink>
         </div>
         <RouterLink class="feature-link" to="/discover">探索板块 <ArrowRight :size="16" /></RouterLink>
       </section>
@@ -241,10 +247,11 @@ onBeforeUnmount(stopHeroCarousel)
               </div>
             </div>
             <div class="featured-grid">
-              <RouterLink v-for="post in featuredPosts" :key="post.id" class="feature-tile" :to="`/post/${post.id}`">
+              <RouterLink v-for="(post, index) in featuredPosts" :key="post.id" :class="['feature-tile', { lead: index === 0 }]" :to="`/post/${post.id}`">
                 <img :src="post.coverUrl" :alt="post.title" :style="{ objectPosition: post.imagePosition ?? 'center' }" />
                 <span>{{ post.series ? `系列 · ${post.series}` : `#${post.tags[0]}` }}</span>
                 <strong>{{ post.title }}</strong>
+                <small><Heart :size="13" /> {{ formatCount(post.likeCount) }} · {{ post.tags.slice(0, 2).join(' / ') }}</small>
               </RouterLink>
             </div>
           </section>

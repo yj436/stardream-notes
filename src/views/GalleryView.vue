@@ -77,6 +77,22 @@ const galleryTags = computed(() => {
   return [...tagCounts.entries()].sort((a, b) => b[1] - a[1])
 })
 
+const visualImageScore = (item: GalleryItem) => {
+  const url = item.image.url
+  const animeAssetKeys = ['asset:hero', 'asset:healingAnime', 'asset:sakuraWatercolor', 'asset:starryDesk', 'asset:novelKitchen', 'asset:galaxySchool']
+  const acgnTags = ['番剧', '番剧补完', 'AnimeJapan', '新番情报', 'COS', 'Comiket', '同人现场', '游戏', 'Tokyo Game Show', '玩家文化', '图廊', '版权标注', '日常番', '场景资料', '轻小说']
+  const techTags = ['IT技术', 'Vue', 'Vite', 'TypeScript', '工程质量', 'MySQL', 'Prisma', 'GitHub Pages', 'Web Vitals']
+  let score = 0
+  if (url.includes('wallpaper-anime') || animeAssetKeys.includes(url)) score += 4
+  if (item.post.tags.some((tag) => acgnTags.includes(tag))) score += 3
+  if (item.post.type === 'gallery') score += 2
+  if (item.index === 0 && ['gallery', 'article', 'record'].includes(item.post.type)) score += 1
+  if (item.post.tags.some((tag) => techTags.includes(tag))) score -= 4
+  if (url.includes('content-digital-tablet') || url.includes('content-game-controller')) score -= 2
+  if (url.includes('content-comiket-cosplayers') || url.includes('content-comiket-cosplay')) score -= 1
+  return score
+}
+
 const filteredItems = computed(() => {
   const keyword = galleryQuery.value.trim().toLowerCase()
   const items = galleryItems.value.filter((item) => {
@@ -88,9 +104,14 @@ const filteredItems = computed(() => {
     return tagMatched && typeMatched && textMatched
   })
   return [...items].sort((a, b) => {
-    if (selectedSort.value === 'latest') return new Date(b.post.createdAt).getTime() - new Date(a.post.createdAt).getTime()
-    if (selectedSort.value === 'views') return b.post.viewCount - a.post.viewCount
-    return b.post.likeCount + b.post.favoriteCount - (a.post.likeCount + a.post.favoriteCount)
+    const visualDiff = visualImageScore(b) - visualImageScore(a)
+    if (selectedSort.value === 'latest') {
+      const latestDiff = new Date(b.post.createdAt).getTime() - new Date(a.post.createdAt).getTime()
+      return latestDiff || visualDiff
+    }
+    if (selectedSort.value === 'views') return b.post.viewCount - a.post.viewCount || visualDiff
+    const engagementDiff = b.post.likeCount + b.post.favoriteCount - (a.post.likeCount + a.post.favoriteCount)
+    return visualDiff || engagementDiff || new Date(b.post.createdAt).getTime() - new Date(a.post.createdAt).getTime()
   })
 })
 
@@ -234,6 +255,7 @@ watch([selectedTag, selectedType, selectedSort, galleryQuery], () => {
               {{ item.post.likeCount }}
             </span>
           </span>
+          <span class="gallery-card-chip">#{{ item.post.tags[0] }}</span>
           <span class="gallery-expand"><Maximize2 :size="16" /></span>
         </button>
         <p v-if="!filteredItems.length" class="empty-state">暂时没有符合条件的图廊图片。</p>

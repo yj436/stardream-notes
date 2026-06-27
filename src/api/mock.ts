@@ -71,7 +71,7 @@ const storageKeys = {
   draftSnapshots: 'stardream:draft-snapshots',
 }
 
-const dataVersion = 'homepage-visual-polish-2026-06-26'
+const dataVersion = 'acgn-visual-cleanup-2026-06-27'
 const emptyReactions: Record<PostReactionKey, number> = { heart: 0, laugh: 0, cry: 0, fire: 0 }
 const imageAsset = (url: string, alt: string): ImageAsset => ({ url, alt })
 const cloneData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -125,7 +125,7 @@ const initialUsers: User[] = [
     username: 'stardream-desk',
     email: 'admin@stardream.local',
     nickname: '星梦编辑台',
-    avatarUrl: digitalTablet,
+    avatarUrl: animeNightCity,
     avatarPosition: 'center',
     coverUrl: animeNightCity,
     bio: '维护番剧、COS、游戏和图廊四个主板块，负责来源、版权标注和首页轮播。',
@@ -209,7 +209,7 @@ const initialUsers: User[] = [
     username: 'tech-lab',
     email: 'tech@stardream.local',
     nickname: '技术实验室',
-    avatarUrl: digitalTablet,
+    avatarUrl: animeForestPath,
     avatarPosition: 'center',
     coverUrl: animeForestPath,
     bio: '把 Vue、Vite、TypeScript、数据库和部署这些站点工程经验，写成能直接落地的技术笔记。',
@@ -255,6 +255,8 @@ const initialPosts: Post[] = [
     series: '番剧放映室',
     gallery: [
       imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
+      imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
       imageAsset(tokyoBigSightNight, '东京 Big Sight 夜景，Masato Ohta 摄，CC BY 2.0'),
       imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
     ],
@@ -292,9 +294,11 @@ const initialPosts: Post[] = [
     series: 'COS 影廊',
     gallery: [
       imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
+      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
+      imageAsset(animeCountrysideField, '原创二次元田园晴空壁纸，项目本地生成'),
       imageAsset(comiketCosplayers, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
       imageAsset(comiketCosplay, 'Comiket 84 Cosplay 区域，Guilhem Vellut 摄，CC BY 2.0'),
-      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
     ],
     viewCount: 0,
     likeCount: 0,
@@ -330,6 +334,8 @@ const initialPosts: Post[] = [
     series: '游戏档案部',
     gallery: [
       imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
+      imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
       imageAsset(gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
       imageAsset(digitalTablet, '数位创作设备，Piknuz 摄，CC BY-SA 4.0'),
     ],
@@ -367,6 +373,8 @@ const initialPosts: Post[] = [
     series: '番剧放映室',
     gallery: [
       imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
+      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
       imageAsset(digitalTablet, '数位板绘制场景，Piknuz 摄，CC BY-SA 4.0'),
     ],
     viewCount: 0,
@@ -403,6 +411,9 @@ const initialPosts: Post[] = [
     series: '图廊治理',
     gallery: [
       imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
+      imageAsset(animeNightCity, '原创二次元夜樱城市壁纸，项目本地生成'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
+      imageAsset(animeCountrysideField, '原创二次元田园晴空壁纸，项目本地生成'),
       imageAsset(mangaArtistTools, '漫画工具展示，Maplestrip 摄，CC BY 3.0'),
       imageAsset(gameController, 'Panasonic Q 游戏手柄，Evan-Amos 摄，CC BY-SA 3.0'),
       imageAsset(comiketCosplayers, 'Comiket 69 COS 群像，stormstill 摄，CC BY-SA 2.0'),
@@ -440,6 +451,8 @@ const initialPosts: Post[] = [
     series: '番剧生活感资料',
     gallery: [
       imageAsset(animeCountrysideField, '原创二次元田园晴空壁纸，项目本地生成'),
+      imageAsset(animeForestPath, '原创二次元森林小路壁纸，项目本地生成'),
+      imageAsset(animeSummerGarden, '原创二次元夏日庭院壁纸，项目本地生成'),
       imageAsset(kareRaisu, '家庭制作的日式咖喱饭，Ocdp 摄，CC0 1.0'),
     ],
     viewCount: 0,
