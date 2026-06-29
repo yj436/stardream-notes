@@ -1,5 +1,5 @@
 import type { Component } from 'vue'
-import type { Post } from '@/types/content'
+import type { Post, Report } from '@/types/content'
 
 export interface AdminNavItem<Key extends string = string> {
   key: Key
@@ -53,4 +53,17 @@ export interface AdminCarouselImageChoice {
   url: string
   position: string
   post?: Post
+}
+
+export type AdminReportStatusFilter = 'all' | Report['status']
+
+export interface AdminReportStatusCount {
+  key: AdminReportStatusFilter
+  label: string
+  count: number
+}
+
+export interface AdminReportActionPayload {
+  status: Report['status']
+  hidePost?: boolean
 }

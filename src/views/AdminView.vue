@@ -27,17 +27,24 @@ import {
 } from 'lucide-vue-next'
 import AdminCarouselManager from '@/components/admin/AdminCarouselManager.vue'
 import AdminKpiGrid from '@/components/admin/AdminKpiGrid.vue'
+import AdminReportsTable from '@/components/admin/AdminReportsTable.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import TimestampPill from '@/components/TimestampPill.vue'
 import { appApi } from '@/api/appApi'
 import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
 import { useNotificationStore } from '@/composables/useNotificationStore'
-import type { AdminCarouselImageChoice, AdminKpiItem, AdminNavItem, AdminStatusInfo } from '@/components/admin/adminTypes'
+import type {
+  AdminCarouselImageChoice,
+  AdminKpiItem,
+  AdminNavItem,
+  AdminReportActionPayload,
+  AdminReportStatusFilter,
+  AdminStatusInfo,
+} from '@/components/admin/adminTypes'
 import type { AdminBackupCounts, AdminBackupPayload, ApiHealth, HomeCarouselSlide, Post, Report, User } from '@/types/content'
 
 type AdminTab = 'users' | 'posts' | 'comments' | 'reports' | 'carousel'
-type ReportStatusFilter = 'all' | Report['status']
 
 const router = useRouter()
 const blog = useBlogStore()
@@ -47,7 +54,7 @@ const adminQuery = ref('')
 const broadcastText = ref('')
 const broadcastSent = ref(false)
 const refreshing = ref(false)
-const reportStatusFilter = ref<ReportStatusFilter>('all')
+const reportStatusFilter = ref<AdminReportStatusFilter>('all')
 const selectedReportIds = ref<string[]>([])
 const carouselSaving = ref(false)
 const selectedCarouselId = ref('')
@@ -110,7 +117,7 @@ const builtinCarouselImages: AdminCarouselImageChoice[] = [
   { label: '漫画阅读空间', desc: '日常番和漫画文化参考', url: 'asset:galaxySchool', position: 'center' },
 ]
 
-const reportStatusOptions: Array<{ key: ReportStatusFilter; label: string }> = [
+const reportStatusOptions: Array<{ key: AdminReportStatusFilter; label: string }> = [
   { key: 'all', label: '全部' },
   { key: 'open', label: '待处理' },
   { key: 'reviewing', label: '复核中' },
@@ -449,7 +456,13 @@ const toggleVisibleReports = () => {
   selectedReportIds.value = Array.from(new Set([...selectedReportIds.value, ...visibleIds]))
 }
 
-const runReportBatch = async (payload: { status: Report['status']; hidePost?: boolean }) => {
+const toggleReportSelection = (id: string) => {
+  selectedReportIds.value = selectedReportIds.value.includes(id)
+    ? selectedReportIds.value.filter((selectedId) => selectedId !== id)
+    : [...selectedReportIds.value, id]
+}
+
+const runReportBatch = async (payload: AdminReportActionPayload) => {
   const ids = selectedVisibleReportIds.value
   if (!ids.length) return
   await blog.updateAdminReports(ids, payload)
@@ -701,71 +714,21 @@ onMounted(async () => {
             <p v-if="!filteredAdminComments.length" class="empty-state">没有匹配的评论。</p>
           </section>
 
-          <section v-if="tab === 'reports'" class="admin-table reports-table">
-            <div class="admin-report-toolbar">
-              <div class="segmented admin-report-filters" aria-label="举报状态筛选">
-                <button
-                  v-for="option in reportStatusCounts"
-                  :key="option.key"
-                  type="button"
-                  :class="{ active: reportStatusFilter === option.key }"
-                  @click="reportStatusFilter = option.key"
-                >
-                  {{ option.label }}
-                  <small>{{ option.count }}</small>
-                </button>
-              </div>
-              <div class="admin-report-bulk">
-                <span>{{ selectedVisibleReportIds.length }} 已选</span>
-                <button type="button" class="ghost-button compact" :disabled="!filteredAdminReports.length" @click="toggleVisibleReports">
-                  {{ allVisibleReportsSelected ? '取消全选' : '选择当前' }}
-                </button>
-                <button type="button" class="ghost-button compact" :disabled="!selectedVisibleReportIds.length" @click="runReportBatch({ status: 'reviewing' })">
-                  批量复核
-                </button>
-                <button type="button" class="ghost-button compact" :disabled="!selectedVisibleReportIds.length" @click="runReportBatch({ status: 'resolved', hidePost: true })">
-                  批量隐藏
-                </button>
-                <button type="button" class="text-button compact" :disabled="!selectedVisibleReportIds.length" @click="runReportBatch({ status: 'rejected' })">
-                  批量驳回
-                </button>
-              </div>
-            </div>
-            <div class="admin-table-row admin-table-head">
-              <span class="admin-check-cell">
-                <input type="checkbox" :checked="allVisibleReportsSelected" :disabled="!filteredAdminReports.length" @change="toggleVisibleReports" />
-              </span>
-              <span>举报原因</span>
-              <span>关联文章</span>
-              <span>状态</span>
-              <span>提交时间</span>
-              <span>操作</span>
-            </div>
-            <div v-for="report in filteredAdminReports" :key="report.id" class="admin-table-row">
-              <span class="admin-check-cell">
-                <input v-model="selectedReportIds" type="checkbox" :value="report.id" />
-              </span>
-              <span class="admin-report-copy">
-                <strong>{{ report.reason }}</strong>
-                <small>{{ report.detail || '无补充说明' }}</small>
-              </span>
-              <RouterLink class="admin-link" :to="`/post/${report.postId}`">{{ reportPostTitle(report) }}</RouterLink>
-              <span :class="['admin-status-chip', reportTone(report.status)]">{{ reportStatusLabel(report.status) }}</span>
-              <TimestampPill :value="report.createdAt" compact show-copy />
-              <div class="admin-row-actions">
-                <button type="button" class="ghost-button compact" @click="blog.updateAdminReport(report.id, { status: 'reviewing' })">
-                  复核
-                </button>
-                <button type="button" class="ghost-button compact" @click="blog.updateAdminReport(report.id, { status: 'resolved', hidePost: true })">
-                  隐藏
-                </button>
-                <button type="button" class="text-button compact" @click="blog.updateAdminReport(report.id, { status: 'rejected' })">
-                  驳回
-                </button>
-              </div>
-            </div>
-            <p v-if="!filteredAdminReports.length" class="empty-state">没有匹配的举报。</p>
-          </section>
+          <AdminReportsTable
+            v-if="tab === 'reports'"
+            v-model:status-filter="reportStatusFilter"
+            :reports="filteredAdminReports"
+            :status-counts="reportStatusCounts"
+            :selected-ids="selectedVisibleReportIds"
+            :all-selected="allVisibleReportsSelected"
+            :report-post-title="reportPostTitle"
+            :report-tone="reportTone"
+            :report-status-label="reportStatusLabel"
+            @toggle-visible="toggleVisibleReports"
+            @toggle-report="toggleReportSelection"
+            @run-batch="runReportBatch"
+            @update-report="(id, payload) => blog.updateAdminReport(id, payload)"
+          />
         </section>
 
         <aside class="admin-side-rail">

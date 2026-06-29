@@ -10,7 +10,7 @@ src/App.vue              Global shell: nav, footer, mobile nav, Live2D, toast, s
 src/router/              Route table and page metadata
 src/views/               Route-level screens. Keep orchestration here, not reusable business logic.
 src/components/          Reusable UI pieces with narrow props and no global data ownership.
-src/components/admin/    Admin-console modules: sidebar, KPI grid, carousel manager, and typed view-model props.
+src/components/admin/    Admin-console modules: sidebar, KPI grid, carousel manager, reports table, and typed view-model props.
 src/composables/         Reusable stateful logic, page data derivation, browser behavior.
 src/stores/              Pinia domain state and API-facing actions.
 src/api/                 Mock/static adapters plus HTTP API adapter.
@@ -39,7 +39,7 @@ docs/                    Development, database, content source, and roadmap note
 ## Current Health Notes
 
 - `src/assets/styles/base.css` is the largest file. Future CSS work should split it by layer: shell, content cards, editor, admin, schedule, gallery, responsive.
-- `src/views/AdminView.vue` is the largest page. Admin navigation, KPI cards, system health display, and carousel manager now live in `src/components/admin/`; next refactor should extract report table and backup/broadcast panels.
+- `src/views/AdminView.vue` is the largest page. Admin navigation, KPI cards, system health display, carousel manager, and reports table now live in `src/components/admin/`; next refactor should extract backup/broadcast panels and repeated admin tables.
 - `src/api/mock.ts` is both seed data and asset registry. Next data cleanup should split image assets, users, posts, carousel, and timeline fixtures into focused files.
 - `src/views/EditorView.vue` is feature-heavy. Future changes should extract metadata form, image manager, editor toolbar, draft history, and preview panel.
 - Prefer small structural passes that keep `npm run build` green after every pass.
@@ -68,7 +68,7 @@ Use `content:timeline` when touching schedule data or deployment workflow. Use `
 
 | Priority | Area | Target |
 | --- | --- | --- |
-| P1 | Admin page | Continue extracting report table and backup/broadcast panels until `AdminView.vue` is mostly route orchestration. |
+| P1 | Admin page | Continue extracting backup/broadcast panels and repeated admin tables until `AdminView.vue` is mostly route orchestration. |
 | P1 | Global CSS | Split `base.css` into route and component layers imported from one index stylesheet. |
 | P2 | Mock data | Split seed data by domain and keep asset metadata close to image definitions. |
 | P2 | Editor | Extract rich-text toolbar, metadata form, image manager, and draft history. |
