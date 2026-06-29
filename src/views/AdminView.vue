@@ -9,9 +9,7 @@ import {
   BarChart3,
   BellRing,
   CheckCircle2,
-  CircleGauge,
   Clock3,
-  Cloud,
   Database,
   Download,
   FileText,
@@ -29,18 +27,20 @@ import {
   Search,
   Send,
   Server,
-  ShieldCheck,
   Trash2,
   Upload,
   Users,
   WifiOff,
   X,
 } from 'lucide-vue-next'
+import AdminKpiGrid from '@/components/admin/AdminKpiGrid.vue'
+import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import TimestampPill from '@/components/TimestampPill.vue'
 import { appApi } from '@/api/appApi'
 import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
 import { useNotificationStore } from '@/composables/useNotificationStore'
+import type { AdminKpiItem, AdminNavItem, AdminStatusInfo } from '@/components/admin/adminTypes'
 import type { AdminBackupCounts, AdminBackupPayload, ApiHealth, HomeCarouselSlide, Post, Report, User } from '@/types/content'
 
 type AdminTab = 'users' | 'posts' | 'comments' | 'reports' | 'carousel'
@@ -317,12 +317,32 @@ const healthStatusCodeLabel = computed(() => {
 const healthDetailRows = computed(() => [
   { label: '最近检查', value: formatHealthCheckTime(systemHealth.value?.checkedAt), icon: Clock3 },
   { label: '响应耗时', value: healthDurationLabel.value, icon: Activity },
-  { label: '重试状态', value: healthRetryLabel.value, icon: RefreshCw },
+  { label: '重试状态', value: healthRetryLabel.value, icon: RefreshCw, spinning: systemLoading.value },
   { label: '状态码', value: healthStatusCodeLabel.value, icon: Server },
 ])
 const healthIssueMessage = computed(() => systemHealth.value?.error || systemHealth.value?.database?.message || '')
 
-const navItems = computed(() =>
+const adminStatusInfo = computed<AdminStatusInfo>(() => ({
+  dataModeLabel: dataModeLabel.value,
+  apiEndpointLabel: apiEndpointLabel.value,
+  apiHealthTone: apiHealthTone.value,
+  apiHealthLabel: apiHealthLabel.value,
+  apiHealthIcon: apiHealthIcon.value,
+  databaseHealthTone: databaseHealthTone.value,
+  databaseHealthLabel: databaseHealthLabel.value,
+  healthDetailRows: healthDetailRows.value,
+  healthIssueMessage: healthIssueMessage.value,
+  healthCounts: healthCounts.value,
+  systemLoading: systemLoading.value,
+}))
+
+const setAdminTab = (key: string) => {
+  if (tabConfig.some((item) => item.key === key)) {
+    tab.value = key as AdminTab
+  }
+}
+
+const navItems = computed<AdminNavItem<AdminTab>[]>(() =>
   tabConfig.map((item) => ({
     ...item,
     count:
@@ -339,7 +359,7 @@ const navItems = computed(() =>
   })),
 )
 
-const kpis = computed(() => [
+const kpis = computed<AdminKpiItem[]>(() => [
   {
     label: '注册用户',
     value: blog.adminStats?.users ?? 0,
@@ -549,69 +569,7 @@ onMounted(async () => {
 
 <template>
   <section class="admin-shell">
-    <aside class="admin-sidebar">
-      <div class="admin-brand-block">
-        <span class="admin-brand-icon"><ShieldCheck :size="20" /></span>
-        <div>
-          <strong>星梦运营台</strong>
-          <small>Stardream Admin</small>
-        </div>
-      </div>
-
-      <nav class="admin-menu" aria-label="后台模块">
-        <button
-          v-for="item in navItems"
-          :key="item.key"
-          type="button"
-          :class="['admin-menu-item', { active: tab === item.key }]"
-          @click="tab = item.key"
-        >
-          <component :is="item.icon" :size="18" />
-          <span>
-            <strong>{{ item.title }}</strong>
-            <small>{{ item.desc }}</small>
-          </span>
-          <em>{{ item.alert || item.count }}</em>
-        </button>
-      </nav>
-
-      <div class="admin-system-card">
-        <span class="section-kicker"><CircleGauge :size="15" /> 系统状态</span>
-        <strong>{{ dataModeLabel }}</strong>
-        <small class="admin-endpoint"><Cloud :size="13" /> {{ apiEndpointLabel }}</small>
-        <div class="admin-health-row">
-          <span :class="['admin-health-pill', apiHealthTone]">
-            <component :is="apiHealthIcon" :size="14" :class="{ 'spin-icon': systemLoading }" />
-            {{ apiHealthLabel }}
-          </span>
-          <span :class="['admin-health-pill', databaseHealthTone]">
-            <Database :size="14" />
-            {{ databaseHealthLabel }}
-          </span>
-        </div>
-        <div class="admin-health-details">
-          <span v-for="item in healthDetailRows" :key="item.label">
-            <component :is="item.icon" :size="13" :class="{ 'spin-icon': item.label === '重试状态' && systemLoading }" />
-            <small>{{ item.label }}</small>
-            <strong>{{ item.value }}</strong>
-          </span>
-        </div>
-        <p v-if="healthIssueMessage" class="admin-health-message">
-          <AlertTriangle :size="14" />
-          {{ healthIssueMessage }}
-        </p>
-        <div v-if="healthCounts" class="admin-health-counts">
-          <span><Users :size="13" />{{ healthCounts.users }}</span>
-          <span><FileText :size="13" />{{ healthCounts.posts }}</span>
-          <span><MessageSquareText :size="13" />{{ healthCounts.comments }}</span>
-          <span><Flag :size="13" />{{ healthCounts.reports }}</span>
-        </div>
-        <button type="button" class="ghost-button compact admin-health-refresh" :disabled="systemLoading" @click="loadSystemHealth">
-          <Server :size="15" />
-          {{ systemLoading ? '检测中' : '重新检测' }}
-        </button>
-      </div>
-    </aside>
+    <AdminSidebar :tab="tab" :nav-items="navItems" :status="adminStatusInfo" @select="setAdminTab" @refresh-health="loadSystemHealth" />
 
     <main class="admin-console">
       <header class="admin-topbar">
@@ -632,16 +590,7 @@ onMounted(async () => {
         </div>
       </header>
 
-      <section class="admin-kpi-grid" aria-label="运营指标">
-        <article v-for="item in kpis" :key="item.label" :class="['admin-kpi-card', item.tone]">
-          <span><component :is="item.icon" :size="20" /></span>
-          <div>
-            <strong>{{ item.value }}</strong>
-            <small>{{ item.label }}</small>
-          </div>
-          <p>{{ item.helper }}</p>
-        </article>
-      </section>
+      <AdminKpiGrid :items="kpis" />
 
       <section class="admin-workbench">
         <section class="admin-primary-panel">
