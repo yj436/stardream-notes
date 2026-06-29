@@ -1,4 +1,5 @@
 import type { Component } from 'vue'
+import type { Post } from '@/types/content'
 
 export interface AdminNavItem<Key extends string = string> {
   key: Key
@@ -44,4 +45,12 @@ export interface AdminStatusInfo {
   healthIssueMessage: string
   healthCounts?: AdminHealthCounts
   systemLoading: boolean
+}
+
+export interface AdminCarouselImageChoice {
+  label: string
+  desc: string
+  url: string
+  position: string
+  post?: Post
 }

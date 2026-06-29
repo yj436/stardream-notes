@@ -4,8 +4,6 @@ import { useRouter } from 'vue-router'
 import {
   Activity,
   AlertTriangle,
-  ArrowDown,
-  ArrowUp,
   BarChart3,
   BellRing,
   CheckCircle2,
@@ -14,16 +12,11 @@ import {
   Download,
   FileText,
   Flag,
-  Image as ImageIcon,
   Images,
   LayoutDashboard,
-  Link2,
   Megaphone,
   MessageSquareText,
-  Plus,
   RefreshCw,
-  RotateCcw,
-  Save,
   Search,
   Send,
   Server,
@@ -31,8 +24,8 @@ import {
   Upload,
   Users,
   WifiOff,
-  X,
 } from 'lucide-vue-next'
+import AdminCarouselManager from '@/components/admin/AdminCarouselManager.vue'
 import AdminKpiGrid from '@/components/admin/AdminKpiGrid.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import TimestampPill from '@/components/TimestampPill.vue'
@@ -40,18 +33,11 @@ import { appApi } from '@/api/appApi'
 import { imageAssets } from '@/api/mock'
 import { useBlogStore } from '@/stores/blog'
 import { useNotificationStore } from '@/composables/useNotificationStore'
-import type { AdminKpiItem, AdminNavItem, AdminStatusInfo } from '@/components/admin/adminTypes'
+import type { AdminCarouselImageChoice, AdminKpiItem, AdminNavItem, AdminStatusInfo } from '@/components/admin/adminTypes'
 import type { AdminBackupCounts, AdminBackupPayload, ApiHealth, HomeCarouselSlide, Post, Report, User } from '@/types/content'
 
 type AdminTab = 'users' | 'posts' | 'comments' | 'reports' | 'carousel'
 type ReportStatusFilter = 'all' | Report['status']
-type CarouselImageChoice = {
-  label: string
-  desc: string
-  url: string
-  position: string
-  post?: Post
-}
 
 const router = useRouter()
 const blog = useBlogStore()
@@ -113,7 +99,7 @@ const tabConfig = [
   { key: 'carousel' as const, label: '轮播', title: '首页轮播', desc: '更换首屏主图与文案', icon: Images },
 ]
 
-const builtinCarouselImages: CarouselImageChoice[] = [
+const builtinCarouselImages: AdminCarouselImageChoice[] = [
   { label: '番剧前哨场馆', desc: 'AnimeJapan 与新番情报入口', url: 'asset:healingAnime', position: 'center' },
   { label: 'Comiket COS 群像', desc: 'COS 影廊与同人现场', url: 'asset:cosplayStage', position: 'center' },
   { label: 'Comiket COS 区域', desc: '角色扮演活动摄影', url: 'asset:moonlightCos', position: 'center' },
@@ -474,7 +460,7 @@ const updateCarouselDraft = (id: string, payload: Partial<HomeCarouselSlide>) =>
   carouselDrafts.value = carouselDrafts.value.map((slide) => (slide.id === id ? { ...slide, ...payload } : slide))
 }
 
-const selectCarouselImage = (choice: CarouselImageChoice) => {
+const selectCarouselImage = (choice: AdminCarouselImageChoice) => {
   const current = selectedCarouselSlide.value
   if (!current) return
   updateCarouselDraft(current.id, {
@@ -605,139 +591,25 @@ onMounted(async () => {
             <span class="admin-count-pill">{{ currentRows }} 条</span>
           </div>
 
-          <section v-if="tab === 'carousel'" class="admin-carousel-manager">
-            <div class="admin-carousel-toolbar">
-              <div>
-                <strong>首页首屏轮播</strong>
-                <small>{{ enabledCarouselCount }} 张启用 · 最多建议保留 5 张主图</small>
-              </div>
-              <div class="admin-row-actions">
-                <button type="button" class="ghost-button compact" @click="addCarouselDraft"><Plus :size="15" />新增</button>
-                <button type="button" class="ghost-button compact" :disabled="carouselSaving" @click="resetCarouselDrafts">
-                  <RotateCcw :size="15" />
-                  重置主推
-                </button>
-                <button type="button" class="primary-button compact" :disabled="carouselSaving || !carouselDrafts.length" @click="saveCarouselDrafts">
-                  <Save :size="15" />
-                  {{ carouselSaving ? '保存中' : '保存轮播' }}
-                </button>
-              </div>
-            </div>
-
-            <div class="admin-carousel-grid">
-              <div class="admin-carousel-list" aria-label="轮播列表">
-                <article v-for="(slide, index) in carouselDrafts" :key="slide.id" :class="['admin-carousel-item', { active: slide.id === selectedCarouselId }]">
-                  <button type="button" class="admin-carousel-select" @click="selectedCarouselId = slide.id">
-                    <img :src="carouselPreviewUrl(slide.imageUrl)" :alt="slide.title" :style="{ objectPosition: slide.imagePosition ?? 'center' }" />
-                    <span>
-                      <strong>{{ index + 1 }}. {{ slide.title }}</strong>
-                      <small>{{ slide.enabled ? '展示中' : '已停用' }} · #{{ slide.tag }}</small>
-                    </span>
-                  </button>
-                  <div class="admin-carousel-item-actions">
-                    <button type="button" title="上移" :disabled="index === 0" @click="moveCarouselDraft(slide.id, -1)"><ArrowUp :size="14" /></button>
-                    <button type="button" title="下移" :disabled="index === carouselDrafts.length - 1" @click="moveCarouselDraft(slide.id, 1)"><ArrowDown :size="14" /></button>
-                    <button type="button" title="移除" :disabled="carouselDrafts.length <= 1" @click="removeCarouselDraft(slide.id)"><X :size="14" /></button>
-                  </div>
-                </article>
-              </div>
-
-              <div v-if="selectedCarouselSlide" class="admin-carousel-editor">
-                <div class="admin-carousel-preview">
-                  <img :src="carouselPreviewUrl(selectedCarouselSlide.imageUrl)" :alt="selectedCarouselSlide.title" :style="{ objectPosition: selectedCarouselSlide.imagePosition ?? 'center' }" />
-                  <div>
-                    <span class="section-kicker"><ImageIcon :size="15" /> #{{ selectedCarouselSlide.tag }}</span>
-                    <strong>{{ selectedCarouselSlide.title }}</strong>
-                    <small>{{ selectedCarouselSlide.excerpt }}</small>
-                  </div>
-                </div>
-
-                <div class="admin-carousel-form">
-                  <label>
-                    轮播标题
-                    <input
-                      :value="selectedCarouselSlide.title"
-                      maxlength="80"
-                      @input="updateCarouselDraft(selectedCarouselSlide.id, { title: ($event.target as HTMLInputElement).value })"
-                    />
-                  </label>
-                  <label>
-                    摘要文案
-                    <textarea
-                      :value="selectedCarouselSlide.excerpt"
-                      rows="3"
-                      maxlength="180"
-                      @input="updateCarouselDraft(selectedCarouselSlide.id, { excerpt: ($event.target as HTMLTextAreaElement).value })"
-                    />
-                  </label>
-                  <div class="admin-carousel-fields">
-                    <label>
-                      标签
-                      <input
-                        :value="selectedCarouselSlide.tag"
-                        maxlength="16"
-                        @input="updateCarouselDraft(selectedCarouselSlide.id, { tag: ($event.target as HTMLInputElement).value })"
-                      />
-                    </label>
-                    <label>
-                      图片焦点
-                      <select
-                        :value="selectedCarouselSlide.imagePosition ?? 'center'"
-                        @change="updateCarouselDraft(selectedCarouselSlide.id, { imagePosition: ($event.target as HTMLSelectElement).value })"
-                      >
-                        <option value="center">居中</option>
-                        <option value="20% 40%">偏左</option>
-                        <option value="70% 28%">偏右人物</option>
-                        <option value="35% 55%">偏下主体</option>
-                        <option value="50% 20%">偏上主体</option>
-                      </select>
-                    </label>
-                  </div>
-                  <label>
-                    跳转链接
-                    <span class="admin-input-with-icon">
-                      <Link2 :size="15" />
-                      <input
-                        :value="selectedCarouselSlide.link"
-                        placeholder="/post/xxx 或 /discover"
-                        @input="updateCarouselDraft(selectedCarouselSlide.id, { link: ($event.target as HTMLInputElement).value })"
-                      />
-                    </span>
-                  </label>
-                  <label class="toggle-row">
-                    <input
-                      type="checkbox"
-                      :checked="selectedCarouselSlide.enabled"
-                      @change="updateCarouselDraft(selectedCarouselSlide.id, { enabled: ($event.target as HTMLInputElement).checked })"
-                    />
-                    <span>在首页轮播中启用</span>
-                  </label>
-                </div>
-
-                <div class="admin-image-picker">
-                  <div class="admin-carousel-toolbar compact">
-                    <div>
-                      <strong>更换轮播图</strong>
-                      <small>可使用内置封面或任意文章封面</small>
-                    </div>
-                  </div>
-                  <button
-                    v-for="choice in carouselImageChoices"
-                    :key="choice.url"
-                    type="button"
-                    :class="{ active: normalizeCarouselImageUrl(selectedCarouselSlide.imageUrl) === normalizeCarouselImageUrl(choice.url) }"
-                    @click="selectCarouselImage(choice)"
-                  >
-                    <img :src="carouselPreviewUrl(choice.url)" :alt="choice.label" :style="{ objectPosition: choice.position }" />
-                    <span>
-                      <strong>{{ choice.label }}</strong>
-                      <small>{{ choice.desc }}</small>
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
+          <AdminCarouselManager
+            v-if="tab === 'carousel'"
+            :drafts="carouselDrafts"
+            :selected-id="selectedCarouselId"
+            :selected-slide="selectedCarouselSlide"
+            :enabled-count="enabledCarouselCount"
+            :image-choices="carouselImageChoices"
+            :saving="carouselSaving"
+            :preview-url="carouselPreviewUrl"
+            :normalize-image-url="normalizeCarouselImageUrl"
+            @select="selectedCarouselId = $event"
+            @add="addCarouselDraft"
+            @reset="resetCarouselDrafts"
+            @save="saveCarouselDrafts"
+            @move="moveCarouselDraft"
+            @remove="removeCarouselDraft"
+            @update-slide="updateCarouselDraft"
+            @select-image="selectCarouselImage"
+          />
 
           <section v-if="tab === 'users'" class="admin-table users-table">
             <div class="admin-table-row admin-table-head">
