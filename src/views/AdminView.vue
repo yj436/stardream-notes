@@ -4,30 +4,24 @@ import { useRouter } from 'vue-router'
 import {
   Activity,
   AlertTriangle,
-  BarChart3,
-  BellRing,
   CheckCircle2,
   Clock3,
-  Database,
-  Download,
   FileText,
   Flag,
   Images,
   LayoutDashboard,
-  Megaphone,
   MessageSquareText,
   RefreshCw,
   Search,
-  Send,
   Server,
   Trash2,
-  Upload,
   Users,
   WifiOff,
 } from 'lucide-vue-next'
 import AdminCarouselManager from '@/components/admin/AdminCarouselManager.vue'
 import AdminKpiGrid from '@/components/admin/AdminKpiGrid.vue'
 import AdminReportsTable from '@/components/admin/AdminReportsTable.vue'
+import AdminSideRail from '@/components/admin/AdminSideRail.vue'
 import AdminSidebar from '@/components/admin/AdminSidebar.vue'
 import TimestampPill from '@/components/TimestampPill.vue'
 import { appApi } from '@/api/appApi'
@@ -60,7 +54,6 @@ const carouselSaving = ref(false)
 const selectedCarouselId = ref('')
 const carouselDrafts = ref<HomeCarouselSlide[]>([])
 const backupBusy = ref(false)
-const backupFileInputRef = ref<HTMLInputElement | null>(null)
 const backupMessage = ref('')
 const runtimeInfo = appApi.getRuntimeInfo()
 const systemHealth = ref<ApiHealth | null>(null)
@@ -177,16 +170,8 @@ const downloadAdminBackup = async () => {
   }
 }
 
-const triggerBackupImport = () => {
-  backupFileInputRef.value?.click()
-}
-
-const importBackupFile = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
+const importBackupFile = async (file: File) => {
   if (!window.confirm('导入备份会覆盖当前站点数据，继续吗？')) {
-    input.value = ''
     return
   }
   backupBusy.value = true
@@ -201,7 +186,6 @@ const importBackupFile = async (event: Event) => {
     backupMessage.value = error instanceof Error ? error.message : '导入失败'
     blog.notify('JSON 备份导入失败', 'warning')
   } finally {
-    input.value = ''
     backupBusy.value = false
   }
 }
@@ -244,6 +228,11 @@ const openReports = computed(() => blog.adminReports.filter((report) => report.s
 const hiddenPosts = computed(() => blog.adminPosts.filter((post) => post.status === 'hidden').length)
 const bannedUsers = computed(() => blog.adminUsers.filter((user) => user.status === 'banned').length)
 const totalViews = computed(() => blog.adminPosts.reduce((sum, post) => sum + post.viewCount, 0))
+const backupPanelCounts = computed(() => ({
+  users: blog.adminUsers.length,
+  posts: blog.adminPosts.length,
+  comments: blog.adminComments.length,
+}))
 const currentRows = computed(() => {
   if (tab.value === 'users') return filteredAdminUsers.value.length
   if (tab.value === 'posts') return filteredAdminPosts.value.length
@@ -731,83 +720,20 @@ onMounted(async () => {
           />
         </section>
 
-        <aside class="admin-side-rail">
-          <section class="admin-side-panel">
-            <div class="admin-panel-head compact">
-              <div>
-                <span class="section-kicker"><Megaphone :size="16" /> 系统广播</span>
-                <h2>全站通知</h2>
-              </div>
-            </div>
-            <form class="admin-broadcast-form" @submit.prevent="sendBroadcast">
-              <textarea v-model="broadcastText" rows="4" placeholder="输入广播消息，发送后写入当前通知中心。" />
-              <button type="submit" class="primary-button" :disabled="!broadcastText.trim()">
-                <Send :size="16" />
-                {{ broadcastSent ? '已发送' : '发送通知' }}
-              </button>
-            </form>
-          </section>
-
-          <section class="admin-side-panel admin-backup-panel">
-            <div class="admin-panel-head compact">
-              <div>
-                <span class="section-kicker"><Database :size="16" /> 数据备份</span>
-                <h2>JSON 备份</h2>
-              </div>
-            </div>
-            <div class="admin-backup-stats">
-              <span><Users :size="14" />{{ blog.adminUsers.length }}</span>
-              <span><FileText :size="14" />{{ blog.adminPosts.length }}</span>
-              <span><MessageSquareText :size="14" />{{ blog.adminComments.length }}</span>
-            </div>
-            <div class="admin-backup-actions">
-              <button type="button" class="primary-button compact" :disabled="backupBusy" @click="downloadAdminBackup">
-                <Download :size="15" />
-                {{ backupBusy ? '处理中' : '导出 JSON' }}
-              </button>
-              <button type="button" class="ghost-button compact" :disabled="backupBusy" @click="triggerBackupImport">
-                <Upload :size="15" />
-                导入 JSON
-              </button>
-              <input ref="backupFileInputRef" class="file-input-hidden" type="file" accept="application/json,.json" @change="importBackupFile" />
-            </div>
-            <small v-if="backupMessage" class="admin-backup-message">{{ backupMessage }}</small>
-          </section>
-
-          <section class="admin-side-panel">
-            <div class="admin-panel-head compact">
-              <div>
-                <span class="section-kicker"><BellRing :size="16" /> 待办队列</span>
-                <h2>需要关注</h2>
-              </div>
-            </div>
-            <div class="admin-task-list">
-              <RouterLink v-for="report in openReports.slice(0, 4)" :key="report.id" class="admin-task-item" :to="`/post/${report.postId}`">
-                <span><Flag :size="15" /></span>
-                <strong>{{ report.reason }}</strong>
-                <small>{{ reportPostTitle(report) }}</small>
-              </RouterLink>
-              <p v-if="!openReports.length" class="empty-state">当前没有待处理举报。</p>
-            </div>
-          </section>
-
-          <section class="admin-side-panel">
-            <div class="admin-mini-chart">
-              <span><BarChart3 :size="20" /></span>
-              <div>
-                <strong>{{ totalViews.toLocaleString() }}</strong>
-                <small>累计内容浏览</small>
-              </div>
-            </div>
-            <div class="admin-mini-chart">
-              <span><Activity :size="20" /></span>
-              <div>
-                <strong>{{ blog.adminComments.length }}</strong>
-                <small>评论审核样本</small>
-              </div>
-            </div>
-          </section>
-        </aside>
+        <AdminSideRail
+          v-model:broadcast-text="broadcastText"
+          :broadcast-sent="broadcastSent"
+          :backup-busy="backupBusy"
+          :backup-message="backupMessage"
+          :backup-counts="backupPanelCounts"
+          :open-reports="openReports"
+          :total-views="totalViews"
+          :comment-count="blog.adminComments.length"
+          :report-post-title="reportPostTitle"
+          @send-broadcast="sendBroadcast"
+          @export-backup="downloadAdminBackup"
+          @import-backup="importBackupFile"
+        />
       </section>
     </main>
   </section>
